@@ -1507,6 +1507,33 @@
                 explanation: "Unambiguous Genitive case! Shows possession for masculine and neuter nouns. The noun itself typically gains an -s or -es ending (e.g., das Dach des Hauses)."
             },
 
+            // Demonstrative determiners (dies-)
+            "dieser": {
+                case: "Nominative (Masc) | Dative (Fem) | Genitive (Fem)",
+                gender: "Masculine / Feminine",
+                explanation: "Form of 'dies-' meaning 'this'. With a feminine noun phrase such as 'dieser netten Frau', it marks Dative feminine."
+            },
+            "diese": {
+                case: "Nominative | Accusative",
+                gender: "Feminine / Plural",
+                explanation: "Form of 'dies-' meaning 'this/these'. It can mark Nominative or Accusative feminine, and Nominative/Accusative plural."
+            },
+            "dieses": {
+                case: "Nominative | Accusative",
+                gender: "Neuter",
+                explanation: "Form of 'dies-' meaning 'this'. It marks Nominative or Accusative neuter."
+            },
+            "diesen": {
+                case: "Accusative (Masc) | Dative (Plural)",
+                gender: "Masculine / Plural",
+                explanation: "Form of 'dies-' meaning 'this/these'. It marks Accusative masculine or Dative plural."
+            },
+            "diesem": {
+                case: "Dative",
+                gender: "Masculine / Neuter",
+                explanation: "Form of 'dies-' meaning 'this'. It unambiguously marks Dative masculine or neuter."
+            },
+
             // Indefinite Articles
             "ein": {
                 case: "Nominative (Masc/Neut) | Accusative (Neut)",
@@ -1933,6 +1960,73 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
             }
         }
 
+        // Small offline noun lexicon used to disambiguate article/determiner forms.
+        // This can be expanded over time without using AI/API credits.
+        const germanNounGender = {
+            frau: "Feminine", mutter: "Feminine", schwester: "Feminine", freundin: "Feminine",
+            mann: "Masculine", vater: "Masculine", bruder: "Masculine", freund: "Masculine",
+            hund: "Masculine", apfel: "Masculine",
+            buch: "Neuter", kind: "Neuter", haus: "Neuter", auto: "Neuter", geld: "Neuter"
+        };
+
+        function phraseLastNoun(words) {
+            for (let i = words.length - 1; i >= 0; i--) {
+                const clean = words[i].replace(/[.,!?;]/g, "");
+                if (/^[A-ZÄÖÜ]/.test(clean)) return clean.toLowerCase();
+            }
+            return "";
+        }
+
+        function resolvedPhraseEntry(words, baseEntry) {
+            if (!baseEntry || !words || !words.length) return baseEntry;
+
+            const det = words[0].toLowerCase();
+            const noun = phraseLastNoun(words);
+            const nounGender = germanNounGender[noun] || "";
+            const hasAdjEn = words.slice(1, -1).some(w => /en$/i.test(w));
+
+            // Strongly identifiable demonstrative + adjective/noun patterns.
+            if (det === "dieser" && nounGender === "Feminine" && hasAdjEn) {
+                return {
+                    case: "Dative",
+                    gender: "Feminine",
+                    explanation: "This whole noun phrase is Dative feminine. 'Dieser' is the Dative feminine form of 'dies-', and the adjective takes -en: e.g. 'dieser netten Frau'."
+                };
+            }
+            if (det === "diesem") {
+                return {
+                    case: "Dative",
+                    gender: nounGender || "Masculine / Neuter",
+                    explanation: "'Diesem' unambiguously marks Dative masculine or neuter. The noun determines which gender applies."
+                };
+            }
+            if (det === "diesen" && nounGender === "Plural") {
+                return {
+                    case: "Dative",
+                    gender: "Plural",
+                    explanation: "'Diesen' with a plural noun marks a Dative plural noun phrase."
+                };
+            }
+
+            // Resolve common indefinite-article ambiguity from the noun itself.
+            if (det === "ein" && nounGender === "Neuter") {
+                return {
+                    case: "Nominative | Accusative",
+                    gender: "Neuter",
+                    explanation: "'Ein' with a neuter noun can be Nominative or Accusative. In object position, as in 'ein Buch besorgen', it functions as the Accusative direct object."
+                };
+            }
+            if (det === "eine" && nounGender === "Feminine") {
+                return {
+                    case: "Nominative | Accusative",
+                    gender: "Feminine",
+                    explanation: "'Eine' with a feminine noun can be Nominative or Accusative; sentence role determines the case."
+                };
+            }
+
+            return baseEntry;
+        }
+
         // Parses and intelligently groups German words into horizontal phrase cards
         function renderGrammarTiles(sentence) {
             const tilesContainer = document.getElementById("tiles-container");
@@ -2006,6 +2100,11 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
                 i++;
             }
 
+            // Context pass for common ditransitive patterns such as:
+            // "Ich möchte dieser netten Frau ein Buch besorgen."
+            const sentenceLower = sentence.toLowerCase();
+            const hasDativeRecipientVerb = /\b(besorgen|geben|schenken|bringen|zeigen|schicken|kaufen)\b/.test(sentenceLower);
+
             // Render generated phrase chunk cards
             chunks.forEach((chunk) => {
                 const phraseText = chunk.words.join(" ");
@@ -2028,6 +2127,23 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
                         keyWord = w;
                         dictEntry = germanGrammarDictionary[cleanW];
                         break;
+                    }
+                }
+
+                // Use the whole phrase (especially its noun) to resolve ambiguous determiners.
+                if (dictEntry && chunk.type === "noun_phrase") {
+                    dictEntry = resolvedPhraseEntry(chunk.words, dictEntry);
+
+                    const det = chunk.words[0].toLowerCase();
+                    const noun = phraseLastNoun(chunk.words);
+                    const nounGender = germanNounGender[noun] || "";
+
+                    if (hasDativeRecipientVerb && det === "ein" && nounGender === "Neuter") {
+                        dictEntry = {
+                            case: "Accusative",
+                            gender: "Neuter",
+                            explanation: "This noun phrase is the thing being obtained/given, so it functions as the Accusative direct object. 'Buch' is neuter: das Buch → ein Buch."
+                        };
                     }
                 }
 
@@ -2153,7 +2269,7 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
 
                 aiButton.addEventListener("click", async () => {
                     aiButton.disabled = true;
-                    aiButton.innerText = "Asking Gemini…";
+                    aiButton.innerText = "Asking Tutor…";
 
                     const staticHtml = dExplanation.innerHTML;
                     const loading = document.createElement("div");
