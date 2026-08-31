@@ -2495,7 +2495,19 @@
                     dExplanation.appendChild(loading);
 
                     try {
-                        const prompt = `You are an expert German language tutor. The student selected the phrase "${phraseText}" in the sentence: "${currentGermanSentence}". Explain its grammatical role, case, gender where relevant, and endings in 2-3 concise educational sentences.`;
+                        const prompt = `You are an expert German language tutor helping an English-speaking learner.
+The student selected the German phrase "${phraseText}" in the sentence: "${currentGermanSentence}".
+
+Explain this phrase in ENGLISH in 2 short, clear sentences.
+Focus only on:
+- its grammatical role in this sentence,
+- its case,
+- its gender if relevant,
+- and what the article/determiner/adjective ending shows.
+
+Do not use Markdown, asterisks, bullet points, headings, German quotation marks, or formatting symbols.
+Do not claim that the noun itself changes ending unless it actually changes in this exact phrase.
+Return plain English text only.`;
                         const aiExplanation = await callAI(prompt);
 
                         if (currentSelectedPhrase === phraseText) {
@@ -2506,11 +2518,15 @@
 
                             const aiLabel = document.createElement("span");
                             aiLabel.className = "block font-bold text-amber-600 text-[10px] uppercase";
-                            aiLabel.textContent = "AI Grammar Explanation";
+                            aiLabel.textContent = "AI Explanation";
 
                             const aiText = document.createElement("p");
                             aiText.className = "bg-amber-50 text-amber-950 border border-amber-100 p-3 rounded-lg font-medium leading-relaxed";
-                            aiText.textContent = String(aiExplanation || "").trim();
+                            aiText.textContent = String(aiExplanation || "")
+                                .replace(/\*\*/g, "")
+                                .replace(/\*/g, "")
+                                .replace(/^#+\s*/gm, "")
+                                .trim();
 
                             aiResult.append(aiLabel, aiText);
                             dExplanation.appendChild(aiResult);
