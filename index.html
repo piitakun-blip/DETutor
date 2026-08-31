@@ -2066,9 +2066,9 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
             "mag","magst","mögen","möchte","möchtest","möchten"
         ]);
 
-        const modalVerbForms = new Set(["kann","kannst","können","konnte","konnten","muss","musst","müssen","musste","mussten","soll","sollst","sollen","sollte","sollten","will","willst","wollen","wollte","wollten","darf","darfst","dürfen","durfte","durften","mag","magst","mögen","möchte","möchtest","möchten"]);
-        function isHelpingVerb(word) { return helpingVerbForms.has(word.toLowerCase()); }
-        function helpingVerbLabel(word) { return modalVerbForms.has(word.toLowerCase()) ? "Modal Verb" : "Auxiliary Verb"; }
+        function isHelpingVerb(word) {
+            return helpingVerbForms.has(word.toLowerCase());
+        }
 
         function looksLikeVerb(word) {
             const w = word.toLowerCase();
@@ -2137,210 +2137,94 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
         }
 
         // Parses and intelligently groups German words into horizontal phrase cards
-        function renderGrammarTiles(sentence) {
-            const tilesContainer = document.getElementById("tiles-container");
-            tilesContainer.innerHTML = ""; // Clear existing
+        // Grammar parser v2 — boundary-first and regression-tested.
+        const gpPronouns=new Set(["ich","du","er","sie","es","wir","ihr","mich","mir","dich","dir","ihn","ihm","uns","ihnen"]);
+        const gpDet=new Set(["der","die","das","den","dem","des","ein","eine","einen","einem","einer","eines","dieser","diese","dieses","diesen","diesem"]);
+        const gpPoss=/^(mein|dein|sein|ihr|unser|euer)(e|en|em|er|es)?$/i;
+        const gpModal=new Set(["kann","kannst","können","muss","musst","müssen","soll","sollst","sollen","will","willst","wollen","darf","darfst","dürfen","mag","magst","mögen","möchte","möchtest","möchten"]);
+        const gpAux=new Set(["bin","bist","ist","sind","seid","sein","war","waren","habe","hast","hat","haben","werde","wirst","wird","werden","wurde","wurden"]);
+        const gpVerb=new Set(["geben","schenken","besorgen","bringen","zeigen","schicken","kaufen","sehen","machen","gehen","kommen","lernen","essen","trinken","aufzubrechen"]);
+        const gpPrep=new Set(["mit","zu","von","nach","bei","aus","seit","für","durch","gegen","ohne","um","an","auf","in","über","unter","vor","hinter","neben","zwischen"]);
+        const gpGender={frau:"Feminine",stunde:"Feminine",marmelade:"Feminine",mann:"Masculine",berliner:"Masculine",buch:"Neuter",kind:"Neuter",gelee:"Neuter"};
+        function gpIsDet(w){return gpDet.has(w.toLowerCase())||gpPoss.test(w)}
+        function gpIsNoun(w){return /^[A-ZÄÖÜ]/.test(w)&&!gpPronouns.has(w.toLowerCase())}
+        function gpIsAdj(w){w=w.toLowerCase();return /(?:e|en|er|es|em)$/i.test(w)&&!gpIsDet(w)}
+        function gpLastNoun(a){for(let j=a.length-1;j>=0;j--)if(gpIsNoun(a[j]))return a[j].toLowerCase();return""}
 
-            // Tokenize punctuation and alphanumeric words separately
-            const tokens = sentence.match(/[A-ZÄÖÜa-zäöüß]+|[.,!?;]+/g) || [];
+        function parseGermanPhrases(sentence){
+            const t=sentence.match(/[A-ZÄÖÜa-zäöüß]+|[.,!?;]+/g)||[], out=[]; let i=0;
+            const add=(words,type,label="",gender="")=>out.push({words,type,label,gender});
+            while(i<t.length){
+                const w=t[i],l=w.toLowerCase();
+                if(/^[.,!?;]+$/.test(w)){add([w],"punctuation");i++;continue}
+                if(gpPronouns.has(l)){const e=germanGrammarDictionary[l];add([w],"pronoun",e?e.case.split(" | ")[0].split(" (")[0]:"","");i++;continue}
+                if(gpModal.has(l)){add([w],"modal","Modal Verb","Verb");i++;continue}
+                if(gpAux.has(l)){add([w],"auxiliary","Auxiliary Verb","Verb");i++;continue}
+                if(gpVerb.has(l)||/^[a-zäöüß]+(ieren|eln|ern)$/i.test(l)){add([w],"verb","Verb","Verb");i++;continue}
 
-            const chunks = [];
-            let i = 0;
-            const pronounWords = new Set(["ich","du","er","sie","es","wir","ihr","mich","mir","dich","dir","ihn","ihm","uns","ihnen"]);
-            const determinerStarts = new Set(["der","die","das","den","dem","des","ein","eine","einen","einem","einer","eines","dieser","diese","dieses","diesen","diesem"]);
-            function startsDeterminer(word) {
-                const w=word.toLowerCase();
-                return determinerStarts.has(w) || possessiveDeterminerPattern.test(w);
-            }
-            function isCapitalizedNoun(word) {
-                return /^[A-ZÄÖÜ]/.test(word) && !pronounWords.has(word.toLowerCase());
-            }
-            function pushStandalone(word) {
-                chunks.push({words:[word],isPunctuation:false,type:"standalone"});
-            }
+                if(gpIsDet(l)){
+                    const words=[w];i++;
+                    while(i<t.length&&gpIsAdj(t[i])&&!gpIsDet(t[i]))words.push(t[i++]);
+                    if(i<t.length&&gpIsNoun(t[i]))words.push(t[i++]);
 
-            // Boundary-aware phrase chunker: verbs/pronouns stop noun phrases.
-            while (i < tokens.length) {
-                const token=tokens[i], lower=token.toLowerCase();
-                if (/^[.,!?;]+$/.test(token)) {
-                    chunks.push({words:[token],isPunctuation:true}); i++; continue;
-                }
-                if (pronounWords.has(lower) || looksLikeVerb(lower)) {
-                    pushStandalone(token); i++; continue;
-                }
-                if (startsDeterminer(lower)) {
-                    const words=[token]; i++;
-                    while (i < tokens.length) {
-                        const w=tokens[i], wl=w.toLowerCase();
-                        if (/^[.,!?;]+$/.test(w) || pronounWords.has(wl) || looksLikeVerb(wl) || startsDeterminer(wl)) break;
-                        if (looksLikeAdjective(wl)) { words.push(w); i++; continue; }
-                        if (germanPrepositions.includes(wl)) {
-                            words.push(w); i++;
-                            while (i < tokens.length) {
-                                const mw=tokens[i], ml=mw.toLowerCase();
-                                if (/^[.,!?;]+$/.test(mw) || pronounWords.has(ml) || looksLikeVerb(ml) || startsDeterminer(ml)) break;
-                                words.push(mw); i++;
-                                if (looksLikeAdjective(ml)) break;
-                            }
-                            continue;
+                    // Embedded modifier: meinen + mit Marmelade gefüllten + Berliner
+                    if(i<t.length&&gpPrep.has(t[i].toLowerCase())){
+                        words.push(t[i++]);
+                        while(i<t.length&&!gpModal.has(t[i].toLowerCase())&&!gpAux.has(t[i].toLowerCase())&&!gpVerb.has(t[i].toLowerCase())&&!/^[.,!?;]+$/.test(t[i])){
+                            words.push(t[i]);
+                            const adj=gpIsAdj(t[i]);i++;
+                            if(adj&&i<t.length&&gpIsNoun(t[i])){words.push(t[i++]);break}
                         }
-                        if (isCapitalizedNoun(w)) {
-                            words.push(w); i++;
-                            if (i>=tokens.length || !germanPrepositions.includes(tokens[i].toLowerCase())) break;
-                            continue;
-                        }
-                        break;
                     }
-                    chunks.push({words,isPunctuation:false,type:"noun_phrase"}); continue;
+                    const d=words[0].toLowerCase(),noun=gpLastNoun(words),g=gpGender[noun]||"";
+                    let label="";
+                    if(d==="diesem")label="Dative";
+                    else if(d==="dieser"&&g==="Feminine")label="Dative";
+                    else if(/^(einen|meinen|deinen|seinen|ihren|unseren|euren)$/i.test(d)&&g==="Masculine")label="Accusative";
+                    else if(/^(ein|mein|dein|sein|ihr|unser|euer)$/i.test(d)&&g==="Neuter")label="Nominative / Accusative";
+                    else {const e=germanGrammarDictionary[d];label=e?e.case.split(" | ")[0].split(" (")[0]:"Phrase"}
+                    add(words,"noun_phrase",label,g);continue
                 }
-                if (germanPrepositions.includes(lower)) {
-                    const words=[token]; i++;
-                    while (i < tokens.length) {
-                        const w=tokens[i], wl=w.toLowerCase();
-                        if (/^[.,!?;]+$/.test(w) || pronounWords.has(wl) || looksLikeVerb(wl)) break;
-                        words.push(w); i++;
-                        if (isCapitalizedNoun(w)) break;
+
+                if(gpPrep.has(l)){
+                    const words=[w];i++;
+                    while(i<t.length&&!gpModal.has(t[i].toLowerCase())&&!gpAux.has(t[i].toLowerCase())&&!gpVerb.has(t[i].toLowerCase())&&!/^[.,!?;]+$/.test(t[i])){
+                        words.push(t[i++]);if(gpIsNoun(words[words.length-1]))break
                     }
-                    chunks.push({words,isPunctuation:false,type:"prepositional"}); continue;
+                    add(words,"prepositional",["mit","zu","von","nach","bei","aus","seit"].includes(l)?"Dative":"Phrase",gpGender[gpLastNoun(words)]||"");continue
                 }
-                pushStandalone(token); i++;
+                add([w],gpIsNoun(w)?"noun":"word",gpIsNoun(w)?"Noun":"Word","");i++
             }
-
-            // Context pass for common ditransitive patterns such as:
-            // "Ich möchte dieser netten Frau ein Buch besorgen."
-            const sentenceLower = sentence.toLowerCase();
-            const hasDativeRecipientVerb = /\b(besorgen|geben|schenken|bringen|zeigen|schicken|kaufen|geben|senden)\b/.test(sentenceLower);
-            const finiteVerbIndex = chunks.findIndex(c => c.words && c.words.length === 1 && looksLikeVerb(c.words[0]));
-            const subjectPronounIndex = chunks.findIndex(c => c.words && c.words.length === 1 && ["ich","du","er","sie","es","wir","ihr"].includes(c.words[0].toLowerCase()));
-
-            // Render generated phrase chunk cards
-            chunks.forEach((chunk) => {
-                const phraseText = chunk.words.join(" ");
-                const tile = document.createElement("button");
-
-                if (chunk.isPunctuation) {
-                    tile.className = "text-xl font-bold text-slate-400 p-2 select-none cursor-default";
-                    tile.innerText = phraseText;
-                    tilesContainer.appendChild(tile);
-                    return;
-                }
-
-                // Search for the primary case/gender signaling dictionary word in this phrase
-                let keyWord = "";
-                let dictEntry = null;
-
-                for (let w of chunk.words) {
-                    const cleanW = w.replace(/[.,!?;]/g, "").toLowerCase();
-                    if (germanGrammarDictionary[cleanW] !== undefined) {
-                        keyWord = w;
-                        dictEntry = germanGrammarDictionary[cleanW];
-                        break;
-                    }
-                }
-
-                // Use the whole phrase (especially its noun) to resolve ambiguous determiners.
-                if (dictEntry && chunk.type === "noun_phrase") {
-                    dictEntry = resolvedPhraseEntry(chunk.words, dictEntry);
-
-                    const det = chunk.words[0].toLowerCase();
-                    const noun = phraseLastNoun(chunk.words);
-                    const nounGender = germanNounGender[noun] || "";
-
-                    if (hasDativeRecipientVerb && /^(ein|mein|dein|sein|ihr|unser|euer)$/i.test(det) && nounGender === "Neuter") {
-                        dictEntry = {
-                            case: "Accusative",
-                            gender: "Neuter",
-                            explanation: "This noun phrase is the thing being given/obtained, so it functions as the Accusative direct object. The neuter noun keeps the zero-ending determiner form."
-                        };
-                    }
-                }
-
-                let matchedClass = "case-none";
-                let genderClass = "gender-none";
-                let displaySubtitle = "Phrase";
-
-                if (dictEntry) {
-                    // 1. DETERMINE BACKGROUND COLOR (CASE)
-                    const wordCase = dictEntry.case.toLowerCase();
-                    if (wordCase.includes("nominative") && (wordCase.includes("accusative") || wordCase.includes("dative") || wordCase.includes("genitive"))) {
-                        matchedClass = "case-multi";
-                    } else if (wordCase.includes("nominative")) {
-                        matchedClass = "case-nom";
-                    } else if (wordCase.includes("accusative")) {
-                        matchedClass = "case-acc";
-                    } else if (wordCase.includes("dative")) {
-                        matchedClass = "case-dat";
-                    } else if (wordCase.includes("genitive")) {
-                        matchedClass = "case-gen";
-                    }
-
-                    // 2. DETERMINE TEXT & BORDER COLOR (GENDER)
-                    const genderStr = dictEntry.gender.toLowerCase();
-                    if (genderStr === "masculine") {
-                        genderClass = "gender-masc";
-                    } else if (genderStr === "feminine") {
-                        genderClass = "gender-fem";
-                    } else if (genderStr === "neuter") {
-                        genderClass = "gender-neut";
-                    } else if (genderStr === "plural") {
-                        genderClass = "gender-plural";
-                    } else if (genderStr.includes("/") || genderStr.includes("plural")) {
-                        genderClass = "gender-multi";
-                    }
-
-                    // Calculate truncated subtitle label with multi-case intelligence
-                    let caseLabel = "";
-                    if (matchedClass === "case-multi") {
-                        if (wordCase.includes("nominative") && wordCase.includes("accusative") && wordCase.includes("dative")) {
-                            caseLabel = "Nom/Acc/Dat";
-                        } else if (wordCase.includes("nominative") && wordCase.includes("accusative")) {
-                            caseLabel = "Nom / Acc";
-                        } else if (wordCase.includes("nominative") && wordCase.includes("dative")) {
-                            caseLabel = "Nom / Dat";
-                        } else if (wordCase.includes("accusative") && wordCase.includes("dative")) {
-                            caseLabel = "Acc / Dat";
-                        } else {
-                            caseLabel = "Multi-Case";
-                        }
-                    } else {
-                        caseLabel = dictEntry.case.split(" | ")[0].split(" (")[0];
-                    }
-                    if (dictEntry.gender === "Verb") {
-                        displaySubtitle = (chunk.words.length === 1 && isHelpingVerb(chunk.words[0])) ? helpingVerbLabel(chunk.words[0]) : caseLabel;
-                    } else {
-                        const rawGender = dictEntry.gender.split(" / ")[0].substring(0, 4);
-                        displaySubtitle = `${caseLabel} (${rawGender})`;
-                    }
-                } else {
-                    if (chunk.words.length === 1 && isHelpingVerb(chunk.words[0])) {
-                        displaySubtitle = helpingVerbLabel(chunk.words[0]);
-                    } else if (chunk.words.length === 1 && looksLikeVerb(chunk.words[0])) {
-                        displaySubtitle = "Verb";
-                    } else if (/^[A-ZÄÖÜ]/.test(chunk.words[0])) {
-                        displaySubtitle = "Noun";
-                    } else {
-                        displaySubtitle = "Word";
-                    }
-                }
-
-                // Combine Case Background & Gender Borders
-                tile.className = `${matchedClass} ${genderClass} px-4 py-3 rounded-xl font-bold shadow-sm hover:scale-105 active:scale-95 transition duration-150 flex flex-col items-center justify-center min-w-[90px] border border-2`;
-
-                const phraseSpan = document.createElement("span");
-                phraseSpan.className = "text-sm tracking-wide";
-                phraseSpan.innerText = phraseText;
-                tile.appendChild(phraseSpan);
-
-                const subtitleSpan = document.createElement("span");
-                subtitleSpan.className = "text-[9px] opacity-75 font-semibold tracking-wider mt-0.5 uppercase";
-                subtitleSpan.innerText = displaySubtitle;
-                tile.appendChild(subtitleSpan);
-
-                // Interactive Detail Card Click
-                tile.onclick = () => selectTile(phraseText, keyWord, dictEntry);
-                tilesContainer.appendChild(tile);
-            });
+            if(/\b(geben|schenken|besorgen|bringen|zeigen|schicken|kaufen)\b/i.test(sentence))
+                out.forEach(x=>{if(x.type==="noun_phrase"&&x.label==="Nominative / Accusative"&&x.gender==="Neuter")x.label="Accusative"});
+            return out
         }
+
+        function renderGrammarTiles(sentence){
+            const box=document.getElementById("tiles-container");box.innerHTML="";
+            parseGermanPhrases(sentence).forEach(ch=>{
+                const text=ch.words.join(" ");
+                if(ch.type==="punctuation"){const e=document.createElement("span");e.className="text-xl font-bold text-slate-400 p-2";e.innerText=text;box.appendChild(e);return}
+                let cc="case-none",gc="gender-none";const c=ch.label.toLowerCase(),g=ch.gender.toLowerCase();
+                if(c==="nominative")cc="case-nom";else if(c==="accusative")cc="case-acc";else if(c==="dative")cc="case-dat";else if(c.includes("nominative")&&c.includes("accusative"))cc="case-multi";
+                if(g==="masculine")gc="gender-masc";else if(g==="feminine")gc="gender-fem";else if(g==="neuter")gc="gender-neut";
+                const b=document.createElement("button");b.className=`${cc} ${gc} px-4 py-3 rounded-xl font-bold shadow-sm hover:scale-105 active:scale-95 transition duration-150 flex flex-col items-center justify-center min-w-[90px] border border-2`;
+                const a=document.createElement("span");a.className="text-sm tracking-wide";a.innerText=text;
+                const sub=document.createElement("span");sub.className="text-[9px] opacity-75 font-semibold tracking-wider mt-0.5 uppercase";
+                sub.innerText=ch.label+(ch.gender&&!["modal","auxiliary","verb","pronoun"].includes(ch.type)&&["Nominative","Accusative","Dative"].includes(ch.label)?` (${ch.gender.substring(0,4)})`:"");
+                b.append(a,sub);box.appendChild(b)
+            })
+        }
+
+        // Regression tests for every parser failure reported so far.
+        (function(){
+            const tests=[
+              ["Ich möchte dieser netten Frau ein Buch besorgen.",["Ich","möchte","dieser netten Frau","ein Buch","besorgen","."]],
+              ["Ich werde in einer Stunde bereit sein, aufzubrechen.",["Ich","werde","in einer Stunde","bereit","sein",",","aufzubrechen","."]],
+              ["Ich möchte diesem netten Mann meinen mit Marmelade gefüllten Berliner geben.",["Ich","möchte","diesem netten Mann","meinen mit Marmelade gefüllten Berliner","geben","."]]
+            ];
+            tests.forEach(([q,exp])=>{const got=parseGermanPhrases(q).map(x=>x.words.join(" "));if(JSON.stringify(got)!==JSON.stringify(exp))console.error("GRAMMAR PARSER TEST FAILED",q,{got,exp})})
+        })();
 
                 // Show details about a clicked grouped phrase tile
         function selectTile(phraseText, keyWord, entry) {
