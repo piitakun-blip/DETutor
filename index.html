@@ -431,6 +431,47 @@
 
         #tiles-container button { cursor:pointer; }
         #tiles-container button:active { transform:scale(.98); }
+
+        /* Make editable text-entry areas easier to identify on desktop/Mac. */
+        @media (min-width: 641px) {
+            #source-text,
+            #german-source-text,
+            #chat-user-input {
+                background:#ffffff !important;
+                border:1.5px solid #94a3b8 !important;
+                box-shadow: inset 0 1px 2px rgba(15,23,42,.05);
+            }
+
+            #source-text:hover,
+            #german-source-text:hover,
+            #chat-user-input:hover {
+                border-color:#64748b !important;
+            }
+
+            #source-text:focus,
+            #german-source-text:focus,
+            #chat-user-input:focus {
+                background:#fffef8 !important;
+                border-color:#d4a300 !important;
+                box-shadow:0 0 0 3px rgba(255,204,0,.18), inset 0 1px 2px rgba(15,23,42,.04) !important;
+            }
+
+            /* Output boxes stay visually quieter so inputs are obvious. */
+            #target-text,
+            #german-english-translation,
+            #german-corrected-text {
+                background:#f8fafc !important;
+                border-color:#e2e8f0 !important;
+            }
+
+            /* Subtle distinction for the two editable input panels. */
+            #source-text {
+                background:#fffdf7 !important;
+            }
+            #german-source-text {
+                background:#fbfcff !important;
+            }
+        }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
@@ -444,7 +485,7 @@
                 </div>
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight">DeutschLerner</h1>
-                    <p class="text-xs text-amber-100">Interactive German Grammar & Translation Companion (AI Tutor)</p>
+                    <p class="text-xs text-amber-100">Interactive German Grammar & Translation Companion</p>
                 </div>
             </div>
             <div class="flex items-center gap-4">
@@ -734,7 +775,7 @@
                         <h4 class="text-base font-bold text-slate-800 flex items-center gap-2">
                             Phrase Analysis: <span id="detail-word" class="font-mono text-base text-blue-700 bg-white px-3 py-1 rounded shadow-sm border border-slate-200"></span>
                         </h4>
-                        <button onclick="closeDetailCard()" class="text-slate-400 hover:text-slate-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                        <button type="button" onclick="closeDetailCard()" class="text-slate-400 hover:text-slate-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
                         <div>
@@ -1864,24 +1905,9 @@
                 </div>`;
 
             try {
-                let germanSentence = "";
-                const apiKey = getActiveAIKey();
-
-                if (apiKey) {
-                    const loadingSpan = document.getElementById("ai-loading-text");
-                    if (loadingSpan) loadingSpan.innerText = "AI Tutor translating with premium contextual analysis...";
-
-                    const prompt = `Translate the following English sentence to grammatically correct German.
-Return ONLY the raw German sentence translation, with no markdown, no quotes, no extra annotations, and no explanations.
-English: "${sourceText}"`;
-
-                    germanSentence = await callAI(prompt);
-                    // Strip quotes or any linebreaks
-                    germanSentence = sanitizeTranslation(germanSentence).replace(/^[\"'\s]|[\"'\s]$/g, "").trim();
-                } else {
-                    // Translate English -> German (free fallback)
-                    germanSentence = await googleTranslateApiCall(sourceText, "en", "de");
-                }
+                // Normal translation never spends AI tokens.
+                // AI is reserved for explicit Tutor / Ask AI actions.
+                let germanSentence = await googleTranslateApiCall(sourceText, "en", "de");
 
                 document.getElementById("target-text").value = germanSentence;
 
@@ -1944,59 +1970,26 @@ English: "${sourceText}"`;
             englishMeaningEl.value = "Translating input to English...";
             correctedGermanEl.value = "Generating grammatical correction...";
 
-            const apiKey = getActiveAIKey();
             const aiCoachBox = document.getElementById("ai-coach-box");
             const aiCoachNote = document.getElementById("ai-coach-note");
 
             try {
-                if (apiKey) {
-                    const loadingSpan = document.getElementById("de-loading-text");
-                    if (loadingSpan) loadingSpan.innerText = "Interactive AI Tutor analyzing your grammar and spelling...";
+                // Never invoke AI automatically for German correction.
+                // Use the normal translation service for the meaning check and round-trip correction.
+                if (aiCoachBox) aiCoachBox.classList.add("hidden");
+                if (aiCoachNote) aiCoachNote.innerText = "";
 
-                    const prompt = `You are an expert German language tutor. The student typed: "${germanInput}".
-Analyze this German input and provide a JSON response with exactly three fields:
-1. "correctedGerman": The grammatically correct German sentence.
-2. "englishTranslation": The natural, accurate English meaning of the sentence.
-3. "grammarCorrectionNote": A concise, friendly explanation (1-2 sentences) of any errors corrected (e.g. incorrect noun gender, adjective endings, or cases). If the sentence was already perfect, say "Your sentence is grammatically perfect! Excellent job!".
+                const englishTranslation = await googleTranslateApiCall(germanInput, "de", "en");
+                englishMeaningEl.value = englishTranslation;
 
-Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
+                const correctedGerman = await googleTranslateApiCall(englishTranslation, "en", "de");
+                correctedGermanEl.value = correctedGerman;
 
-                    const result = await callAIJson(prompt);
-                    const correctedGerman = sanitizeTranslation(result.correctedGerman);
-                    const englishTranslation = sanitizeTranslation(result.englishTranslation);
-                    const coachNote = result.grammarCorrectionNote;
+                // Mirror output to the English translate card.
+                document.getElementById("source-text").value = englishTranslation;
+                document.getElementById("target-text").value = correctedGerman;
 
-                    englishMeaningEl.value = englishTranslation;
-                    correctedGermanEl.value = correctedGerman;
-
-                    // Mirror output to the English translate card on the left
-                    document.getElementById("source-text").value = englishTranslation;
-                    document.getElementById("target-text").value = correctedGerman;
-
-                    if (aiCoachBox && aiCoachNote) {
-                        aiCoachNote.innerText = coachNote;
-                        aiCoachBox.classList.remove("hidden");
-                    }
-
-                    currentGermanSentence = correctedGerman;
-                } else {
-                    // Hide AI Coach if no key
-                    if (aiCoachBox) aiCoachBox.classList.add("hidden");
-
-                    // Step 1: Translate German Input to English
-                    const englishTranslation = await googleTranslateApiCall(germanInput, "de", "en");
-                    englishMeaningEl.value = englishTranslation;
-
-                    // Step 2: Translate English back to German (Auto-Correction)
-                    const correctedGerman = await googleTranslateApiCall(englishTranslation, "en", "de");
-                    correctedGermanEl.value = correctedGerman;
-
-                    // Mirror output to the English translate card on the left
-                    document.getElementById("source-text").value = englishTranslation;
-                    document.getElementById("target-text").value = correctedGerman;
-
-                    currentGermanSentence = correctedGerman;
-                }
+                currentGermanSentence = correctedGerman;
 
                 if (networkBanner) networkBanner.classList.add("hidden");
 
@@ -2340,7 +2333,7 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
                 let cc="case-none",gc="gender-none";const c=ch.label.toLowerCase(),g=ch.gender.toLowerCase();
                 if(c==="nominative")cc="case-nom";else if(c==="accusative")cc="case-acc";else if(c==="dative")cc="case-dat";else if(c.includes("nominative")&&c.includes("accusative"))cc="case-multi";
                 if(g==="masculine")gc="gender-masc";else if(g==="feminine")gc="gender-fem";else if(g==="neuter")gc="gender-neut";
-                const b=document.createElement("button");b.className=`${cc} ${gc} px-4 py-3 rounded-xl font-bold shadow-sm hover:scale-105 active:scale-95 transition duration-150 flex flex-col items-center justify-center min-w-[90px] border border-2`;
+                const b=document.createElement("button");b.type="button";b.setAttribute("aria-label",`Show grammar details for ${text}`);b.className=`${cc} ${gc} px-4 py-3 rounded-xl font-bold shadow-sm hover:scale-105 active:scale-95 transition duration-150 flex flex-col items-center justify-center min-w-[90px] border border-2`;
 
                 const a=document.createElement("span");
                 a.className="text-sm tracking-wide";
@@ -2392,7 +2385,11 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
                     };
                 }
 
-                b.onclick = () => selectTile(text, firstWord, detailEntry);
+                b.addEventListener("click", (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    selectTile(text, firstWord, detailEntry);
+                });
                 box.appendChild(b)
             })
         }
@@ -2417,8 +2414,12 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
             const dGender = document.getElementById("detail-gender");
             const dExplanation = document.getElementById("detail-explanation");
 
-            currentSelectedPhrase = phraseText; // Track for lazy loader
+            if (!detailCard || !dWord || !dCase || !dGender || !dExplanation) {
+                console.error("Phrase detail panel is missing required elements.");
+                return;
+            }
 
+            currentSelectedPhrase = phraseText;
             dWord.innerText = phraseText;
 
             if (entry) {
@@ -2496,8 +2497,13 @@ Describe its grammatical role, case, gender where relevant, and endings in this 
                 dExplanation.appendChild(aiButton);
             }
 
-            // Trigger translation automatically!
-            triggerAutoPhraseTranslation(phraseText);
+            // Phrase translation uses the normal translation service, never the AI tutor.
+            // Run it after the local details are already visible.
+            try {
+                triggerAutoPhraseTranslation(phraseText);
+            } catch (e) {
+                console.warn("Phrase translation unavailable:", e);
+            }
         }
 
         // Render standard offline fallback explanatory text
