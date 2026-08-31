@@ -2458,6 +2458,28 @@
         })();
 
                 // Show details about a clicked grouped phrase tile
+        function cleanAiExplanation(text) {
+            return String(text || "")
+                .replace(/\*\*/g, "")
+                .replace(/\*/g, "")
+                .replace(/^#+\s*/gm, "")
+                .replace(/^[\-\u2022]\s+/gm, "")
+                .replace(/[„“]/g, '"')
+                .replace(/\s+/g, " ")
+                .trim();
+        }
+
+        function looksMostlyGerman(text) {
+            const sample = String(text || "").toLowerCase();
+            const germanSignals = [
+                " ist ", " und ", " der ", " die ", " das ", " im ", " wird ",
+                " bezeichnet ", " während ", " artikel ", " substantiv ", " dativobjekt "
+            ];
+            let hits = 0;
+            germanSignals.forEach(x => { if (sample.includes(x)) hits++; });
+            return hits >= 3;
+        }
+
         function selectTile(phraseText, keyWord, entry) {
             const detailCard = document.getElementById("tile-detail-card");
             const dWord = document.getElementById("detail-word");
@@ -2495,19 +2517,33 @@
                     dExplanation.appendChild(loading);
 
                     try {
-                        const prompt = `You are an expert German language tutor helping an English-speaking learner.
-The student selected the German phrase "${phraseText}" in the sentence: "${currentGermanSentence}".
+                        const prompt = `You are a German grammar tutor for an ENGLISH-SPEAKING learner.
 
-Explain this phrase in ENGLISH in 2 short, clear sentences.
-Focus only on:
-- its grammatical role in this sentence,
-- its case,
-- its gender if relevant,
-- and what the article/determiner/adjective ending shows.
+OUTPUT LANGUAGE: ENGLISH ONLY.
+Do not answer in German. German may appear only when quoting the exact German word or phrase being explained.
 
-Do not use Markdown, asterisks, bullet points, headings, German quotation marks, or formatting symbols.
-Do not claim that the noun itself changes ending unless it actually changes in this exact phrase.
-Return plain English text only.`;
+Selected phrase: "${phraseText}"
+Full German sentence: "${currentGermanSentence}"
+
+Write exactly 2 short English sentences:
+1. State the phrase's grammatical role, case, and gender if relevant.
+2. Explain what the article/determiner/adjective form shows in this exact phrase.
+
+Accuracy rules:
+- Do not invent a noun ending change.
+- For "Mann" in "dem Mann", say the article changes from "der" to "dem"; the noun "Mann" itself is unchanged.
+- Only mention an -n/-en noun ending when that exact noun actually changes form in the phrase.
+
+Formatting rules:
+- Plain text only.
+- No Markdown.
+- No asterisks.
+- No headings.
+- No bullet points.
+- No German-style quotation marks.
+- No bold formatting.
+
+Before returning, verify that the explanation itself is English.`;
                         const aiExplanation = await callAI(prompt);
 
                         if (currentSelectedPhrase === phraseText) {
@@ -2522,11 +2558,10 @@ Return plain English text only.`;
 
                             const aiText = document.createElement("p");
                             aiText.className = "bg-amber-50 text-amber-950 border border-amber-100 p-3 rounded-lg font-medium leading-relaxed";
-                            aiText.textContent = String(aiExplanation || "")
-                                .replace(/\*\*/g, "")
-                                .replace(/\*/g, "")
-                                .replace(/^#+\s*/gm, "")
-                                .trim();
+                            const cleanedExplanation = cleanAiExplanation(aiExplanation);
+                            aiText.textContent = looksMostlyGerman(cleanedExplanation)
+                                ? "The AI returned the explanation in German instead of English. Tap Ask AI again to retry."
+                                : cleanedExplanation;
 
                             aiResult.append(aiLabel, aiText);
                             dExplanation.appendChild(aiResult);
