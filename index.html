@@ -472,6 +472,71 @@
                 background:#fbfcff !important;
             }
         }
+
+        /* Strong, always-visible desktop input treatment. */
+        @media (min-width: 641px) {
+            #source-text,
+            #german-source-text {
+                background:#fff8d8 !important;
+                border:2px solid #64748b !important;
+                box-shadow:0 1px 0 rgba(15,23,42,.05), inset 0 0 0 1px rgba(255,255,255,.75) !important;
+                min-height:92px;
+            }
+
+            #source-text::placeholder,
+            #german-source-text::placeholder {
+                color:#64748b !important;
+                opacity:1 !important;
+                font-weight:600;
+            }
+
+            #source-text:focus,
+            #german-source-text:focus {
+                background:#fffdf2 !important;
+                border-color:#b8860b !important;
+                box-shadow:0 0 0 4px rgba(255,204,0,.24) !important;
+            }
+
+            #target-text,
+            #german-english-translation,
+            #german-corrected-text {
+                background:#f1f5f9 !important;
+                border:1px solid #cbd5e1 !important;
+            }
+        }
+
+        /* High-visibility editable fields on desktop/Mac — visible without hover. */
+        @media (min-width: 641px) {
+            #source-text,
+            #german-source-text {
+                background:#fff4c2 !important;
+                border:2px solid #b7791f !important;
+                box-shadow:inset 0 0 0 1px rgba(255,255,255,.9), 0 1px 2px rgba(15,23,42,.08) !important;
+                min-height:100px;
+            }
+
+            #source-text:focus,
+            #german-source-text:focus {
+                background:#fff9df !important;
+                border-color:#92400e !important;
+                box-shadow:0 0 0 4px rgba(245,158,11,.28), inset 0 0 0 1px #fff !important;
+            }
+
+            #source-text::placeholder,
+            #german-source-text::placeholder {
+                color:#7c5a20 !important;
+                opacity:1 !important;
+                font-weight:700;
+            }
+
+            /* Outputs are deliberately cooler/lighter so editable vs output is obvious. */
+            #target-text,
+            #german-english-translation,
+            #german-corrected-text {
+                background:#f1f5f9 !important;
+                border:1px solid #cbd5e1 !important;
+            }
+        }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
@@ -713,15 +778,7 @@
                         </div>
 
                         <!-- AI Grammar Coach Box (Hidden by default, shown if Gemini API has correction notes) -->
-                        <div id="ai-coach-box" class="hidden p-3.5 bg-amber-50 border border-amber-100 rounded-xl text-xs text-amber-950 animate-fadeIn space-y-1.5">
-                            <span class="font-bold flex items-center gap-1.5 text-amber-800">
-                                <svg class="w-4 h-4 shrink-0 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                                </svg>
-                                Interactive AI Tutor - Grammar Explanation:
-                            </span>
-                            <p id="ai-coach-note" class="leading-relaxed font-medium">Your sentence is correct!</p>
-                        </div>
+                        
 
                     </div>
                 </div>
@@ -755,7 +812,7 @@
 
                         <!-- Right Sub-legend: Border/Gender -->
                         <div class="space-y-1.5">
-                            <span class="text-[11px] font-bold text-slate-600 block border-b border-slate-200 pb-1">Text & Border color = Word Gender</span>
+                            <span class="text-[11px] font-bold text-slate-600 block border-b border-slate-200 pb-1">Text color = Word Gender</span>
                             <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-sky-400 text-sky-600"><span class="w-2 h-2 rounded-full bg-sky-600"></span> Masculine (m)</span>
                             <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-pink-400 text-pink-600"><span class="w-2 h-2 rounded-full bg-pink-600"></span> Feminine (f)</span>
                             <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-teal-400 text-teal-600"><span class="w-2 h-2 rounded-full bg-teal-600"></span> Neuter (n)</span>
@@ -793,7 +850,7 @@
                             </div>
                         </div>
                         <div>
-                            <span class="block font-bold uppercase tracking-wider text-slate-400 text-[10px]">Grammatical Role & Explanation</span>
+                            <span class="block font-bold uppercase tracking-wider text-slate-400 text-[10px]">Explanation</span>
                             <span id="detail-explanation" class="text-sm text-slate-600"></span>
                         </div>
                     </div>
@@ -1916,13 +1973,6 @@
                 document.getElementById("german-corrected-text").value = germanSentence;
                 document.getElementById("german-english-translation").value = sourceText;
 
-                // Close any visible AI Coach note (since input was English and corrected German is identical)
-                const aiCoachBox = document.getElementById("ai-coach-box");
-                if (aiCoachBox) {
-                    aiCoachBox.classList.add("hidden");
-                    document.getElementById("ai-coach-note").innerText = "";
-                }
-
                 currentGermanSentence = germanSentence;
                 if (networkBanner) networkBanner.classList.add("hidden"); // Hide banner if successful
 
@@ -1970,14 +2020,9 @@
             englishMeaningEl.value = "Translating input to English...";
             correctedGermanEl.value = "Generating grammatical correction...";
 
-            const aiCoachBox = document.getElementById("ai-coach-box");
-            const aiCoachNote = document.getElementById("ai-coach-note");
-
             try {
                 // Never invoke AI automatically for German correction.
                 // Use the normal translation service for the meaning check and round-trip correction.
-                if (aiCoachBox) aiCoachBox.classList.add("hidden");
-                if (aiCoachNote) aiCoachNote.innerText = "";
 
                 const englishTranslation = await googleTranslateApiCall(germanInput, "de", "en");
                 englishMeaningEl.value = englishTranslation;
@@ -2010,6 +2055,15 @@
                 }
                 tilesContainer.innerHTML = `<span class="text-rose-600 text-sm font-semibold italic"><svg class="w-4 h-4 mr-1 shrink-0 inline text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"></path></svg> Grammar check failed: ${escapeHtml(error && error.message ? error.message : String(error))}</span>`;
             }
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
 
         // Utility to completely strip control characters, carriage returns, and leaked entities
@@ -2435,66 +2489,74 @@
             detailCard.classList.remove("hidden");
             detailCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-            // Show the normal grammar explanation immediately.
-            // Gemini is only called if the learner explicitly taps the Ask AI button.
-            renderStaticExplanation(keyWord, entry, dExplanation);
+            // Keep the default card details concise.
+            // No offline explanation paragraph is shown; AI remains strictly opt-in.
+            dExplanation.innerHTML = "";
 
+            // Phrase details are offline by default.
+            // AI is NEVER called by selecting a card.
             const apiKey = getActiveAIKey();
             if (apiKey) {
-                const aiButton = document.createElement("button");
-                aiButton.type = "button";
-                aiButton.className = "phrase-ai-explain-btn mt-3 w-full sm:w-auto px-3 py-2.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-200 text-xs font-bold transition";
-                aiButton.innerHTML = '<span class="inline-flex items-center gap-1.5">✨ Ask AI about this phrase</span>';
+                const aiHint = document.createElement("div");
+                aiHint.className = "text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1";
+                aiHint.textContent = "Optional explanation";
+                dExplanation.appendChild(aiHint);
+                window.setTimeout(() => {
+                    // Do not add the button if the user already selected another phrase.
+                    if (currentSelectedPhrase !== phraseText) return;
 
-                aiButton.addEventListener("click", async () => {
-                    aiButton.disabled = true;
-                    aiButton.innerText = "Asking Tutor…";
+                    const aiButton = document.createElement("button");
+                    aiButton.type = "button";
+                    aiButton.className = "phrase-ai-explain-btn mt-3 w-full sm:w-auto px-3 py-2.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-xs font-bold transition";
+                    aiButton.textContent = "✨ Ask AI about this phrase";
 
-                    const staticHtml = dExplanation.innerHTML;
-                    const loading = document.createElement("div");
-                    loading.className = "mt-3 flex items-center gap-2 text-amber-700 text-xs font-semibold";
-                    loading.innerHTML = `
-                        <svg class="animate-spin w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                        </svg>
-                        <span>AI Tutor analyzing this phrase…</span>`;
-                    dExplanation.appendChild(loading);
+                    aiButton.addEventListener("click", async (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        aiButton.disabled = true;
+                        aiButton.textContent = "Asking Tutor…";
 
-                    try {
-                        const prompt = `You are an expert German language tutor. The student selected the phrase "${phraseText}" in the sentence: "${currentGermanSentence}".
-Describe its grammatical role, case, gender where relevant, and endings in this specific sentence context in 2-3 concise, friendly, highly educational sentences. Be encouraging and clear.`;
+                        const loading = document.createElement("div");
+                        loading.className = "mt-3 text-amber-700 text-xs font-semibold";
+                        loading.textContent = "AI Tutor analyzing this phrase…";
+                        dExplanation.appendChild(loading);
 
-                        const aiExplanation = await callAI(prompt);
+                        try {
+                            const prompt = `You are an expert German language tutor. The student selected the phrase "${phraseText}" in the sentence: "${currentGermanSentence}".
+Describe its grammatical role, case, gender where relevant, and endings in this specific sentence context in 2-3 concise educational sentences.`;
 
-                        if (currentSelectedPhrase === phraseText) {
-                            loading.remove();
+                            const aiExplanation = await callAI(prompt);
 
-                            const aiResult = document.createElement("div");
-                            aiResult.className = "mt-3 space-y-1 animate-fadeIn";
-                            aiResult.innerHTML = `
-                                <span class="block font-bold text-amber-600 text-[10px] uppercase">
-                                    Live AI Grammar Explanation
-                                </span>
-                                <p class="bg-amber-50/50 text-amber-950 border border-amber-100 p-2.5 rounded-lg font-medium leading-relaxed">${escapeHtml(aiExplanation.trim())}</p>`;
-                            dExplanation.appendChild(aiResult);
-                        }
-                    } catch (e) {
-                        console.error("AI phrase explanation failed:", e);
-                        if (currentSelectedPhrase === phraseText) {
+                            if (currentSelectedPhrase === phraseText) {
+                                loading.remove();
+                                const aiResult = document.createElement("div");
+                                aiResult.className = "mt-3 space-y-1 animate-fadeIn";
+                                aiResult.innerHTML = `
+                                    <span class="block font-bold text-amber-600 text-[10px] uppercase">Live AI Grammar Explanation</span>
+                                    <p class="bg-amber-50/50 text-amber-950 border border-amber-100 p-2.5 rounded-lg font-medium leading-relaxed">${escapeHtml(String(aiExplanation ?? "").trim())}</p>`;
+                                dExplanation.appendChild(aiResult);
+                            }
+                        } catch (e) {
                             loading.remove();
                             const errorNote = document.createElement("div");
                             errorNote.className = "mt-3 text-rose-600 text-xs font-semibold";
                             errorNote.textContent = "AI explanation failed: " + (e && e.message ? e.message : String(e));
                             dExplanation.appendChild(errorNote);
+                        } finally {
+                            aiButton.disabled = false;
+                            aiButton.textContent = "✨ Ask AI again";
                         }
-                    } finally {
-                        aiButton.disabled = false;
-                        aiButton.innerHTML = '<span class="inline-flex items-center gap-1.5">✨ Ask AI again</span>';
-                    }
-                });
+                    });
 
-                dExplanation.appendChild(aiButton);
+                    dExplanation.appendChild(aiButton);
+                }, 350);
+            }
+
+            if (!apiKey) {
+                const noAiNote = document.createElement("div");
+                noAiNote.className = "text-xs text-slate-400 italic";
+                noAiNote.textContent = "Add an AI key to enable optional explanations.";
+                dExplanation.appendChild(noAiNote);
             }
 
             // Phrase translation uses the normal translation service, never the AI tutor.
