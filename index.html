@@ -606,6 +606,83 @@
             opacity: 0.58 !important;
             font-weight: 500 !important;
         }
+
+        /* FINAL canonical input/output styling — applies on desktop and iPhone */
+        #source-text,
+        #german-source-text {
+            background:#f1f5f9 !important;
+            border:1.5px solid #cbd5e1 !important;
+            box-shadow:none !important;
+            color:#334155 !important;
+        }
+
+        #source-text:focus,
+        #german-source-text:focus {
+            background:#ffffff !important;
+            border-color:#94a3b8 !important;
+            box-shadow:0 0 0 3px rgba(148,163,184,.16) !important;
+        }
+
+        #source-text::placeholder,
+        #german-source-text::placeholder {
+            color:#94a3b8 !important;
+            opacity:.68 !important;
+            font-weight:500 !important;
+        }
+
+        #target-text,
+        #german-english-translation {
+            background:#fff4c2 !important;
+            border:2px solid #b7791f !important;
+            box-shadow:inset 0 1px 2px rgba(120,72,0,.08), 0 1px 2px rgba(120,72,0,.08) !important;
+            color:#27364a !important;
+            font-size:1.05rem !important;
+            line-height:1.6 !important;
+        }
+
+        #target-text::placeholder,
+        #german-english-translation::placeholder {
+            color:#a16207 !important;
+            opacity:.5 !important;
+            font-weight:500 !important;
+        }
+
+        /* iPhone safeguards: readable text, no accidental Safari zoom, comfortable tap layout */
+        @media (max-width:640px) {
+            #source-text,
+            #german-source-text,
+            #target-text,
+            #german-english-translation {
+                font-size:16px !important;
+                line-height:1.5 !important;
+                min-height:92px;
+            }
+
+            #mobile-input-workspaces {
+                gap:14px !important;
+            }
+
+            #mobile-english-card,
+            #mobile-german-card,
+            #mobile-parser-card {
+                padding:16px !important;
+            }
+
+            #tiles-container {
+                gap:10px !important;
+            }
+
+            #tiles-container button {
+                min-width:82px !important;
+                max-width:100%;
+            }
+
+            #ai-parse-btn,
+            #toggle-legend-btn {
+                min-height:44px;
+                white-space:nowrap;
+            }
+        }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
