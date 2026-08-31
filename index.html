@@ -772,7 +772,7 @@
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
 
     <!-- Header Section -->
-    <!-- HEADER-V3-EXACT-AMBER400-TITLE -->
+    <!-- HEADER-V4-GERMAN-TO-ENGLISH-MEANING-CHECK -->
     <header class="text-white shadow-md" style="background:linear-gradient(180deg,#111111 0%,#111111 72%,#dd0000 72%,#dd0000 86%,#ffcc00 86%,#ffcc00 100%);">
         <div class="max-screen-xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
@@ -2202,15 +2202,26 @@
                 // AI is reserved for explicit Tutor / Ask AI actions.
                 let germanSentence = await googleTranslateApiCall(sourceText, "en", "de");
 
-                // Round-trip the translated German back into English.
-                // This acts as a free meaning/correction check and does not use AI tokens.
-                let correctedEnglish = await googleTranslateApiCall(germanSentence, "de", "en");
-
                 document.getElementById("target-text").value = germanSentence;
 
-                // Mirror output to the German input card on the right.
+                // Mirror the translated German into the German workspace.
                 document.getElementById("german-source-text").value = germanSentence;
-                document.getElementById("german-english-translation").value = correctedEnglish;
+
+                // IMPORTANT: The English Meaning Check is generated from the GERMAN OUTPUT,
+                // never copied from the original English input.
+                // This gives us: English input -> German -> fresh English translation.
+                const germanForMeaningCheck = document.getElementById("target-text").value.trim();
+                const englishMeaningFromGerman = await googleTranslateApiCall(
+                    germanForMeaningCheck,
+                    "de",
+                    "en"
+                );
+
+                document.getElementById("german-english-translation").value = englishMeaningFromGerman;
+                console.debug("[DeutschLerner] Meaning Check generated from German output:", {
+                    german: germanForMeaningCheck,
+                    english: englishMeaningFromGerman
+                });
 
                 currentGermanSentence = germanSentence;
                 if (networkBanner) networkBanner.classList.add("hidden"); // Hide banner if successful
