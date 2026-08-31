@@ -1251,28 +1251,6 @@
             }
 
             return text;
-        },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{
-                            text: prompt
-                        }]
-                    }]
-                })
-            });
-
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                const errMsg = errData?.error?.message || "HTTP status " + response.status;
-                throw new Error("Gemini API Request failed: " + errMsg);
-            }
-
-            const data = await response.json();
-            if (data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
-                return data.candidates[0].content.parts[0].text;
-            } else {
-                throw new Error("Gemini returned invalid or empty response structure");
-            }
         }
 
         // Offline German Case & Gender Morphological Dictionary
