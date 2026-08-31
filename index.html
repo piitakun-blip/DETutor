@@ -1639,6 +1639,17 @@
             "habe": { case: "Verb", gender: "Verb", explanation: "The first-person singular of 'haben' (I have)." },
             "haben": { case: "Verb", gender: "Verb", explanation: "The infinitive verb meaning 'to have'. Usually triggers an Accusative direct object." },
             "werde": { case: "Verb (Auxiliary)", gender: "Verb", explanation: "First-person singular of 'werden'. It can serve as an auxiliary, for example in future constructions." },
+            "wirst": { case: "Verb (Auxiliary)", gender: "Verb", explanation: "Second-person singular of 'werden', often used as an auxiliary." },
+            "wird": { case: "Verb (Auxiliary)", gender: "Verb", explanation: "Third-person singular of 'werden', often used as an auxiliary." },
+            "bin": { case: "Verb (Auxiliary / Copula)", gender: "Verb", explanation: "First-person singular of 'sein'. It can function as a copula or auxiliary." },
+            "bist": { case: "Verb (Auxiliary / Copula)", gender: "Verb", explanation: "Second-person singular of 'sein'. It can function as a copula or auxiliary." },
+            "ist": { case: "Verb (Auxiliary / Copula)", gender: "Verb", explanation: "Third-person singular of 'sein'. It can function as a copula or auxiliary." },
+            "sind": { case: "Verb (Auxiliary / Copula)", gender: "Verb", explanation: "Plural/formal form of 'sein'. It can function as a copula or auxiliary." },
+            "war": { case: "Verb (Auxiliary / Copula)", gender: "Verb", explanation: "Past singular form of 'sein'." },
+            "waren": { case: "Verb (Auxiliary / Copula)", gender: "Verb", explanation: "Past plural/formal form of 'sein'." },
+            "habe": { case: "Verb (Auxiliary)", gender: "Verb", explanation: "First-person singular of 'haben'. It can function as an auxiliary in perfect tenses." },
+            "hast": { case: "Verb (Auxiliary)", gender: "Verb", explanation: "Second-person singular of 'haben'. It can function as an auxiliary in perfect tenses." },
+            "hat": { case: "Verb (Auxiliary)", gender: "Verb", explanation: "Third-person singular of 'haben'. It can function as an auxiliary in perfect tenses." },
             "werden": { case: "Verb (Auxiliary / Infinitive)", gender: "Verb", explanation: "Infinitive of 'werden'; also used as an auxiliary." },
             "schenken": { case: "Verb (Infinitive)", gender: "Verb", explanation: "Means 'to give as a gift'. It commonly takes a Dative recipient and an Accusative thing." },
             "besorgen": { case: "Verb (Infinitive)", gender: "Verb", explanation: "Means 'to get/obtain'. It can take a Dative recipient and an Accusative thing." },
@@ -2043,9 +2054,25 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
             "komme","kommst","kommt","kommen","lerne","lernst","lernt","lernen"
         ]);
 
+        const helpingVerbForms = new Set([
+            "bin","bist","ist","sind","seid","war","waren","gewesen",
+            "habe","hast","hat","haben","hatte","hattest","hatten","gehabt",
+            "werde","wirst","wird","werden","wurde","wurden","worden",
+            "kann","kannst","können","konnte","konnten",
+            "muss","musst","müssen","musste","mussten",
+            "soll","sollst","sollen","sollte","sollten",
+            "will","willst","wollen","wollte","wollten",
+            "darf","darfst","dürfen","durfte","durften",
+            "mag","magst","mögen","möchte","möchtest","möchten"
+        ]);
+
+        function isHelpingVerb(word) {
+            return helpingVerbForms.has(word.toLowerCase());
+        }
+
         function looksLikeVerb(word) {
             const w = word.toLowerCase();
-            if (knownVerbForms.has(w)) return true;
+            if (knownVerbForms.has(w) || isHelpingVerb(w)) return true;
             if (/^[a-zäöüß]{3,}(en|eln|ern)$/i.test(w)) return true; // likely infinitive
             return false;
         }
@@ -2282,13 +2309,15 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
                         caseLabel = dictEntry.case.split(" | ")[0].split(" (")[0];
                     }
                     if (dictEntry.gender === "Verb") {
-                        displaySubtitle = caseLabel;
+                        displaySubtitle = (chunk.words.length === 1 && isHelpingVerb(chunk.words[0])) ? "Helping Verb" : caseLabel;
                     } else {
                         const rawGender = dictEntry.gender.split(" / ")[0].substring(0, 4);
                         displaySubtitle = `${caseLabel} (${rawGender})`;
                     }
                 } else {
-                    if (chunk.words.length === 1 && looksLikeVerb(chunk.words[0])) {
+                    if (chunk.words.length === 1 && isHelpingVerb(chunk.words[0])) {
+                        displaySubtitle = "Helping Verb";
+                    } else if (chunk.words.length === 1 && looksLikeVerb(chunk.words[0])) {
                         displaySubtitle = "Verb";
                     } else if (/^[A-ZÄÖÜ]/.test(chunk.words[0])) {
                         displaySubtitle = "Noun";
