@@ -1108,15 +1108,12 @@
             saveButtons.forEach(btn => {
                 btn.disabled = true;
                 btn.dataset.oldHtml = btn.innerHTML;
-                btn.innerHTML = "Testing…";
+                btn.innerHTML = "Testing...";
                 btn.classList.add("opacity-70");
             });
 
             try {
-                await callGeminiApi(
-                    "Reply with exactly these two words and nothing else: CONNECTION OK"
-                );
-
+                await callGeminiApi("Reply with exactly these two words and nothing else: CONNECTION OK");
                 updateApiStatusHeader();
                 alert("Gemini connection successful. Your API key is working on this device.");
                 toggleSettingsPanel();
@@ -1127,13 +1124,7 @@
                     localStorage.removeItem("deutschlerner_gemini_api_key");
                 }
                 updateApiStatusHeader();
-
-                alert(
-                    "The key was not activated because Gemini could not be reached.
-
-" +
-                    err.message
-                );
+                alert("The key was not activated because Gemini could not be reached.\n\n" + err.message);
             } finally {
                 saveButtons.forEach(btn => {
                     btn.disabled = false;
@@ -1141,11 +1132,6 @@
                     btn.classList.remove("opacity-70");
                 });
             }
-        }
-            localStorage.setItem("deutschlerner_gemini_api_key", inputVal);
-            updateApiStatusHeader();
-            alert("Success! Your Gemini API Key has been saved locally. Interactive AI Tutor mode is now active!");
-            toggleSettingsPanel(); // Hide panel
         }
 
         // Wipe API Key from cache
