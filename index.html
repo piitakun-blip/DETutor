@@ -459,7 +459,7 @@
             /* Output boxes stay visually quieter so inputs are obvious. */
             #target-text,
             #german-english-translation,
-            #german-corrected-text {
+            #target-text {
                 background:#f8fafc !important;
                 border-color:#e2e8f0 !important;
             }
@@ -499,7 +499,7 @@
 
             #target-text,
             #german-english-translation,
-            #german-corrected-text {
+            #target-text {
                 background:#f1f5f9 !important;
                 border:1px solid #cbd5e1 !important;
             }
@@ -532,9 +532,16 @@
             /* Outputs are deliberately cooler/lighter so editable vs output is obvious. */
             #target-text,
             #german-english-translation,
-            #german-corrected-text {
+            #target-text {
                 background:#f1f5f9 !important;
                 border:1px solid #cbd5e1 !important;
+            }
+        }
+
+        @media (max-width:640px) {
+            #ai-parse-btn,
+            #toggle-legend-btn {
+                min-height:44px;
             }
         }
 </style>
@@ -717,7 +724,7 @@
                                 </div>
                             </div>
                             <textarea id="target-text" rows="3"
-                                class="w-full p-4 rounded-b-xl border border-slate-200 bg-slate-50 focus:bg-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 resize-none font-medium text-slate-700 text-xs"
+                                class="w-full p-4 rounded-b-xl border border-slate-200 bg-slate-50 focus:bg-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 resize-none font-medium text-slate-700 text-sm"
                                 placeholder="German translation will appear here..." readonly></textarea>
                         </div>
                     </div>
@@ -749,7 +756,7 @@
                         </div>
 
                         <!-- Split Middle/Bottom Part: English Meaning & Corrected German -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 gap-4">
                             <!-- English Literal Meaning -->
                             <div class="space-y-1">
                                 <div class="bg-slate-100/80 px-4 py-1.5 flex justify-between items-center border border-slate-200 border-b-0 rounded-t-xl text-[11px] font-bold text-slate-600">
@@ -759,22 +766,13 @@
                                     </button>
                                 </div>
                                 <textarea id="german-english-translation" rows="2"
-                                    class="w-full p-3 rounded-b-xl border border-slate-200 bg-slate-50 outline-none resize-none font-medium text-slate-600 text-xs"
+                                    class="w-full p-3 rounded-b-xl border border-slate-200 bg-slate-50 outline-none resize-none font-medium text-slate-700 text-sm"
                                     placeholder="English meaning check..." readonly></textarea>
                             </div>
+                            <p class="text-[11px] text-slate-400">
+                                Corrected German appears in the German Translation box.
+                            </p>
 
-                            <!-- Corrected German -->
-                            <div class="space-y-1">
-                                <div class="bg-slate-100/80 px-4 py-1.5 flex justify-between items-center border border-slate-200 border-b-0 rounded-t-xl text-[11px] font-bold text-slate-600">
-                                    <span class="text-slate-700">Corrected German</span>
-                                    <button onclick="speakText('german-corrected-text', 'de-DE')" class="text-blue-600 hover:text-blue-800 transition p-0.5 rounded-full hover:bg-slate-200 flex items-center justify-center" title="Listen (German)">
-                                        <svg class="w-4 h-4 text-blue-600 hover:text-blue-800" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"></path></svg>
-                                    </button>
-                                </div>
-                                <textarea id="german-corrected-text" rows="2"
-                                    class="w-full p-3 rounded-b-xl border border-slate-200 bg-slate-50 outline-none resize-none font-medium text-slate-700 text-xs"
-                                    placeholder="Corrected German will appear here..." readonly></textarea>
-                            </div>
                         </div>
 
                         <!-- AI Grammar Coach Box (Hidden by default, shown if Gemini API has correction notes) -->
@@ -792,9 +790,14 @@
                         <svg class="w-5 h-5 text-blue-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"></path></svg>
                         Grammar Parser
                     </h3>
+                    <div class="flex flex-wrap items-center gap-2">
+                    <button id="ai-parse-btn" type="button" class="text-xs text-amber-800 hover:text-amber-950 font-semibold flex items-center gap-1 bg-amber-50 hover:bg-amber-100 py-1.5 px-3 rounded-lg border border-amber-200 transition shadow-sm shrink-0" title="Analyze the current German sentence using your selected AI provider">
+                        ✨ Parse with AI
+                    </button>
                     <button id="toggle-legend-btn" onclick="toggleLegend()" class="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1 bg-blue-50 hover:bg-blue-100 py-1.5 px-3 rounded-lg border border-blue-100 transition shadow-sm shrink-0">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"></path></svg> Show Legend
                     </button>
+                    </div>
                 </div>
 
                 <!-- Unified Legend mapping Case and Gender simultaneously (Hidden by Default) -->
@@ -819,6 +822,10 @@
                             <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-violet-400 text-violet-600"><span class="w-2 h-2 rounded-full bg-violet-600"></span> Plural Only (pl)</span>
                         </div>
                     </div>
+                </div>
+
+                <div id="parse-source-status" class="hidden text-[10px] uppercase tracking-wider font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 w-fit">
+                    AI Parse
                 </div>
 
                 <!-- Generated Tiles Container -->
@@ -1852,6 +1859,11 @@
             installFreshEntryBehavior("source-text");
             installFreshEntryBehavior("german-source-text");
 
+            const aiParseBtn = document.getElementById("ai-parse-btn");
+            if (aiParseBtn) {
+                aiParseBtn.addEventListener("click", parseCurrentSentenceWithAI);
+            }
+
             const mobileTranslateBtn = document.getElementById("mobile-translate-btn");
             if (mobileTranslateBtn) {
                 mobileTranslateBtn.addEventListener("click", () => processEnglishTranslation());
@@ -1923,7 +1935,7 @@
             // Clear both input consoles' output fields
             document.getElementById("target-text").value = "";
             document.getElementById("german-english-translation").value = "";
-            document.getElementById("german-corrected-text").value = "";
+            document.getElementById("target-text").value = "";
 
             // Hide AI Coach card
             const coachBox = document.getElementById("ai-coach-box");
@@ -1967,7 +1979,7 @@
 
                 // Mirror output to the German input card on the right
                 document.getElementById("german-source-text").value = germanSentence;
-                document.getElementById("german-corrected-text").value = germanSentence;
+                document.getElementById("target-text").value = germanSentence;
                 document.getElementById("german-english-translation").value = sourceText;
 
                 currentGermanSentence = germanSentence;
@@ -1996,7 +2008,7 @@
         async function processGermanCorrection() {
             const germanInput = document.getElementById("german-source-text").value.trim();
             const englishMeaningEl = document.getElementById("german-english-translation");
-            const correctedGermanEl = document.getElementById("german-corrected-text");
+            const germanTranslationEl = document.getElementById("target-text");
             const tilesContainer = document.getElementById("tiles-container");
             const networkBanner = document.getElementById("network-alert-banner");
 
@@ -2015,7 +2027,7 @@
                 </div>`;
 
             englishMeaningEl.value = "Translating input to English...";
-            correctedGermanEl.value = "Generating grammatical correction...";
+            germanTranslationEl.value = "Generating corrected German...";
 
             try {
                 // Never invoke AI automatically for German correction.
@@ -2025,11 +2037,10 @@
                 englishMeaningEl.value = englishTranslation;
 
                 const correctedGerman = await googleTranslateApiCall(englishTranslation, "en", "de");
-                correctedGermanEl.value = correctedGerman;
+                germanTranslationEl.value = correctedGerman;
 
-                // Mirror output to the English translate card.
+                // Keep the English side synchronized for the shared two-way workspace.
                 document.getElementById("source-text").value = englishTranslation;
-                document.getElementById("target-text").value = correctedGerman;
 
                 currentGermanSentence = correctedGerman;
 
@@ -2275,9 +2286,41 @@
         const gpPoss=/^(mein|dein|sein|ihr|unser|euer|kein)(e|en|em|er|es)?$/i;
         const gpModal=new Set(["kann","kannst","können","muss","musst","müssen","soll","sollst","sollen","will","willst","wollen","darf","darfst","dürfen","mag","magst","mögen","möchte","möchtest","möchten"]);
         const gpAux=new Set(["bin","bist","ist","sind","seid","sein","war","waren","habe","hast","hat","haben","werde","wirst","wird","werden","wurde","wurden"]);
-        const gpVerb=new Set(["geben","gebe","schenken","besorgen","bringen","zeigen","schicken","kaufen","sehen","machen","gehen","kommen","lernen","essen","trinken","aufzubrechen"]);
-        const gpPrep=new Set(["mit","zu","von","nach","bei","aus","seit","für","durch","gegen","ohne","um","an","auf","in","über","unter","vor","hinter","neben","zwischen"]);
-        const gpGender={frau:"Feminine",stunde:"Feminine",marmelade:"Feminine",mann:"Masculine",berliner:"Masculine",urlaub:"Masculine",hund:"Masculine",apfel:"Masculine",buch:"Neuter",kind:"Neuter",gelee:"Neuter",haus:"Neuter",auto:"Neuter",geld:"Neuter"};
+        const gpVerb=new Set([
+            "geben","gebe","gibst","gibt","gebt",
+            "bringen","bringe","bringst","bringt","bringt","brachte","brachten",
+            "schenken","schenke","schenkst","schenkt",
+            "besorgen","besorge","besorgst","besorgt",
+            "zeigen","zeige","zeigst","zeigt",
+            "schicken","schicke","schickst","schickt",
+            "kaufen","kaufe","kaufst","kauft",
+            "sehen","sehe","siehst","sieht","seht",
+            "machen","mache","machst","macht",
+            "gehen","gehe","gehst","geht",
+            "kommen","komme","kommst","kommt",
+            "lernen","lerne","lernst","lernt",
+            "essen","esse","isst","esst",
+            "trinken","trinke","trinkst","trinkt",
+            "fahren","fahre","fährst","fährt","fahrt",
+            "nehmen","nehme","nimmst","nimmt","nehmt",
+            "helfen","helfe","hilfst","hilft","helft",
+            "sagen","sage","sagst","sagt",
+            "fragen","frage","fragst","fragt",
+            "arbeiten","arbeite","arbeitest","arbeitet",
+            "wohnen","wohne","wohnst","wohnt",
+            "aufbrechen","aufzubrechen"
+        ]);
+        const gpPrep=new Set(["mit","zu","von","nach","bei","aus","seit","gegenüber","für","durch","gegen","ohne","um","bis","entlang","an","auf","in","über","unter","vor","hinter","neben","zwischen"]);
+        const gpDativePrep=new Set(["mit","zu","von","nach","bei","aus","seit","gegenüber"]);
+        const gpAccusativePrep=new Set(["für","durch","gegen","ohne","um","bis"]);
+        const gpTwoWayPrep=new Set(["an","auf","in","über","unter","vor","hinter","neben","zwischen"]);
+        const gpGender={
+            frau:"Feminine",mutter:"Feminine",schwester:"Feminine",lehrerin:"Feminine",freundin:"Feminine",
+            stunde:"Feminine",marmelade:"Feminine",stadt:"Feminine",schule:"Feminine",straße:"Feminine",tasche:"Feminine",
+            mann:"Masculine",vater:"Masculine",bruder:"Masculine",lehrer:"Masculine",freund:"Masculine",
+            berliner:"Masculine",urlaub:"Masculine",hund:"Masculine",apfel:"Masculine",tisch:"Masculine",stuhl:"Masculine",tag:"Masculine",
+            buch:"Neuter",kind:"Neuter",gelee:"Neuter",haus:"Neuter",auto:"Neuter",geld:"Neuter",wasser:"Neuter",zimmer:"Neuter",geschenk:"Neuter"
+        };
         function gpIsDet(w){return gpDet.has(w.toLowerCase())||gpPoss.test(w)}
         function gpIsNoun(w){return /^[A-ZÄÖÜ]/.test(w)&&!gpPronouns.has(w.toLowerCase())}
         function gpIsAdj(w){w=w.toLowerCase();return /(?:e|en|er|es|em)$/i.test(w)&&!gpIsDet(w)}
@@ -2324,6 +2367,78 @@
             return "";
         }
 
+        function gpDeterminerCase(det, gender) {
+            const d=(det||"").toLowerCase();
+            const g=gender||"";
+
+            if(["dem","diesem","einem","meinem","deinem","seinem","ihrem","unserem","eurem","keinem"].includes(d))
+                return "Dative";
+
+            if(["einen","meinen","deinen","seinen","ihren","unseren","euren","keinen"].includes(d) && g==="Masculine")
+                return "Accusative";
+
+            if(d==="den" && g==="Masculine") return "Accusative";
+            if(d==="den" && g==="Plural") return "Dative";
+
+            if(d==="der" && g==="Feminine") return "Dative / Genitive";
+            if(d==="der" && g==="Masculine") return "Nominative";
+
+            if(["die","eine","meine","deine","seine","ihre","unsere","eure","keine","diese"].includes(d) && g==="Feminine")
+                return "Nominative / Accusative";
+
+            if(["das","ein","mein","dein","sein","ihr","unser","euer","kein","dieses"].includes(d) && g==="Neuter")
+                return "Nominative / Accusative";
+
+            return "";
+        }
+
+        function gpResolveTwoWayPreposition(prep, words, gender) {
+            // Article morphology can often resolve two-way prepositions without guessing motion/location.
+            const det=(words[1]||"").toLowerCase();
+            const morphology=gpDeterminerCase(det, gender);
+            if(morphology==="Dative") return "Dative";
+            if(morphology==="Accusative") return "Accusative";
+
+            // Common contraction forms.
+            if(["im","am","beim"].includes(det)) return "Dative";
+            if(["ins","ans"].includes(det)) return "Accusative";
+
+            return "Accusative / Dative";
+        }
+
+        function gpResolveSentenceRoles(out, sentence) {
+            const lower=sentence.toLowerCase();
+
+            // Verbs that very commonly use a dative recipient plus an accusative thing.
+            const recipientVerb=/\b(geben|gebe|gibst|gibt|bringen|bringe|bringst|bringt|schenken|schenke|schenkst|schenkt|zeigen|zeige|zeigst|zeigt|schicken|schicke|schickst|schickt|besorgen|besorge|besorgst|besorgt|kaufen|kaufe|kaufst|kauft)\b/i.test(lower);
+
+            if(recipientVerb) {
+                const nounPhrases=out.filter(x=>x.type==="noun_phrase");
+
+                // First preserve unambiguous accusative objects.
+                nounPhrases.forEach(x=>{
+                    const det=(x.words[0]||"").toLowerCase();
+                    const morph=gpDeterminerCase(det,x.gender);
+                    if(morph==="Accusative") x.label="Accusative";
+                    if(morph==="Dative") x.label="Dative";
+                });
+
+                const hasAcc=nounPhrases.some(x=>x.label==="Accusative");
+
+                // If there is an accusative thing, an ambiguous feminine "der + noun"
+                // is normally the dative recipient: der Frau, der Mutter, der Lehrerin...
+                if(hasAcc) {
+                    nounPhrases.forEach(x=>{
+                        const det=(x.words[0]||"").toLowerCase();
+                        if(det==="der" && x.gender==="Feminine" && (x.label.includes("Nominative") || x.label.includes("Dative") || x.label.includes("Genitive")))
+                            x.label="Dative";
+                    });
+                }
+            }
+
+            return out;
+        }
+
         function parseGermanPhrases(sentence){
             const t=sentence.match(/[A-ZÄÖÜa-zäöüß]+|[.,!?;]+/g)||[], out=[]; let i=0;
             const add=(words,type,label="",gender="")=>out.push({words,type,label,gender});
@@ -2352,39 +2467,109 @@
                         }
                     }
                     const d=words[0].toLowerCase(),noun=gpLastNoun(words),g=gpGender[noun]||"";
-                    let label="";
-                    if(d==="diesem")label="Dative";
-                    else if(d==="keinem" && (g==="Masculine" || g==="Neuter")) label="Dative";
-                    else if(d==="dieser"&&g==="Feminine")label="Dative";
-                    else if(/^(einen|meinen|deinen|seinen|ihren|unseren|euren|keinen)$/i.test(d)&&g==="Masculine")label="Accusative";
-                    else if(/^(ein|mein|dein|sein|ihr|unser|euer|kein)$/i.test(d)&&g==="Neuter")label="Nominative / Accusative";
-                    else {const e=germanGrammarDictionary[d];label=e?e.case.split(" | ")[0].split(" (")[0]:"Phrase"}
+                    let label=gpDeterminerCase(d,g);
+                    if(!label){
+                        const e=germanGrammarDictionary[d];
+                        label=e?e.case.split(" | ")[0].split(" (")[0]:"Phrase";
+                    }
                     add(words,"noun_phrase",label,g);continue
                 }
 
                 if(gpPrep.has(l)){
                     const words=[w];i++;
-                    while(i<t.length&&!gpModal.has(t[i].toLowerCase())&&!gpAux.has(t[i].toLowerCase())&&!gpVerb.has(t[i].toLowerCase())&&!/^[.,!?;]+$/.test(t[i])){
-                        words.push(t[i++]);if(gpIsNoun(words[words.length-1]))break
+
+                    // Keep the complete prepositional phrase together:
+                    // preposition + determiner + adjective(s) + noun/proper place.
+                    while(i<t.length &&
+                          !gpModal.has(t[i].toLowerCase()) &&
+                          !gpAux.has(t[i].toLowerCase()) &&
+                          !gpVerb.has(t[i].toLowerCase()) &&
+                          !/^[.,!?;]+$/.test(t[i])) {
+                        words.push(t[i++]);
+
+                        // Stop once we have reached the head noun/place and the next token
+                        // clearly starts another grammatical unit.
+                        if(gpIsNoun(words[words.length-1])) {
+                            if(i>=t.length) break;
+                            const next=t[i].toLowerCase();
+                            if(gpPrep.has(next)||gpIsDet(next)||gpPronouns.has(next)||gpModal.has(next)||gpAux.has(next)||gpVerb.has(next))
+                                break;
+                        }
                     }
-                    add(words,"prepositional",(l==="nach"&&words.length>=2)?"Destination Phrase":(["mit","zu","von","nach","bei","aus","seit"].includes(l)?"Dative":"Phrase"),gpGender[gpLastNoun(words)]||"");continue
+
+                    const noun=gpLastNoun(words);
+                    const gender=gpGender[noun]||"";
+                    let prepLabel="Prepositional Phrase";
+
+                    if(l==="nach" && words.length>=2) prepLabel="Destination Phrase";
+                    else if(gpDativePrep.has(l)) prepLabel="Dative";
+                    else if(gpAccusativePrep.has(l)) prepLabel="Accusative";
+                    else if(gpTwoWayPrep.has(l)) prepLabel=gpResolveTwoWayPreposition(l,words,gender);
+
+                    add(words,"prepositional",prepLabel,gender);continue
                 }
                 add([w],gpIsNoun(w)?"noun":"word",gpIsNoun(w)?"Noun":"Word","");i++
             }
-            if(/\b(geben|schenken|besorgen|bringen|zeigen|schicken|kaufen)\b/i.test(sentence))
+            // Resolve ambiguous cases using the whole sentence after the local phrase parse.
+            gpResolveSentenceRoles(out,sentence);
+
+            // Common neuter object ambiguity under recipient verbs.
+            if(/\b(geben|gebe|gibt|bringen|bringe|bringt|schenken|schenkt|besorgen|besorgt|zeigen|zeigt|schicken|schickt|kaufen|kauft)\b/i.test(sentence))
                 out.forEach(x=>{if(x.type==="noun_phrase"&&x.label==="Nominative / Accusative"&&x.gender==="Neuter")x.label="Accusative"});
+
             return out
         }
 
-        function renderGrammarTiles(sentence){
-            const box=document.getElementById("tiles-container");box.innerHTML="";
-            parseGermanPhrases(sentence).forEach(ch=>{
+        function normalizeAiParseItem(item) {
+            const words = Array.isArray(item?.words) ? item.words.map(String) : String(item?.text || "").trim().split(/\s+/).filter(Boolean);
+            const type = String(item?.type || "word").toLowerCase().replace(/\s+/g, "_");
+            const label = String(item?.label || item?.case || item?.role || "Word");
+            const gender = String(item?.gender || "");
+            return { words, type, label, gender };
+        }
+
+        function renderParsedChunks(chunks, sourceLabel="Local Parse") {
+            const box=document.getElementById("tiles-container");
+            const status=document.getElementById("parse-source-status");
+            box.innerHTML="";
+
+            if(status){
+                if(sourceLabel==="AI Parse"){
+                    status.textContent="AI Parse";
+                    status.classList.remove("hidden");
+                } else {
+                    status.classList.add("hidden");
+                }
+            }
+
+            chunks.forEach(ch=>{
                 const text=ch.words.join(" ");
-                if(ch.type==="punctuation"){const e=document.createElement("span");e.className="text-xl font-bold text-slate-400 p-2";e.innerText=text;box.appendChild(e);return}
-                let cc="case-none",gc="gender-none";const c=ch.label.toLowerCase(),g=ch.gender.toLowerCase();
-                if(c==="nominative")cc="case-nom";else if(c==="accusative")cc="case-acc";else if(c==="dative")cc="case-dat";else if(c.includes("nominative")&&c.includes("accusative"))cc="case-multi";
-                if(g==="masculine")gc="gender-masc";else if(g==="feminine")gc="gender-fem";else if(g==="neuter")gc="gender-neut";
-                const b=document.createElement("button");b.type="button";b.setAttribute("aria-label",`Show grammar details for ${text}`);b.className=`${cc} ${gc} px-4 py-3 rounded-xl font-bold shadow-sm hover:scale-105 active:scale-95 transition duration-150 flex flex-col items-center justify-center min-w-[90px] border border-2`;
+                if(ch.type==="punctuation"){
+                    const e=document.createElement("span");
+                    e.className="text-xl font-bold text-slate-400 p-2";
+                    e.innerText=text;
+                    box.appendChild(e);
+                    return;
+                }
+
+                let cc="case-none",gc="gender-none";
+                const c=(ch.label||"").toLowerCase(),g=(ch.gender||"").toLowerCase();
+
+                if(c==="nominative")cc="case-nom";
+                else if(c==="accusative")cc="case-acc";
+                else if(c==="dative")cc="case-dat";
+                else if(c==="genitive")cc="case-gen";
+                else if(c.includes("nominative")&&c.includes("accusative"))cc="case-multi";
+
+                if(g==="masculine")gc="gender-masc";
+                else if(g==="feminine")gc="gender-fem";
+                else if(g==="neuter")gc="gender-neut";
+                else if(g==="plural")gc="gender-plural";
+
+                const b=document.createElement("button");
+                b.type="button";
+                b.setAttribute("aria-label",`Show grammar details for ${text}`);
+                b.className=`${cc} ${gc} px-4 py-3 rounded-xl font-bold shadow-sm hover:scale-105 active:scale-95 transition duration-150 flex flex-col items-center justify-center min-w-[90px] border border-2`;
 
                 const a=document.createElement("span");
                 a.className="text-sm tracking-wide";
@@ -2396,53 +2581,103 @@
                     a.appendChild(ws);
                 });
 
-                const sub=document.createElement("span");sub.className="text-[9px] opacity-75 font-semibold tracking-wider mt-0.5 uppercase";
-                if(ch.type==="pronoun"&&ch.gender==="Formal You") sub.innerText="Nominative (Formal You)"; else sub.innerText=ch.label+(ch.gender&&!["modal","auxiliary","verb","pronoun"].includes(ch.type)&&["Nominative","Accusative","Dative"].includes(ch.label)?` (${ch.gender.substring(0,4)})`:"");
+                const sub=document.createElement("span");
+                sub.className="text-[9px] opacity-75 font-semibold tracking-wider mt-0.5 uppercase";
+                if(ch.type==="pronoun"&&ch.gender==="Formal You") {
+                    sub.innerText="Nominative (Formal You)";
+                } else {
+                    sub.innerText=(ch.label||"Word")+(ch.gender&&!["modal","auxiliary","verb","pronoun"].includes(ch.type)&&["Nominative","Accusative","Dative","Genitive"].includes(ch.label)?` (${ch.gender.substring(0,4)})`:"");
+                }
                 b.append(a,sub);
 
-                // Restore interactive detail card behavior.
-                const firstWord = ch.words[0] || "";
-                let detailEntry = germanGrammarDictionary[firstWord.toLowerCase()] || null;
+                const firstWord=ch.words[0]||"";
+                let detailEntry={
+                    case: ch.label || "—",
+                    gender: ch.gender || "—"
+                };
 
-                // Build a contextual entry when the parser resolved the phrase more precisely
-                // than the static dictionary can.
-                if (ch.type === "noun_phrase" || ch.type === "prepositional" || ch.type === "question_word") {
-                    detailEntry = {
-                        case: ch.label || "General Structure",
-                        gender: ch.gender || "Context Dependent",
-                        explanation:
-                            ch.type === "question_word"
-                                ? `${text} is a German question word used to introduce this type of question.`
-                                : ch.type === "prepositional"
-                                    ? `${text} is functioning as a prepositional phrase here. The preposition helps determine the grammatical role/case.`
-                                    : `${text} is being treated as one noun phrase. Its article/determiner, noun gender, and sentence role are analyzed together.`
-                    };
-                } else if (["modal","auxiliary","verb"].includes(ch.type)) {
-                    detailEntry = {
-                        case: ch.label,
-                        gender: "Verb",
-                        explanation:
-                            ch.type === "modal"
-                                ? `${text} is a modal verb. Modal verbs modify the meaning of another verb and normally send the main infinitive toward the end of the clause.`
-                                : ch.type === "auxiliary"
-                                    ? `${text} is functioning as an auxiliary/helping verb in this sentence.`
-                                    : `${text} is functioning as a verb in this sentence.`
-                    };
-                } else if (ch.type === "pronoun" && ch.gender === "Formal You") {
-                    detailEntry = {
-                        case: "Nominative",
-                        gender: "Formal You",
-                        explanation: "Capitalized Sie is the formal pronoun 'you'. In this sentence it functions as the subject, so it is Nominative."
-                    };
-                }
-
-                b.addEventListener("click", (event) => {
+                b.addEventListener("click",(event)=>{
                     event.preventDefault();
                     event.stopPropagation();
-                    selectTile(text, firstWord, detailEntry);
+                    selectTile(text,firstWord,detailEntry);
                 });
-                box.appendChild(b)
-            })
+
+                box.appendChild(b);
+            });
+        }
+
+        async function parseCurrentSentenceWithAI() {
+            const btn=document.getElementById("ai-parse-btn");
+            const key=getActiveAIKey();
+
+            if(!key){
+                alert("Add an AI API key in Settings first.");
+                return;
+            }
+
+            const sentence=(currentGermanSentence || document.getElementById("target-text")?.value || "").trim();
+            if(!sentence){
+                alert("Translate or enter a German sentence first.");
+                return;
+            }
+
+            const oldText=btn ? btn.textContent : "";
+            if(btn){
+                btn.disabled=true;
+                btn.textContent="Parsing with AI…";
+            }
+
+            try {
+                const prompt = `You are an expert German grammar parser for an English-speaking learner.
+
+Analyze this German sentence:
+"${sentence}"
+
+Return ONLY valid JSON in exactly this shape:
+{
+  "items": [
+    {
+      "text": "exact phrase from sentence",
+      "type": "pronoun|question_word|modal|auxiliary|verb|noun_phrase|prepositional|adverb|conjunction|word|punctuation",
+      "label": "Nominative|Accusative|Dative|Genitive|Verb|Modal Verb|Auxiliary Verb|Question Word|Prepositional Phrase|Destination Phrase|Adverb|Conjunction|Word",
+      "gender": "Masculine|Feminine|Neuter|Plural|Formal You|"
+    }
+  ]
+}
+
+Rules:
+- Preserve the original sentence order.
+- Group noun phrases together, including determiner + adjective + noun.
+- Group prepositional phrases together.
+- Split finite/helper/modal verbs from their infinitives when they are separate words.
+- Resolve grammatical case from the entire sentence, not from article form alone.
+- For two-way prepositions, use context to choose Accusative vs Dative when possible.
+- Use noun gender when relevant.
+- Do not add explanations or markdown.
+- Every word and punctuation mark from the sentence must appear exactly once across the items.`;
+
+                const result=await callAIJson(prompt);
+                const rawItems=Array.isArray(result?.items) ? result.items : [];
+                if(!rawItems.length) throw new Error("AI returned no parse items.");
+
+                const parsed=rawItems.map(normalizeAiParseItem).filter(x=>x.words.length);
+                if(!parsed.length) throw new Error("AI parse was empty.");
+
+                currentGermanSentence=sentence;
+                renderParsedChunks(parsed,"AI Parse");
+            } catch(e) {
+                console.error("AI parse failed:",e);
+                alert("AI parse failed: " + ((e&&e.message)?e.message:String(e)));
+            } finally {
+                if(btn){
+                    btn.disabled=false;
+                    btn.textContent=oldText || "✨ Parse with AI";
+                }
+            }
+        }
+
+        function renderGrammarTiles(sentence){
+            renderParsedChunks(parseGermanPhrases(sentence),"Local Parse");
         }
 
         // Regression tests for every parser failure reported so far.
@@ -2452,7 +2687,10 @@
               ["Ich werde in einer Stunde bereit sein, aufzubrechen.",["Ich","werde","in einer Stunde","bereit","sein",",","aufzubrechen","."]],
               ["Ich möchte diesem netten Mann meinen mit Marmelade gefüllten Berliner geben.",["Ich","möchte","diesem netten Mann","meinen mit Marmelade gefüllten Berliner","geben","."]],
               ["Wann fahren Sie in den Urlaub nach Prag?",["Wann","fahren","Sie","in den Urlaub","nach Prag","?"]],
-              ["Ich gebe keinem netten Mann einen Apfel.",["Ich","gebe","keinem netten Mann","einen Apfel","."]]
+              ["Ich gebe keinem netten Mann einen Apfel.",["Ich","gebe","keinem netten Mann","einen Apfel","."]],
+              ["Ich bringe der Frau einen Apfel.",["Ich","bringe","der Frau","einen Apfel","."]],
+              ["Ich fahre mit dem Mann nach Prag.",["Ich","fahre","mit dem Mann","nach Prag","."]],
+              ["Ich gehe in den Park.",["Ich","gehe","in den Park","."]]
             ];
             tests.forEach(([q,exp])=>{const got=parseGermanPhrases(q).map(x=>x.words.join(" "));if(JSON.stringify(got)!==JSON.stringify(exp))console.error("GRAMMAR PARSER TEST FAILED",q,{got,exp})})
         })();
@@ -2758,7 +2996,7 @@ Before returning, verify that the explanation itself is English.`;
                 germanWord = targetText;
             } else {
                 const germanInput = document.getElementById("german-source-text").value.trim();
-                const correctedGerman = document.getElementById("german-corrected-text").value.trim();
+                const correctedGerman = document.getElementById("target-text").value.trim();
                 const englishTranslation = document.getElementById("german-english-translation").value.trim();
 
                 if (!germanInput || !correctedGerman) return;
@@ -3201,7 +3439,7 @@ Before returning, verify that the explanation itself is English.`;
                 const enInput = document.getElementById("source-text")?.value.trim();
                 const deTranslation = document.getElementById("target-text")?.value.trim();
                 const deInput = document.getElementById("german-source-text")?.value.trim();
-                const deCorrected = document.getElementById("german-corrected-text")?.value.trim();
+                const deCorrected = document.getElementById("target-text")?.value.trim();
 
                 if (enInput) {
                     sentenceContext += `The student is currently working on the English phrase: "${enInput}", which translates to German as: "${deTranslation}". `;
