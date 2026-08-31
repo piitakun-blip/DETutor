@@ -470,6 +470,16 @@
         </div>
     </div>
 
+    <div id="gemini-diagnostic-panel" class="bg-slate-950 border-b border-slate-700 px-4 py-3 text-xs text-slate-200">
+        <div class="max-w-7xl mx-auto">
+            <div class="font-bold text-amber-300 mb-1">Gemini connection diagnostic</div>
+            <div id="gemini-diagnostic-status" class="text-slate-300 mb-2">
+                Paste your key and tap Save Key. The exact result will appear here.
+            </div>
+            <pre id="gemini-diagnostic-details" style="white-space:pre-wrap;word-break:break-word;margin:0;color:#cbd5e1;font-size:11px;line-height:1.45;max-height:260px;overflow:auto;-webkit-overflow-scrolling:touch;user-select:text;-webkit-user-select:text;"></pre>
+        </div>
+    </div>
+
     <!-- Network Alert Banner (Hidden by default, shown on failure) -->
     <div id="network-alert-banner" class="hidden bg-rose-50 border-b border-rose-200 px-6 py-4 text-rose-900 animate-fadeIn">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs font-semibold">
@@ -1136,27 +1146,55 @@
             }
         }
 
-        // Save and verify Gemini API Key
+        // Save and verify Gemini API Key, showing exact diagnostics
         async function saveApiKey() {
             const input = document.getElementById("gemini-api-key-input");
             const inputVal = input ? input.value.trim() : "";
 
             if (!inputVal) {
-                alert("Please paste a Gemini API key first.");
+                showGeminiDiagnostic("No API key entered.", {
+                    stage: "input",
+                    message: "Paste a Gemini API key first."
+                }, false);
                 return;
             }
 
             const previousKey = getGeminiKey();
             setGeminiKey(inputVal);
 
+            showGeminiDiagnostic("Testing Gemini connection…", {
+                model: "gemini-2.5-flash",
+                origin: window.location.origin,
+                online: navigator.onLine
+            }, true);
+
             try {
-                await callGeminiApi("Reply with exactly: CONNECTION OK");
+                const reply = await callGeminiApi(
+                    "Reply with exactly these two words and nothing else: CONNECTION OK"
+                );
+
                 updateApiStatusHeader();
+                showGeminiDiagnostic("SUCCESS — Gemini answered.", {
+                    model: "gemini-2.5-flash",
+                    reply: reply,
+                    origin: window.location.origin
+                }, true);
+
                 alert("Gemini connection successful.");
             } catch (err) {
                 setGeminiKey(previousKey);
                 updateApiStatusHeader();
-                alert("Gemini connection failed: " + err.message);
+
+                const details = Object.assign({
+                    errorName: err && err.name ? err.name : "Error",
+                    errorMessage: err && err.message ? err.message : String(err),
+                    origin: window.location.origin,
+                    online: navigator.onLine
+                }, err && err.diagnostic ? err.diagnostic : {});
+
+                showGeminiDiagnostic("FAILED — exact diagnostic below", details, false);
+
+                alert("Gemini test failed. Scroll to the diagnostic box and send me a screenshot of what it says.");
             }
         }
 
@@ -1211,15 +1249,25 @@
             }
         }
 
-        // Google Gemini API browser REST call
+        // Google Gemini API browser REST call with detailed diagnostics
         async function callGeminiApi(prompt) {
             const apiKey = getGeminiKey();
-            if (!apiKey) throw new Error("No Gemini API key is saved.");
+            if (!apiKey) {
+                const err = new Error("No Gemini API key is saved.");
+                err.diagnostic = { stage: "before request" };
+                throw err;
+            }
 
-            const response = await fetch(
-                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
-                {
+            const model = "gemini-2.5-flash";
+            const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/" +
+                model + ":generateContent";
+
+            let response;
+            try {
+                response = await fetch(endpoint, {
                     method: "POST",
+                    mode: "cors",
+                    cache: "no-store",
                     headers: {
                         "Content-Type": "application/json",
                         "x-goog-api-key": apiKey
@@ -1230,23 +1278,86 @@
                             parts: [{ text: prompt }]
                         }]
                     })
-                }
-            );
-
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                const errMsg = errData?.error?.message || ("HTTP " + response.status);
-                throw new Error(errMsg);
+                });
+            } catch (networkError) {
+                const err = new Error(
+                    "Browser/network request failed before Google returned an HTTP response: " +
+                    (networkError && networkError.message ? networkError.message : String(networkError))
+                );
+                err.diagnostic = {
+                    stage: "fetch/network",
+                    name: networkError && networkError.name ? networkError.name : "Unknown",
+                    message: networkError && networkError.message ? networkError.message : String(networkError),
+                    endpoint: endpoint,
+                    origin: window.location.origin,
+                    online: navigator.onLine,
+                    userAgent: navigator.userAgent
+                };
+                throw err;
             }
 
-            const data = await response.json();
-            const text = data?.candidates?.[0]?.content?.parts
-                ?.map(part => part.text || "")
-                .join("")
-                .trim();
+            const rawText = await response.text();
+            let data = null;
+            try {
+                data = rawText ? JSON.parse(rawText) : null;
+            } catch (e) {}
 
-            if (!text) throw new Error("Gemini returned an empty response.");
+            if (!response.ok) {
+                const googleMessage =
+                    (data && data.error && data.error.message) ||
+                    rawText ||
+                    ("HTTP " + response.status + " " + response.statusText);
+
+                const err = new Error(googleMessage);
+                err.diagnostic = {
+                    stage: "Google HTTP response",
+                    httpStatus: response.status,
+                    httpStatusText: response.statusText,
+                    googleStatus: data && data.error ? (data.error.status || "") : "",
+                    googleCode: data && data.error ? (data.error.code || "") : "",
+                    googleMessage: data && data.error ? (data.error.message || "") : rawText,
+                    endpoint: endpoint,
+                    origin: window.location.origin
+                };
+                throw err;
+            }
+
+            const text = data && data.candidates && data.candidates[0] &&
+                data.candidates[0].content && data.candidates[0].content.parts
+                ? data.candidates[0].content.parts.map(part => part.text || "").join("").trim()
+                : "";
+
+            if (!text) {
+                const err = new Error("Google returned HTTP 200, but no text response was found.");
+                err.diagnostic = {
+                    stage: "response parsing",
+                    httpStatus: response.status,
+                    responsePreview: rawText.slice(0, 1200)
+                };
+                throw err;
+            }
+
             return text;
+        }
+
+        function showGeminiDiagnostic(title, details, success) {
+            const status = document.getElementById("gemini-diagnostic-status");
+            const box = document.getElementById("gemini-diagnostic-details");
+
+            if (status) {
+                status.textContent = title;
+                status.style.color = success ? "#86efac" : "#fca5a5";
+            }
+
+            if (box) {
+                try {
+                    box.textContent = typeof details === "string"
+                        ? details
+                        : JSON.stringify(details, null, 2);
+                } catch (e) {
+                    box.textContent = String(details);
+                }
+            }
         }
 
         // Offline German Case & Gender Morphological Dictionary
