@@ -416,38 +416,60 @@
 
     <!-- Settings Panel (Hidden by default, saved in localStorage) -->
     <div id="settings-panel" class="hidden bg-slate-800 border-b border-slate-700 text-slate-100 animate-fadeIn">
-        <div class="max-w-7xl mx-auto px-6 py-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div class="space-y-1.5 max-w-xl">
-                <span class="flex items-center gap-2 text-amber-400 font-bold text-sm">
-                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 21m0 0l-.813-5.096M9 21h3m-3.07-12.772a9.75 9.75 0 1115.717 8.358m-15.717-8.358L9 3m0 0l-.813 5.096M9 3h3"></path>
-                    </svg>
-                    Interactive AI Tutor Mode (Optional)
-                </span>
-                <p class="text-xs text-slate-300 leading-relaxed">
-                    By entering a **Google Gemini API Key**, you activate a private, secure personal tutor. The AI will proofread your sentences, explain the exact grammar and noun endings dynamically, and offer customized lessons directly in your browser. Your key is stored in this browser and sent directly to Google's Gemini API when AI features are used.
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 space-y-5">
+            <div>
+                <div class="text-amber-400 font-bold text-sm">Services & API Keys</div>
+                <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                    Translation and AI are separate. Google Cloud Translation handles routine English ↔ German translation.
+                    The selected AI provider is used only for grammar correction, optional phrase explanations, and Tutor chat.
+                    Keys are stored only in this browser, but a static GitHub Pages app cannot protect browser-side API keys like a private backend can.
                 </p>
             </div>
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto shrink-0">
-                <div class="relative w-full sm:w-64">
-                    <input type="password" id="gemini-api-key-input" class="w-full pl-3 pr-10 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition" placeholder="Paste your Gemini API Key here...">
-                    <button onclick="toggleKeyMask()" class="absolute right-3 top-2.5 text-slate-400 hover:text-white transition" title="Show/Hide Key">
-                        <svg id="mask-eye-icon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.43 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="saveApiKey()" class="flex-1 sm:flex-initial px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg transition shadow-sm flex items-center justify-center gap-1.5">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
-                        </svg> Save Key
-                    </button>
-                    <button onclick="clearApiKey()" class="px-3 py-2.5 bg-slate-700 hover:bg-rose-600 hover:text-white text-slate-300 transition rounded-lg text-xs font-bold" title="Wipe Key From Cache">
-                        Wipe Key
-                    </button>
-                </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <section class="bg-slate-900/60 border border-slate-700 rounded-xl p-4 space-y-3">
+                    <div>
+                        <div class="font-bold text-sm text-emerald-300">Google Cloud Translation</div>
+                        <div class="text-[11px] text-slate-400 mt-1">Optional. Uses Cloud Translation Basic v2. Without a key, the app keeps its existing free/public translation fallbacks.</div>
+                    </div>
+                    <input type="password" id="google-translate-api-key-input"
+                        class="w-full px-3 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-base sm:text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400"
+                        placeholder="Google Cloud Translation API key">
+                    <div class="flex gap-2">
+                        <button type="button" onclick="saveTranslationKey()" class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-lg">Save & Test Translation</button>
+                        <button type="button" onclick="clearTranslationKey()" class="px-3 py-2.5 bg-slate-700 hover:bg-rose-600 text-white font-bold text-xs rounded-lg">Wipe</button>
+                    </div>
+                    <div id="translation-key-status" class="text-[11px] text-slate-400">Public fallback mode</div>
+                </section>
+
+                <section class="bg-slate-900/60 border border-slate-700 rounded-xl p-4 space-y-3">
+                    <div>
+                        <div class="font-bold text-sm text-amber-300">AI Tutor Provider</div>
+                        <div class="text-[11px] text-slate-400 mt-1">Choose one provider. You can switch later if a provider runs out of quota.</div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <select id="ai-provider-select" onchange="syncProviderSettingsUI()"
+                            class="w-full px-3 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-base sm:text-xs text-white focus:outline-none focus:border-amber-400">
+                            <option value="gemini">Google Gemini</option>
+                            <option value="openai">OpenAI</option>
+                            <option value="anthropic">Anthropic Claude</option>
+                        </select>
+                        <input id="ai-model-input" type="text"
+                            class="w-full px-3 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-base sm:text-xs font-mono text-white focus:outline-none focus:border-amber-400"
+                            aria-label="AI model">
+                    </div>
+
+                    <input type="password" id="ai-api-key-input"
+                        class="w-full px-3 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-base sm:text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+                        placeholder="API key for selected AI provider">
+
+                    <div class="flex gap-2">
+                        <button type="button" onclick="saveAISettings()" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg">Save & Test AI</button>
+                        <button type="button" onclick="clearActiveAIKey()" class="px-3 py-2.5 bg-slate-700 hover:bg-rose-600 text-white font-bold text-xs rounded-lg">Wipe</button>
+                    </div>
+                    <div id="ai-provider-status" class="text-[11px] text-slate-400">No AI provider configured</div>
+                </section>
             </div>
         </div>
     </div>
@@ -508,7 +530,7 @@
                         <!-- Column Header -->
                         <div class="flex items-center gap-2 text-blue-600 border-b border-slate-100 pb-2">
                             <svg class="w-5 h-5 text-blue-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138A14.25 14.25 0 0010.5 17.5m-3-12.25a14.25 14.25 0 01-1.5 6.75"></path></svg>
-                            <span class="font-bold text-sm tracking-tight">English to German (Translate & Parse)</span>
+                            <span class="font-bold text-sm tracking-tight">English to German</span>
                         </div>
 
                         <!-- Top Part: English Input -->
@@ -556,7 +578,7 @@
                         <!-- Column Header -->
                         <div class="flex items-center gap-2 text-indigo-600 border-b border-slate-100 pb-2">
                             <svg class="w-5 h-5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            <span class="font-bold text-sm tracking-tight">German Input (Auto-Correct & Parse)</span>
+                            <span class="font-bold text-sm tracking-tight">German Input</span>
                         </div>
 
                         <!-- Top Part: German Input -->
@@ -622,7 +644,7 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                         <svg class="w-5 h-5 text-blue-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"></path></svg>
-                        Grammar Parser: German Case & Gender Grouped Tiles
+                        Grammar Parser
                     </h3>
                     <button id="toggle-legend-btn" onclick="toggleLegend()" class="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1 bg-blue-50 hover:bg-blue-100 py-1.5 px-3 rounded-lg border border-blue-100 transition shadow-sm shrink-0">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"></path></svg> Show Legend
@@ -843,7 +865,7 @@
             <button onclick="toggleSocraticChat()" class="w-full py-3.5 px-5 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl shadow-sm flex items-center justify-between font-bold text-slate-700 text-sm transition duration-150 group">
                 <span class="flex items-center gap-2">
                     <svg class="w-5 h-5 text-amber-500 transition group-hover:scale-110 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.418-4.03 8-9 8a9.863 9.75 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                    AI Socratic Grammar Chat
+                    Chat with Tutor
                 </span>
                 <div class="flex items-center gap-3">
                     <span id="chat-status-pill" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">Free Mode (Locked)</span>
@@ -1037,260 +1059,415 @@
     <!-- Interactive Javascript Logic -->
     <script>
         // Global State variables
-        let appMode = "en-de"; // Can be 'en-de' (Translate & Parse) or 'de-en' (Parse & Translate)
+        let appMode = "en-de"; // Can be 'en-de' or 'de-en' (Parse & Translate)
         let highlightMode = "case"; // Not used actively, but maintained for structural consistency
         let currentGermanSentence = ""; // Keeps track of current generated sentence
         let vocabularyList = []; // Array of saved items
         let chatHistory = []; // Chat history with AI tutor
 
-        let sessionGeminiKey = "";
+        const AI_DEFAULT_MODELS = {
+            gemini: "gemini-3.6-flash",
+            openai: "gpt-5.6-luna",
+            anthropic: "claude-haiku-4-5-20251001"
+        };
 
-        function getGeminiKey() {
+        const sessionSecrets = {
+            translation: "",
+            gemini: "",
+            openai: "",
+            anthropic: ""
+        };
+
+        function safeStorageGet(name) {
+            try { return localStorage.getItem(name) || ""; }
+            catch (e) { return ""; }
+        }
+
+        function safeStorageSet(name, value) {
             try {
-                return getGeminiKey() || sessionGeminiKey || "";
+                if (value) localStorage.setItem(name, value);
+                else localStorage.removeItem(name);
+                return true;
             } catch (e) {
-                return sessionGeminiKey || "";
+                console.warn("Browser storage unavailable; setting will last only for this page session.", e);
+                return false;
             }
         }
 
-        function setGeminiKey(value) {
-            sessionGeminiKey = value || "";
-            try {
-                if (value) {
-                    localStorage.setItem("deutschlerner_gemini_api_key", value);
-                } else {
-                    setGeminiKey("");
-                }
-            } catch (e) {
-                console.warn("Browser storage unavailable; Gemini key will work for this page session only.");
+        function getSelectedAIProvider() {
+            return safeStorageGet("deutschlerner_ai_provider") || "gemini";
+        }
+
+        function setSelectedAIProvider(provider) {
+            safeStorageSet("deutschlerner_ai_provider", provider);
+        }
+
+        function providerKeyStorageName(provider) {
+            return "deutschlerner_" + provider + "_api_key";
+        }
+
+        function getProviderKey(provider) {
+            const modern = safeStorageGet(providerKeyStorageName(provider));
+            if (modern) return modern;
+
+            // One-time compatibility with the previous Gemini-only build.
+            if (provider === "gemini") {
+                const legacy = safeStorageGet("deutschlerner_gemini_api_key");
+                if (legacy) return legacy;
             }
+            return sessionSecrets[provider] || "";
+        }
+
+        function setProviderKey(provider, value) {
+            sessionSecrets[provider] = value || "";
+            safeStorageSet(providerKeyStorageName(provider), value || "");
+            if (provider === "gemini" && value) {
+                // Keep old installations working without duplicating future writes.
+                safeStorageSet("deutschlerner_gemini_api_key", "");
+            }
+        }
+
+        function getProviderModel(provider) {
+            return safeStorageGet("deutschlerner_" + provider + "_model") || AI_DEFAULT_MODELS[provider];
+        }
+
+        function setProviderModel(provider, model) {
+            safeStorageSet("deutschlerner_" + provider + "_model", model || AI_DEFAULT_MODELS[provider]);
+        }
+
+        function getActiveAIKey() {
+            return getProviderKey(getSelectedAIProvider());
+        }
+
+        function getTranslationKey() {
+            return safeStorageGet("deutschlerner_google_translate_api_key") || sessionSecrets.translation || "";
+        }
+
+        function setTranslationKey(value) {
+            sessionSecrets.translation = value || "";
+            safeStorageSet("deutschlerner_google_translate_api_key", value || "");
         }
 
         // Quiz Arena variables
-        let quizType = "flashcard"; // 'flashcard' or 'case'
+        let quizType = "flashcard";
         let currentQuizItem = null;
         let caseTargetWord = "";
         let quizScore = 0;
         let quizTotal = 0;
 
-        // Toggle Settings Panel visibility
         function toggleSettingsPanel() {
             const panel = document.getElementById("settings-panel");
-            if (panel.classList.contains("hidden")) {
-                panel.classList.remove("hidden");
-                // Pre-fill input with key if saved
-                const key = getGeminiKey();
-                if (key) {
-                    document.getElementById("gemini-api-key-input").value = key;
-                }
-            } else {
-                panel.classList.add("hidden");
+            if (!panel) return;
+            panel.classList.toggle("hidden");
+            if (!panel.classList.contains("hidden")) populateServiceSettings();
+        }
+
+        function populateServiceSettings() {
+            const provider = getSelectedAIProvider();
+            const providerSelect = document.getElementById("ai-provider-select");
+            if (providerSelect) providerSelect.value = provider;
+
+            const translationInput = document.getElementById("google-translate-api-key-input");
+            if (translationInput) translationInput.value = getTranslationKey();
+
+            syncProviderSettingsUI();
+            updateApiStatusHeader();
+        }
+
+        function syncProviderSettingsUI() {
+            const select = document.getElementById("ai-provider-select");
+            const provider = select ? select.value : getSelectedAIProvider();
+            const modelInput = document.getElementById("ai-model-input");
+            const keyInput = document.getElementById("ai-api-key-input");
+
+            if (modelInput) modelInput.value = getProviderModel(provider);
+            if (keyInput) {
+                keyInput.value = getProviderKey(provider);
+                const labels = {
+                    gemini: "Gemini API key",
+                    openai: "OpenAI API key",
+                    anthropic: "Anthropic API key"
+                };
+                keyInput.placeholder = labels[provider] || "API key";
             }
         }
 
-        // Toggle Password/Mask visibility for Key Input
-        function toggleKeyMask() {
-            const input = document.getElementById("gemini-api-key-input");
-            const eyeIcon = document.getElementById("mask-eye-icon");
-            if (input.type === "password") {
-                input.type = "text";
-                eyeIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"></path>`;
-            } else {
-                input.type = "password";
-                eyeIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.43 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>`;
-            }
-        }
-
-        // Save and verify Gemini API Key
-        async function saveApiKey() {
-            const input = document.getElementById("gemini-api-key-input");
-            const inputVal = input ? input.value.trim() : "";
-
-            if (!inputVal) {
-                alert("Please paste a Gemini API key first.");
+        async function saveTranslationKey() {
+            const input = document.getElementById("google-translate-api-key-input");
+            const value = input ? input.value.trim() : "";
+            if (!value) {
+                alert("Paste a Google Cloud Translation API key first.");
                 return;
             }
 
-            const previousKey = getGeminiKey();
-            setGeminiKey(inputVal);
+            const previous = getTranslationKey();
+            setTranslationKey(value);
+            try {
+                const test = await googleCloudTranslate("Hello", "en", "de");
+                updateApiStatusHeader();
+                alert('Google Cloud Translation connected successfully: "' + test + '"');
+            } catch (e) {
+                setTranslationKey(previous);
+                updateApiStatusHeader();
+                alert("Google Cloud Translation test failed: " + (e && e.message ? e.message : String(e)));
+            }
+        }
 
-            const saveButtons = Array.from(document.querySelectorAll('button[onclick="saveApiKey()"]'));
-            saveButtons.forEach(btn => {
-                btn.disabled = true;
-                btn.dataset.oldHtml = btn.innerHTML;
-                btn.innerHTML = "Testing...";
-            });
+        function clearTranslationKey() {
+            setTranslationKey("");
+            const input = document.getElementById("google-translate-api-key-input");
+            if (input) input.value = "";
+            updateApiStatusHeader();
+        }
+
+        async function saveAISettings() {
+            const providerSelect = document.getElementById("ai-provider-select");
+            const keyInput = document.getElementById("ai-api-key-input");
+            const modelInput = document.getElementById("ai-model-input");
+
+            const provider = providerSelect ? providerSelect.value : "gemini";
+            const key = keyInput ? keyInput.value.trim() : "";
+            const model = modelInput ? modelInput.value.trim() : AI_DEFAULT_MODELS[provider];
+
+            if (!key) {
+                alert("Paste an API key for " + providerDisplayName(provider) + " first.");
+                return;
+            }
+
+            const oldProvider = getSelectedAIProvider();
+            const oldKey = getProviderKey(provider);
+            const oldModel = getProviderModel(provider);
+
+            setSelectedAIProvider(provider);
+            setProviderKey(provider, key);
+            setProviderModel(provider, model);
 
             try {
-                await callGeminiApi("Reply with exactly these two words and nothing else: CONNECTION OK");
+                await callAI("Reply with exactly these two words and nothing else: CONNECTION OK");
                 updateApiStatusHeader();
-
-                const panel = document.getElementById("settings-panel");
-                if (panel) panel.classList.add("hidden");
-
-                alert("Gemini connection successful.");
-            } catch (err) {
-                setGeminiKey(previousKey);
+                alert(providerDisplayName(provider) + " connected successfully.");
+            } catch (e) {
+                setProviderKey(provider, oldKey);
+                setProviderModel(provider, oldModel);
+                setSelectedAIProvider(oldProvider);
                 updateApiStatusHeader();
-                alert("Gemini connection failed: " + (err && err.message ? err.message : String(err)));
-            } finally {
-                saveButtons.forEach(btn => {
-                    btn.disabled = false;
-                    btn.innerHTML = btn.dataset.oldHtml || "Save Key";
-                });
+                alert(providerDisplayName(provider) + " connection failed: " + (e && e.message ? e.message : String(e)));
             }
         }
 
-        // Wipe API Key from cache
-        function clearApiKey() {
-            if (confirm("Are you sure you want to remove your Gemini API Key from this browser? This will revert the app to Free Mode.")) {
-                setGeminiKey("");
-                document.getElementById("gemini-api-key-input").value = "";
-                updateApiStatusHeader();
-                alert("Wiped successfully. Reverted to standard translation/parsing mode.");
-            }
+        function clearActiveAIKey() {
+            const select = document.getElementById("ai-provider-select");
+            const provider = select ? select.value : getSelectedAIProvider();
+            setProviderKey(provider, "");
+            const keyInput = document.getElementById("ai-api-key-input");
+            if (keyInput) keyInput.value = "";
+            updateApiStatusHeader();
         }
 
-        // Update Header status displays dynamically
+        function providerDisplayName(provider) {
+            if (provider === "openai") return "OpenAI";
+            if (provider === "anthropic") return "Anthropic Claude";
+            return "Google Gemini";
+        }
+
         function updateApiStatusHeader() {
-            const key = getGeminiKey();
+            const provider = getSelectedAIProvider();
+            const aiKey = getActiveAIKey();
+            const translationKey = getTranslationKey();
+
             const dot = document.getElementById("api-status-dot");
             const text = document.getElementById("api-status-text");
             const chatOverlay = document.getElementById("chat-locked-overlay");
             const chatPill = document.getElementById("chat-status-pill");
+            const aiStatus = document.getElementById("ai-provider-status");
+            const translationStatus = document.getElementById("translation-key-status");
 
-            if (key) {
-                if (dot) {
-                    dot.className = "inline-block w-2.5 h-2.5 bg-amber-400 rounded-full animate-ping";
-                }
+            if (translationStatus) {
+                translationStatus.textContent = translationKey
+                    ? "Google Cloud Translation configured"
+                    : "Public translation fallback mode";
+            }
+
+            if (aiStatus) {
+                aiStatus.textContent = aiKey
+                    ? providerDisplayName(provider) + " configured • " + getProviderModel(provider)
+                    : "No key saved for " + providerDisplayName(provider);
+            }
+
+            if (aiKey) {
+                if (dot) dot.className = "inline-block w-2.5 h-2.5 bg-amber-400 rounded-full animate-ping";
                 if (text) {
-                    text.innerText = "Active: AI Tutor Enabled";
+                    text.innerText = "AI: " + providerDisplayName(provider);
                     text.className = "text-amber-300 font-semibold";
                 }
-                if (chatOverlay) {
-                    chatOverlay.classList.add("hidden");
-                }
+                if (chatOverlay) chatOverlay.classList.add("hidden");
                 if (chatPill) {
-                    chatPill.innerText = "AI Tutor Active";
+                    chatPill.innerText = providerDisplayName(provider) + " Active";
                     chatPill.className = "text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100";
                 }
             } else {
-                if (dot) {
-                    dot.className = "inline-block w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping";
-                }
+                if (dot) dot.className = "inline-block w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping";
                 if (text) {
-                    text.innerText = "Active: Free Translation (No Key)";
+                    text.innerText = translationKey ? "Google Translation • AI Off" : "Free Translation • AI Off";
                     text.className = "text-white font-semibold";
                 }
-                if (chatOverlay) {
-                    chatOverlay.classList.remove("hidden");
-                }
+                if (chatOverlay) chatOverlay.classList.remove("hidden");
                 if (chatPill) {
-                    chatPill.innerText = "Free Mode (Locked)";
+                    chatPill.innerText = "AI Off";
                     chatPill.className = "text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500";
                 }
             }
         }
 
-        // Google Gemini API browser REST call
-        async function callGeminiApi(prompt) {
-            const apiKey = getGeminiKey();
-            if (!apiKey) throw new Error("No Gemini API key is saved.");
-
-            const response = await fetch(
-                "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "x-goog-api-key": apiKey
-                    },
-                    body: JSON.stringify({
-                        contents: [{
-                            role: "user",
-                            parts: [{ text: prompt }]
-                        }]
-                    })
-                }
-            );
-
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                const errMsg = errData?.error?.message || ("HTTP " + response.status);
-                throw new Error(errMsg);
+        function extractOpenAIText(data) {
+            if (data && typeof data.output_text === "string" && data.output_text.trim()) {
+                return data.output_text.trim();
             }
-
-            const data = await response.json();
-            const text = data?.candidates?.[0]?.content?.parts
-                ?.map(part => part.text || "")
-                .join("")
-                .trim();
-
-            if (!text) throw new Error("Gemini returned an empty response.");
-            return text;
+            const chunks = [];
+            const output = data && Array.isArray(data.output) ? data.output : [];
+            output.forEach(item => {
+                if (!item || !Array.isArray(item.content)) return;
+                item.content.forEach(part => {
+                    if (part && typeof part.text === "string") chunks.push(part.text);
+                });
+            });
+            return chunks.join("").trim();
         }
 
-        // Gemini call for features that require strict JSON output.
-        async function callGeminiJson(prompt) {
-            const apiKey = getGeminiKey();
-            if (!apiKey) throw new Error("No Gemini API key is saved.");
+        async function callAI(prompt) {
+            const provider = getSelectedAIProvider();
+            const apiKey = getProviderKey(provider);
+            const model = getProviderModel(provider);
 
-            const response = await fetch(
-                "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
-                {
+            if (!apiKey) throw new Error("No API key is saved for " + providerDisplayName(provider) + ".");
+
+            let response;
+
+            if (provider === "gemini") {
+                response = await fetch(
+                    "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "x-goog-api-key": apiKey
+                        },
+                        body: JSON.stringify({
+                            contents: [{ role: "user", parts: [{ text: prompt }] }]
+                        })
+                    }
+                );
+
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data?.error?.message || ("Gemini HTTP " + response.status));
+                const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("").trim();
+                if (!text) throw new Error("Gemini returned an empty response.");
+                return text;
+            }
+
+            if (provider === "openai") {
+                response = await fetch("https://api.openai.com/v1/responses", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "x-goog-api-key": apiKey
+                        "Authorization": "Bearer " + apiKey
                     },
                     body: JSON.stringify({
-                        contents: [{
-                            role: "user",
-                            parts: [{ text: prompt }]
-                        }],
-                        generationConfig: {
-                            responseMimeType: "application/json"
-                        }
+                        model,
+                        input: prompt,
+                        max_output_tokens: 1400
                     })
+                });
+
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    const msg = data?.error?.message || ("OpenAI HTTP " + response.status);
+                    throw new Error(msg);
                 }
-            );
-
-            const rawText = await response.text();
-            let data = null;
-            try { data = rawText ? JSON.parse(rawText) : null; } catch (e) {}
-
-            if (!response.ok) {
-                const message =
-                    (data && data.error && data.error.message) ||
-                    rawText ||
-                    ("HTTP " + response.status);
-                throw new Error(message);
+                const text = extractOpenAIText(data);
+                if (!text) throw new Error("OpenAI returned an empty response.");
+                return text;
             }
 
-            const modelText = data && data.candidates && data.candidates[0] &&
-                data.candidates[0].content && data.candidates[0].content.parts
-                ? data.candidates[0].content.parts.map(part => part.text || "").join("").trim()
-                : "";
+            if (provider === "anthropic") {
+                response = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-api-key": apiKey,
+                        "anthropic-version": "2023-06-01",
+                        "anthropic-dangerous-direct-browser-access": "true"
+                    },
+                    body: JSON.stringify({
+                        model,
+                        max_tokens: 1400,
+                        messages: [{ role: "user", content: prompt }]
+                    })
+                });
 
-            if (!modelText) throw new Error("Gemini returned an empty grammar response.");
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    const msg = data?.error?.message || ("Anthropic HTTP " + response.status);
+                    throw new Error(msg);
+                }
+                const text = Array.isArray(data?.content)
+                    ? data.content.filter(p => p && p.type === "text").map(p => p.text || "").join("").trim()
+                    : "";
+                if (!text) throw new Error("Anthropic returned an empty response.");
+                return text;
+            }
 
-            // Accept raw JSON, fenced JSON, or text surrounding one JSON object.
-            let clean = modelText
+            throw new Error("Unsupported AI provider.");
+        }
+
+        function parseAIJson(text) {
+            let clean = String(text || "")
                 .replace(/^```json\s*/i, "")
                 .replace(/^```\s*/i, "")
                 .replace(/\s*```$/i, "")
                 .trim();
 
-            try {
-                return JSON.parse(clean);
-            } catch (firstError) {
-                const firstBrace = clean.indexOf("{");
-                const lastBrace = clean.lastIndexOf("}");
-                if (firstBrace !== -1 && lastBrace > firstBrace) {
-                    return JSON.parse(clean.slice(firstBrace, lastBrace + 1));
-                }
-                throw new Error("Gemini answered, but its grammar response was not valid JSON.");
+            try { return JSON.parse(clean); }
+            catch (firstError) {
+                const a = clean.indexOf("{");
+                const b = clean.lastIndexOf("}");
+                if (a !== -1 && b > a) return JSON.parse(clean.slice(a, b + 1));
+                throw new Error("The AI answered, but its grammar response was not valid JSON.");
             }
+        }
+
+        async function callAIJson(prompt) {
+            const provider = getSelectedAIProvider();
+
+            // Gemini supports direct JSON MIME requests, which reduces malformed responses.
+            if (provider === "gemini") {
+                const apiKey = getProviderKey(provider);
+                const model = getProviderModel(provider);
+                if (!apiKey) throw new Error("No Gemini API key is saved.");
+
+                const response = await fetch(
+                    "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "x-goog-api-key": apiKey
+                        },
+                        body: JSON.stringify({
+                            contents: [{ role: "user", parts: [{ text: prompt }] }],
+                            generationConfig: { responseMimeType: "application/json" }
+                        })
+                    }
+                );
+
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data?.error?.message || ("Gemini HTTP " + response.status));
+                const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("").trim();
+                if (!text) throw new Error("Gemini returned an empty grammar response.");
+                return parseAIJson(text);
+            }
+
+            return parseAIJson(await callAI(prompt));
         }
 
         // Offline German Case & Gender Morphological Dictionary
@@ -1408,13 +1585,8 @@
                 mobileGermanBtn.addEventListener("click", () => processGermanCorrection());
             }
 
-            const keyInput = document.getElementById("gemini-api-key-input");
-            if (keyInput) {
-                const savedKey = getGeminiKey();
-                if (savedKey) keyInput.value = savedKey;
-            }
-            // Update API Status Banner and Key field on boot
-            updateApiStatusHeader();
+            // Restore service/provider choices and status on boot.
+            populateServiceSettings();
 
             let stored = null;
             try { stored = localStorage.getItem('deutschlerner_vocab'); } catch (e) { console.warn('Vocabulary storage unavailable.'); }
@@ -1511,7 +1683,7 @@
 
             try {
                 let germanSentence = "";
-                const apiKey = getGeminiKey();
+                const apiKey = getActiveAIKey();
 
                 if (apiKey) {
                     const loadingSpan = document.getElementById("ai-loading-text");
@@ -1521,7 +1693,7 @@
 Return ONLY the raw German sentence translation, with no markdown, no quotes, no extra annotations, and no explanations.
 English: "${sourceText}"`;
 
-                    germanSentence = await callGeminiApi(prompt);
+                    germanSentence = await callAI(prompt);
                     // Strip quotes or any linebreaks
                     germanSentence = sanitizeTranslation(germanSentence).replace(/^[\"'\s]|[\"'\s]$/g, "").trim();
                 } else {
@@ -1587,7 +1759,7 @@ English: "${sourceText}"`;
             englishMeaningEl.value = "Translating input to English...";
             correctedGermanEl.value = "Generating grammatical correction...";
 
-            const apiKey = getGeminiKey();
+            const apiKey = getActiveAIKey();
             const aiCoachBox = document.getElementById("ai-coach-box");
             const aiCoachNote = document.getElementById("ai-coach-note");
 
@@ -1604,7 +1776,7 @@ Analyze this German input and provide a JSON response with exactly three fields:
 
 Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
 
-                    const result = await callGeminiJson(prompt);
+                    const result = await callAIJson(prompt);
                     const correctedGerman = sanitizeTranslation(result.correctedGerman);
                     const englishTranslation = sanitizeTranslation(result.englishTranslation);
                     const coachNote = result.grammarCorrectionNote;
@@ -1670,15 +1842,62 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
                 .trim();
         }
 
-        // Google Translate Public Endpoint with MyMemory API Auto-Fallback & CORS-rescue mechanisms
-        async function googleTranslateApiCall(text, sl, tl, retries = 2, delayMs = 1500) {
+        // Official Google Cloud Translation Basic v2.
+        async function googleCloudTranslate(text, sl, tl) {
+            const apiKey = getTranslationKey();
+            if (!apiKey) throw new Error("No Google Cloud Translation API key is saved.");
+
+            const response = await fetch("https://translation.googleapis.com/language/translate/v2", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json; charset=utf-8",
+                    "x-goog-api-key": apiKey
+                },
+                body: JSON.stringify({
+                    q: text,
+                    source: sl,
+                    target: tl,
+                    format: "text"
+                })
+            });
+
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data?.error?.message || ("Google Cloud Translation HTTP " + response.status));
+            }
+
+            const translated = data?.data?.translations?.[0]?.translatedText;
+            if (!translated) throw new Error("Google Cloud Translation returned no translated text.");
+            return sanitizeTranslation(decodeHtmlEntities(translated));
+        }
+
+        function decodeHtmlEntities(text) {
+            const box = document.createElement("textarea");
+            box.innerHTML = text || "";
+            return box.value;
+        }
+
+        // Translation router:
+        // 1) official Google Cloud Translation if configured,
+        // 2) existing public Google endpoint,
+        // 3) MyMemory fallback.
+        async function googleTranslateApiCall(text, sl, tl, retries = 2, delayMs = 1000) {
             const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-            // Try Google Translate first (up to retries)
+            if (getTranslationKey()) {
+                try {
+                    return await googleCloudTranslate(text, sl, tl);
+                } catch (cloudErr) {
+                    console.warn("Google Cloud Translation failed; trying public fallback:", cloudErr);
+                }
+            }
+
             for (let attempt = 1; attempt <= retries; attempt++) {
                 try {
-                    const response = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`);
-                    if (!response.ok) throw new Error("Google Translation failed with status " + response.status);
+                    const response = await fetch(
+                        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(sl)}&tl=${encodeURIComponent(tl)}&dt=t&q=${encodeURIComponent(text)}`
+                    );
+                    if (!response.ok) throw new Error("Public Google Translation HTTP " + response.status);
                     const result = await response.json();
 
                     let combinedText = "";
@@ -1687,32 +1906,27 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
                             if (row && row[0]) combinedText += row[0];
                         });
                     }
-                    return sanitizeTranslation(combinedText);
+                    if (combinedText) return sanitizeTranslation(combinedText);
+                    throw new Error("Public Google Translation returned no text.");
                 } catch (err) {
-                    console.warn(`Google Translate attempt ${attempt} failed:`, err);
-                    if (attempt < retries) {
-                        await delay(delayMs);
-                    }
+                    console.warn(`Public Google Translate attempt ${attempt} failed:`, err);
+                    if (attempt < retries) await delay(delayMs);
                 }
             }
 
-            // SILENT FALLBACK TO MYMEMORY API (Highly permissive, great CORS handling)
-            console.log("Google Translate blocked or rate-limited. Activating MyMemory API fallback...");
             try {
-                // MyMemory expects language pairs as e.g. "en|de" or "de|en"
                 const langPair = `${sl}|${tl}`;
-                const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`);
-                if (!response.ok) throw new Error("MyMemory Fallback failed with status " + response.status);
+                const response = await fetch(
+                    `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(langPair)}`
+                );
+                if (!response.ok) throw new Error("MyMemory HTTP " + response.status);
                 const data = await response.json();
-
-                if (data && data.responseData && data.responseData.translatedText) {
-                    return sanitizeTranslation(data.responseData.translatedText);
-                } else {
-                    throw new Error("MyMemory returned invalid data format");
-                }
+                const translated = data?.responseData?.translatedText;
+                if (!translated) throw new Error("MyMemory returned no translated text.");
+                return sanitizeTranslation(decodeHtmlEntities(translated));
             } catch (fallbackErr) {
-                console.error("MyMemory Fallback also failed:", fallbackErr);
-                throw new Error("Both Google Translate and MyMemory translation engines were blocked by your network/browser security. Please use Manual Input Mode to paste your German text directly!");
+                console.error("All translation engines failed:", fallbackErr);
+                throw new Error("Translation services are unavailable. You can still type or paste German directly and use the offline parser.");
             }
         }
 
@@ -1927,7 +2141,7 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
             // Gemini is only called if the learner explicitly taps the Ask AI button.
             renderStaticExplanation(keyWord, entry, dExplanation);
 
-            const apiKey = getGeminiKey();
+            const apiKey = getActiveAIKey();
             if (apiKey) {
                 const aiButton = document.createElement("button");
                 aiButton.type = "button";
@@ -1953,7 +2167,7 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
                         const prompt = `You are an expert German language tutor. The student selected the phrase "${phraseText}" in the sentence: "${currentGermanSentence}".
 Describe its grammatical role, case, gender where relevant, and endings in this specific sentence context in 2-3 concise, friendly, highly educational sentences. Be encouraging and clear.`;
 
-                        const aiExplanation = await callGeminiApi(prompt);
+                        const aiExplanation = await callAI(prompt);
 
                         if (currentSelectedPhrase === phraseText) {
                             loading.remove();
@@ -2627,7 +2841,7 @@ Describe its grammatical role, case, gender where relevant, and endings in this 
                 const finalPrompt = promptParts.join("\n\n");
 
                 // 4. Fire API Request
-                const responseText = await callGeminiApi(finalPrompt);
+                const responseText = await callAI(finalPrompt);
                 const cleanResponse = responseText.trim();
 
                 // 5. Remove loading and render Tutor bubble
