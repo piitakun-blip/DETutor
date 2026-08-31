@@ -544,6 +544,21 @@
                 min-height:44px;
             }
         }
+
+        /* Softer placeholder text; entered text remains fully prominent. */
+        #source-text::placeholder,
+        #german-source-text::placeholder {
+            color: #94a3b8 !important;
+            opacity: 0.78;
+            font-weight: 500;
+        }
+
+        /* Slightly larger primary outputs. */
+        #target-text,
+        #german-english-translation {
+            font-size: 1rem !important;
+            line-height: 1.55 !important;
+        }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
@@ -724,7 +739,7 @@
                                 </div>
                             </div>
                             <textarea id="target-text" rows="3"
-                                class="w-full p-4 rounded-b-xl border border-slate-200 bg-slate-50 focus:bg-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 resize-none font-medium text-slate-700 text-sm"
+                                class="w-full p-4 rounded-b-xl border border-slate-200 bg-slate-50 focus:bg-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 resize-none font-medium text-slate-700 text-base"
                                 placeholder="German translation will appear here..." readonly></textarea>
                         </div>
                     </div>
@@ -766,12 +781,9 @@
                                     </button>
                                 </div>
                                 <textarea id="german-english-translation" rows="2"
-                                    class="w-full p-3 rounded-b-xl border border-slate-200 bg-slate-50 outline-none resize-none font-medium text-slate-700 text-sm"
+                                    class="w-full p-3 rounded-b-xl border border-slate-200 bg-slate-50 outline-none resize-none font-medium text-slate-700 text-base"
                                     placeholder="English meaning check..." readonly></textarea>
                             </div>
-                            <p class="text-[11px] text-slate-400">
-                                Corrected German appears in the German Translation box.
-                            </p>
 
                         </div>
 
