@@ -377,12 +377,7 @@
         .gender-fem { color:#db2777 !important; border-color:#f472b6 !important; }
         .gender-neut { color:#0f9f8f !important; border-color:#2dd4bf !important; }
         .gender-plural { color:#7c3aed !important; border-color:#8b5cf6 !important; }
-
-        /* German flag theme for the title/header area. */
-        header, .app-header, #app-header {
-            background: linear-gradient(180deg,#111111 0%,#111111 72%,#dd0000 72%,#dd0000 86%,#ffcc00 86%,#ffcc00 100%) !important;
-        }
-        header h1, header .app-title, .app-header h1, #app-header h1 { color:white !important; }
+        /* German flag theme is applied directly to the header markup for reliability. */
         @media (max-width:768px) {
             .mobile-app-tabs { border-bottom:3px solid #ffcc00 !important; }
             .mobile-app-tab.active { box-shadow:inset 0 -3px 0 #dd0000,0 3px 10px rgba(15,23,42,.10) !important; }
@@ -427,15 +422,15 @@
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
 
     <!-- Header Section -->
-    <header class="bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-800 text-white shadow-md">
+    <header class="text-white shadow-md" style="background:linear-gradient(180deg,#111111 0%,#111111 72%,#dd0000 72%,#dd0000 86%,#ffcc00 86%,#ffcc00 100%);">
         <div class="max-screen-xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
-                <div class="bg-amber-400 p-2 rounded-lg text-slate-900 font-bold shadow-inner flex items-center justify-center">
+                <div class="bg-amber-400 p-2 rounded-lg text-black font-bold shadow-inner flex items-center justify-center border border-red-600">
                     <span class="text-xl">DE</span>
                 </div>
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight">DeutschLerner</h1>
-                    <p class="text-xs text-blue-200">Interactive German Grammar & Translation Companion (AI Tutor)</p>
+                    <p class="text-xs text-amber-100">Interactive German Grammar & Translation Companion (AI Tutor)</p>
                 </div>
             </div>
             <div class="flex items-center gap-4">
@@ -1711,8 +1706,43 @@
         // Common German Prepositions to bundle into Prepositional Phrases
         const germanPrepositions = ["mit", "zu", "von", "nach", "bei", "aus", "seit", "für", "durch", "gegen", "ohne", "um", "an", "auf", "in", "über", "unter", "vor", "hinter", "neben", "zwischen"];
 
+        // iPhone/mobile convenience: after a sentence has been processed,
+        // the next tap into either entry field clears the previous sentence automatically.
+        function isCompactPhoneLayout() {
+            return window.matchMedia("(max-width: 640px)").matches;
+        }
+
+        function armFreshEntry(fieldId) {
+            const field = document.getElementById(fieldId);
+            if (field) field.dataset.clearOnNextMobileFocus = "true";
+        }
+
+        function armLanguageInputsForNextEntry() {
+            armFreshEntry("source-text");
+            armFreshEntry("german-source-text");
+        }
+
+        function installFreshEntryBehavior(fieldId) {
+            const field = document.getElementById(fieldId);
+            if (!field) return;
+
+            field.addEventListener("focus", () => {
+                if (!isCompactPhoneLayout()) return;
+                if (field.dataset.clearOnNextMobileFocus !== "true") return;
+
+                field.value = "";
+                field.dataset.clearOnNextMobileFocus = "false";
+
+                // Trigger input-dependent UI updates, if any.
+                field.dispatchEvent(new Event("input", { bubbles: true }));
+            });
+        }
+
         // DOM Content Loaded - Sync LocalStorage list & Speed Sliders
         window.addEventListener('DOMContentLoaded', () => {
+            installFreshEntryBehavior("source-text");
+            installFreshEntryBehavior("german-source-text");
+
             const mobileTranslateBtn = document.getElementById("mobile-translate-btn");
             if (mobileTranslateBtn) {
                 mobileTranslateBtn.addEventListener("click", () => processEnglishTranslation());
@@ -1862,6 +1892,9 @@ English: "${sourceText}"`;
                 // Show the Save button
                 document.getElementById("save-vocab-btn")?.classList.remove("hidden");
 
+                // On iPhone, the next tap into either input starts a fresh sentence.
+                armLanguageInputsForNextEntry();
+
             } catch (error) {
                 console.error("Translation processing error:", error);
                 if (networkBanner) {
@@ -1958,6 +1991,9 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
 
                 // Show the Save button
                 document.getElementById("save-vocab-btn")?.classList.remove("hidden");
+
+                // On iPhone, the next tap into either input starts a fresh sentence.
+                armLanguageInputsForNextEntry();
 
             } catch (error) {
                 console.error("German Correction error:", error);
