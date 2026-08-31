@@ -683,6 +683,34 @@
                 white-space:nowrap;
             }
         }
+
+        .grammar-speech-btn {
+            width:28px;
+            height:28px;
+            color:#2563eb;
+            background:rgba(255,255,255,.72);
+            border:1px solid rgba(148,163,184,.45);
+            transition:background .15s ease, transform .15s ease;
+        }
+        .grammar-speech-btn:hover {
+            background:#ffffff;
+            transform:scale(1.05);
+        }
+        .grammar-speech-btn svg {
+            width:17px;
+            height:17px;
+        }
+
+        @media (max-width:640px) {
+            .grammar-speech-btn {
+                width:34px;
+                height:34px;
+            }
+            .grammar-speech-btn svg {
+                width:19px;
+                height:19px;
+            }
+        }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
@@ -2726,6 +2754,27 @@
                 }
                 b.append(a,sub);
 
+                const speechBtn=document.createElement("span");
+                speechBtn.className="grammar-speech-btn mt-2 inline-flex items-center justify-center rounded-full";
+                speechBtn.setAttribute("role","button");
+                speechBtn.setAttribute("tabindex","0");
+                speechBtn.setAttribute("aria-label",`Pronounce ${text}`);
+                speechBtn.setAttribute("title","Pronounce");
+                speechBtn.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.8 8.5H4.5A1.5 1.5 0 0 0 3 10v4a1.5 1.5 0 0 0 1.5 1.5h2.3L11 19V5Zm4.2 3.2a5.4 5.4 0 0 1 0 7.6M17.8 5.7a9 9 0 0 1 0 12.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+                const speakCard=(event)=>{
+                    event.preventDefault();
+                    event.stopPropagation();
+                    speakRawText(text,"de-DE");
+                };
+                speechBtn.addEventListener("click",speakCard);
+                speechBtn.addEventListener("keydown",(event)=>{
+                    if(event.key==="Enter" || event.key===" "){
+                        speakCard(event);
+                    }
+                });
+                b.appendChild(speechBtn);
+
                 const firstWord=ch.words[0]||"";
                 let detailEntry={
                     case: ch.label || "—",
@@ -3086,6 +3135,32 @@ Before returning, verify that the explanation itself is English.`;
         }
 
         // Client-side text-to-speech using browser Web Speech API with adjustable rate
+        function speakRawText(text, lang = 'de-DE') {
+            const cleanText = String(text || "").trim();
+            if (!cleanText) return;
+
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.lang = lang;
+
+                const speedId = lang.startsWith('de') ? 'speech-speed-de' : 'speech-speed-en';
+                const speedSlider = document.getElementById(speedId);
+                if (speedSlider) {
+                    utterance.rate = parseFloat(speedSlider.value);
+                }
+
+                const voices = window.speechSynthesis.getVoices();
+                const matchedVoice = voices.find(voice => voice.lang && voice.lang.toLowerCase().startsWith(lang.slice(0,2).toLowerCase()));
+                if (matchedVoice) utterance.voice = matchedVoice;
+
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert("Text-to-speech is unfortunately not supported in this browser version.");
+            }
+        }
+
         function speakText(textareaId, lang = 'en-US') {
             const text = document.getElementById(textareaId).value.trim();
             if (!text) {
