@@ -18,11 +18,11 @@
         .case-none { background-color: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; } /* Light Gray */
 
         /* Gender-focused styling details */
-        .gender-masc { color: #0284c7; border-color: #38bdf8 !important; border-width: 2px !important; } /* sky-600 / sky-400 */
-        .gender-fem { color: #db2777; border-color: #f472b6 !important; border-width: 2px !important; } /* pink-600 / pink-400 */
-        .gender-neut { color: #0d9488; border-color: #2dd4bf !important; border-width: 2px !important; } /* teal-600 / teal-400 */
-        .gender-plural { color: #7c3aed; border-color: #a78bfa !important; border-width: 2px !important; } /* violet-600 / violet-400 */
-        .gender-multi { color: #b45309; border-color: #fbbf24 !important; border-width: 2px !important; } /* amber-700 / amber-400 */
+        .gender-masc { color: #0284c7; } /* sky-600 / sky-400 */
+        .gender-fem { color: #db2777; } /* pink-600 / pink-400 */
+        .gender-neut { color: #0d9488; } /* teal-600 / teal-400 */
+        .gender-plural { color: #7c3aed; } /* violet-600 / violet-400 */
+        .gender-multi { color: #b45309; } /* amber-700 / amber-400 */
         .gender-none { color: #374151; border-color: #cbd5e1 !important; } /* slate-700 / slate-300 */
 
         .tab-active { border-bottom-width: 3px; border-color: #3b82f6; color: #2563eb; font-weight: 600; }
@@ -417,6 +417,20 @@
         #tiles-container .grammar-word.gender-fem { color:#db2777 !important; }
         #tiles-container .grammar-word.gender-neut { color:#0f9f8f !important; }
         #tiles-container .grammar-word.gender-plural { color:#7c3aed !important; }
+
+        /* Cleaner parser cards: case is shown by background, gender by text only. */
+        #tiles-container button {
+            border-color:#cbd5e1 !important;
+            border-width:1px !important;
+        }
+        #tiles-container button.case-nom { border-color:#bfdbfe !important; }
+        #tiles-container button.case-acc { border-color:#bbf7d0 !important; }
+        #tiles-container button.case-dat { border-color:#fef08a !important; }
+        #tiles-container button.case-gen { border-color:#e9d5ff !important; }
+        #tiles-container button.case-multi { border-color:#fed7aa !important; }
+
+        #tiles-container button { cursor:pointer; }
+        #tiles-container button:active { transform:scale(.98); }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
@@ -2340,7 +2354,46 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
 
                 const sub=document.createElement("span");sub.className="text-[9px] opacity-75 font-semibold tracking-wider mt-0.5 uppercase";
                 if(ch.type==="pronoun"&&ch.gender==="Formal You") sub.innerText="Nominative (Formal You)"; else sub.innerText=ch.label+(ch.gender&&!["modal","auxiliary","verb","pronoun"].includes(ch.type)&&["Nominative","Accusative","Dative"].includes(ch.label)?` (${ch.gender.substring(0,4)})`:"");
-                b.append(a,sub);box.appendChild(b)
+                b.append(a,sub);
+
+                // Restore interactive detail card behavior.
+                const firstWord = ch.words[0] || "";
+                let detailEntry = germanGrammarDictionary[firstWord.toLowerCase()] || null;
+
+                // Build a contextual entry when the parser resolved the phrase more precisely
+                // than the static dictionary can.
+                if (ch.type === "noun_phrase" || ch.type === "prepositional" || ch.type === "question_word") {
+                    detailEntry = {
+                        case: ch.label || "General Structure",
+                        gender: ch.gender || "Context Dependent",
+                        explanation:
+                            ch.type === "question_word"
+                                ? `${text} is a German question word used to introduce this type of question.`
+                                : ch.type === "prepositional"
+                                    ? `${text} is functioning as a prepositional phrase here. The preposition helps determine the grammatical role/case.`
+                                    : `${text} is being treated as one noun phrase. Its article/determiner, noun gender, and sentence role are analyzed together.`
+                    };
+                } else if (["modal","auxiliary","verb"].includes(ch.type)) {
+                    detailEntry = {
+                        case: ch.label,
+                        gender: "Verb",
+                        explanation:
+                            ch.type === "modal"
+                                ? `${text} is a modal verb. Modal verbs modify the meaning of another verb and normally send the main infinitive toward the end of the clause.`
+                                : ch.type === "auxiliary"
+                                    ? `${text} is functioning as an auxiliary/helping verb in this sentence.`
+                                    : `${text} is functioning as a verb in this sentence.`
+                    };
+                } else if (ch.type === "pronoun" && ch.gender === "Formal You") {
+                    detailEntry = {
+                        case: "Nominative",
+                        gender: "Formal You",
+                        explanation: "Capitalized Sie is the formal pronoun 'you'. In this sentence it functions as the subject, so it is Nominative."
+                    };
+                }
+
+                b.onclick = () => selectTile(text, firstWord, detailEntry);
+                box.appendChild(b)
             })
         }
 
