@@ -217,7 +217,7 @@
         @media (max-width: 640px) {
             .mobile-app-tabs {
                 display: grid;
-                grid-template-columns: repeat(4, minmax(0, 1fr));
+                grid-template-columns: repeat(3, minmax(0, 1fr));
                 position: sticky;
                 top: 0;
                 z-index: 40;
@@ -252,7 +252,6 @@
             }
 
             body[data-mobile-tab="translate"] .mobile-tab-translate,
-            body[data-mobile-tab="german"] .mobile-tab-german,
             body[data-mobile-tab="tutor"] .mobile-tab-tutor,
             body[data-mobile-tab="study"] .mobile-tab-study {
                 background: #ffffff;
@@ -261,7 +260,6 @@
             }
 
             body[data-mobile-tab="translate"] .mobile-section:not(.mobile-translate),
-            body[data-mobile-tab="german"] .mobile-section:not(.mobile-german),
             body[data-mobile-tab="tutor"] .mobile-section:not(.mobile-tutor),
             body[data-mobile-tab="study"] .mobile-section:not(.mobile-study) {
                 display: none !important;
@@ -282,8 +280,7 @@
 
             body[data-mobile-tab="tutor"] #mobile-left-column,
             body[data-mobile-tab="study"] #mobile-right-column,
-            body[data-mobile-tab="translate"] #mobile-right-column,
-            body[data-mobile-tab="german"] #mobile-right-column {
+            body[data-mobile-tab="translate"] #mobile-right-column {
                 /* Child section rules handle actual visibility. */
             }
 
@@ -309,16 +306,7 @@
             }
 
             body[data-mobile-tab="translate"] #mobile-study-card,
-            body[data-mobile-tab="german"] #mobile-study-card,
             body[data-mobile-tab="tutor"] #mobile-study-card {
-                display: none !important;
-            }
-
-            body[data-mobile-tab="translate"] #mobile-german-card {
-                display: none !important;
-            }
-
-            body[data-mobile-tab="german"] #mobile-english-card {
                 display: none !important;
             }
 
@@ -383,6 +371,57 @@
         @media (max-width: 640px) {
         }
 
+
+        /* Gender text colors: masculine blue, feminine pink/red, neuter teal, plural purple. */
+        .gender-masc { color:#2563eb !important; border-color:#60a5fa !important; }
+        .gender-fem { color:#db2777 !important; border-color:#f472b6 !important; }
+        .gender-neut { color:#0f9f8f !important; border-color:#2dd4bf !important; }
+        .gender-plural { color:#7c3aed !important; border-color:#8b5cf6 !important; }
+
+        /* German flag theme for the title/header area. */
+        header, .app-header, #app-header {
+            background: linear-gradient(180deg,#111111 0%,#111111 72%,#dd0000 72%,#dd0000 86%,#ffcc00 86%,#ffcc00 100%) !important;
+        }
+        header h1, header .app-title, .app-header h1, #app-header h1 { color:white !important; }
+        @media (max-width:768px) {
+            .mobile-app-tabs { border-bottom:3px solid #ffcc00 !important; }
+            .mobile-app-tab.active { box-shadow:inset 0 -3px 0 #dd0000,0 3px 10px rgba(15,23,42,.10) !important; }
+        }
+
+        .iphone-language-divider { display:none; }
+        @media (max-width:640px) {
+            .iphone-language-divider {
+                display:flex;
+                align-items:center;
+                gap:10px;
+                margin:-2px 2px 2px;
+                color:#64748b;
+                font-size:11px;
+                font-weight:700;
+                text-transform:uppercase;
+                letter-spacing:.08em;
+            }
+            .iphone-language-divider::before,
+            .iphone-language-divider::after {
+                content:"";
+                height:1px;
+                background:#e2e8f0;
+                flex:1;
+            }
+        }
+
+        /* Word-level gender coloring inside grammar cards.
+           The card background communicates case; gender-bearing words carry the gender color. */
+        #tiles-container button.gender-masc,
+        #tiles-container button.gender-fem,
+        #tiles-container button.gender-neut,
+        #tiles-container button.gender-plural {
+            color:#334155 !important;
+        }
+        #tiles-container .grammar-word.gender-masc { color:#2563eb !important; }
+        #tiles-container .grammar-word.gender-fem { color:#db2777 !important; }
+        #tiles-container .grammar-word.gender-neut { color:#0f9f8f !important; }
+        #tiles-container .grammar-word.gender-plural { color:#7c3aed !important; }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
@@ -500,10 +539,6 @@
             <i class="fa-solid fa-language"></i>
             <span>Translate</span>
         </button>
-        <button type="button" class="mobile-app-tab mobile-tab-german" onclick="setMobileAppTab('german')" aria-label="German input">
-            <i class="fa-solid fa-pen"></i>
-            <span>German</span>
-        </button>
         <button type="button" class="mobile-app-tab mobile-tab-tutor" onclick="setMobileAppTab('tutor')" aria-label="AI tutor">
             <i class="fa-solid fa-comments"></i>
             <span>Tutor</span>
@@ -574,7 +609,10 @@
                 </div>
 
                 <!-- CARD 2: German Auto-Correct & Parse Workspace -->
-                <div id="mobile-german-card" class="mobile-section mobile-german bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between space-y-4">
+                <div class="iphone-language-divider mobile-section mobile-translate" aria-hidden="true">
+                    <span>or enter German directly</span>
+                </div>
+                <div id="mobile-german-card" class="mobile-section mobile-translate mobile-german bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between space-y-4">
                     <div class="space-y-4 flex-grow">
                         <!-- Column Header -->
                         <div class="flex items-center gap-2 text-indigo-600 border-b border-slate-100 pb-2">
@@ -2138,18 +2176,59 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
 
         // Parses and intelligently groups German words into horizontal phrase cards
         // Grammar parser v2 — boundary-first and regression-tested.
-        const gpPronouns=new Set(["ich","du","er","sie","es","wir","ihr","mich","mir","dich","dir","ihn","ihm","uns","ihnen"]);
+        const gpPronouns=new Set(["ich","du","er","sie","es","wir","ihr","mich","mir","dich","dir","ihn","ihm","uns","ihnen"]); const gpQuestionWords=new Set(["wann","warum","wo","wohin","woher","wie","was","wer","wen","wem","wessen"]);
         const gpDet=new Set(["der","die","das","den","dem","des","ein","eine","einen","einem","einer","eines","dieser","diese","dieses","diesen","diesem"]);
-        const gpPoss=/^(mein|dein|sein|ihr|unser|euer)(e|en|em|er|es)?$/i;
+        const gpPoss=/^(mein|dein|sein|ihr|unser|euer|kein)(e|en|em|er|es)?$/i;
         const gpModal=new Set(["kann","kannst","können","muss","musst","müssen","soll","sollst","sollen","will","willst","wollen","darf","darfst","dürfen","mag","magst","mögen","möchte","möchtest","möchten"]);
         const gpAux=new Set(["bin","bist","ist","sind","seid","sein","war","waren","habe","hast","hat","haben","werde","wirst","wird","werden","wurde","wurden"]);
-        const gpVerb=new Set(["geben","schenken","besorgen","bringen","zeigen","schicken","kaufen","sehen","machen","gehen","kommen","lernen","essen","trinken","aufzubrechen"]);
+        const gpVerb=new Set(["geben","gebe","schenken","besorgen","bringen","zeigen","schicken","kaufen","sehen","machen","gehen","kommen","lernen","essen","trinken","aufzubrechen"]);
         const gpPrep=new Set(["mit","zu","von","nach","bei","aus","seit","für","durch","gegen","ohne","um","an","auf","in","über","unter","vor","hinter","neben","zwischen"]);
-        const gpGender={frau:"Feminine",stunde:"Feminine",marmelade:"Feminine",mann:"Masculine",berliner:"Masculine",buch:"Neuter",kind:"Neuter",gelee:"Neuter"};
+        const gpGender={frau:"Feminine",stunde:"Feminine",marmelade:"Feminine",mann:"Masculine",berliner:"Masculine",urlaub:"Masculine",hund:"Masculine",apfel:"Masculine",buch:"Neuter",kind:"Neuter",gelee:"Neuter",haus:"Neuter",auto:"Neuter",geld:"Neuter"};
         function gpIsDet(w){return gpDet.has(w.toLowerCase())||gpPoss.test(w)}
         function gpIsNoun(w){return /^[A-ZÄÖÜ]/.test(w)&&!gpPronouns.has(w.toLowerCase())}
         function gpIsAdj(w){w=w.toLowerCase();return /(?:e|en|er|es|em)$/i.test(w)&&!gpIsDet(w)}
         function gpLastNoun(a){for(let j=a.length-1;j>=0;j--)if(gpIsNoun(a[j]))return a[j].toLowerCase();return""}
+
+        function gpStandaloneDeterminerGender(det){
+            const d=det.toLowerCase();
+            // Unambiguous gender-bearing forms.
+            if(/^(einen|meinen|deinen|seinen|ihren|unseren|euren|keinen)$/i.test(d)) return "Masculine";
+            if(/^(eine|meine|deine|seine|ihre|unsere|eure|keine)$/i.test(d)) return "Feminine / Plural";
+            // -em can be masculine or neuter; -er can often be feminine dative/genitive
+            // or masculine nominative. Leave these unresolved unless a noun phrase resolves them.
+            if(/^(einem|meinem|deinem|seinem|ihrem|unserem|eurem|keinem|diesem)$/i.test(d)) return "Masculine / Neuter";
+            if(/^(einer|meiner|deiner|seiner|ihrer|unserer|eurer|keiner|dieser)$/i.test(d)) return "Context Dependent";
+            return "";
+        }
+
+        function gpGenderClass(gender){
+            const g=(gender||"").toLowerCase();
+            if(g==="masculine") return "gender-masc";
+            if(g==="feminine") return "gender-fem";
+            if(g==="neuter") return "gender-neut";
+            if(g==="plural") return "gender-plural";
+            return "gender-none";
+        }
+
+        function gpWordRoleClass(word, chunk){
+            const w=word.toLowerCase();
+
+            // For a resolved noun phrase, color all gender-bearing elements
+            // (article/determiner, adjective, and noun) using the phrase's resolved gender.
+            if(chunk.type==="noun_phrase" && ["Masculine","Feminine","Neuter","Plural"].includes(chunk.gender)){
+                if(gpIsDet(w) || gpIsAdj(w) || gpIsNoun(word)) return gpGenderClass(chunk.gender);
+            }
+
+            // Standalone determiners only get a gender color when the form itself
+            // is unambiguous. Ambiguous forms remain neutral until context resolves them.
+            if(gpIsDet(w)){
+                const standalone=gpStandaloneDeterminerGender(w);
+                return gpGenderClass(standalone);
+            }
+
+            if(gpIsNoun(word)) return gpGenderClass(gpGender[word.toLowerCase()] || "");
+            return "";
+        }
 
         function parseGermanPhrases(sentence){
             const t=sentence.match(/[A-ZÄÖÜa-zäöüß]+|[.,!?;]+/g)||[], out=[]; let i=0;
@@ -2157,6 +2236,8 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
             while(i<t.length){
                 const w=t[i],l=w.toLowerCase();
                 if(/^[.,!?;]+$/.test(w)){add([w],"punctuation");i++;continue}
+                if(gpQuestionWords.has(l)){add([w],"question_word","Question Word","");i++;continue}
+                if(w==="Sie"){add([w],"pronoun","Nominative","Formal You");i++;continue}
                 if(gpPronouns.has(l)){const e=germanGrammarDictionary[l];add([w],"pronoun",e?e.case.split(" | ")[0].split(" (")[0]:"","");i++;continue}
                 if(gpModal.has(l)){add([w],"modal","Modal Verb","Verb");i++;continue}
                 if(gpAux.has(l)){add([w],"auxiliary","Auxiliary Verb","Verb");i++;continue}
@@ -2179,9 +2260,10 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
                     const d=words[0].toLowerCase(),noun=gpLastNoun(words),g=gpGender[noun]||"";
                     let label="";
                     if(d==="diesem")label="Dative";
+                    else if(d==="keinem" && (g==="Masculine" || g==="Neuter")) label="Dative";
                     else if(d==="dieser"&&g==="Feminine")label="Dative";
-                    else if(/^(einen|meinen|deinen|seinen|ihren|unseren|euren)$/i.test(d)&&g==="Masculine")label="Accusative";
-                    else if(/^(ein|mein|dein|sein|ihr|unser|euer)$/i.test(d)&&g==="Neuter")label="Nominative / Accusative";
+                    else if(/^(einen|meinen|deinen|seinen|ihren|unseren|euren|keinen)$/i.test(d)&&g==="Masculine")label="Accusative";
+                    else if(/^(ein|mein|dein|sein|ihr|unser|euer|kein)$/i.test(d)&&g==="Neuter")label="Nominative / Accusative";
                     else {const e=germanGrammarDictionary[d];label=e?e.case.split(" | ")[0].split(" (")[0]:"Phrase"}
                     add(words,"noun_phrase",label,g);continue
                 }
@@ -2191,7 +2273,7 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
                     while(i<t.length&&!gpModal.has(t[i].toLowerCase())&&!gpAux.has(t[i].toLowerCase())&&!gpVerb.has(t[i].toLowerCase())&&!/^[.,!?;]+$/.test(t[i])){
                         words.push(t[i++]);if(gpIsNoun(words[words.length-1]))break
                     }
-                    add(words,"prepositional",["mit","zu","von","nach","bei","aus","seit"].includes(l)?"Dative":"Phrase",gpGender[gpLastNoun(words)]||"");continue
+                    add(words,"prepositional",(l==="nach"&&words.length>=2)?"Destination Phrase":(["mit","zu","von","nach","bei","aus","seit"].includes(l)?"Dative":"Phrase"),gpGender[gpLastNoun(words)]||"");continue
                 }
                 add([w],gpIsNoun(w)?"noun":"word",gpIsNoun(w)?"Noun":"Word","");i++
             }
@@ -2209,9 +2291,19 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
                 if(c==="nominative")cc="case-nom";else if(c==="accusative")cc="case-acc";else if(c==="dative")cc="case-dat";else if(c.includes("nominative")&&c.includes("accusative"))cc="case-multi";
                 if(g==="masculine")gc="gender-masc";else if(g==="feminine")gc="gender-fem";else if(g==="neuter")gc="gender-neut";
                 const b=document.createElement("button");b.className=`${cc} ${gc} px-4 py-3 rounded-xl font-bold shadow-sm hover:scale-105 active:scale-95 transition duration-150 flex flex-col items-center justify-center min-w-[90px] border border-2`;
-                const a=document.createElement("span");a.className="text-sm tracking-wide";a.innerText=text;
+
+                const a=document.createElement("span");
+                a.className="text-sm tracking-wide";
+                ch.words.forEach((word,idx)=>{
+                    const ws=document.createElement("span");
+                    const roleClass=gpWordRoleClass(word,ch);
+                    if(roleClass) ws.className=roleClass+" grammar-word";
+                    ws.innerText=(idx ? " " : "")+word;
+                    a.appendChild(ws);
+                });
+
                 const sub=document.createElement("span");sub.className="text-[9px] opacity-75 font-semibold tracking-wider mt-0.5 uppercase";
-                sub.innerText=ch.label+(ch.gender&&!["modal","auxiliary","verb","pronoun"].includes(ch.type)&&["Nominative","Accusative","Dative"].includes(ch.label)?` (${ch.gender.substring(0,4)})`:"");
+                if(ch.type==="pronoun"&&ch.gender==="Formal You") sub.innerText="Nominative (Formal You)"; else sub.innerText=ch.label+(ch.gender&&!["modal","auxiliary","verb","pronoun"].includes(ch.type)&&["Nominative","Accusative","Dative"].includes(ch.label)?` (${ch.gender.substring(0,4)})`:"");
                 b.append(a,sub);box.appendChild(b)
             })
         }
@@ -2221,7 +2313,9 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
             const tests=[
               ["Ich möchte dieser netten Frau ein Buch besorgen.",["Ich","möchte","dieser netten Frau","ein Buch","besorgen","."]],
               ["Ich werde in einer Stunde bereit sein, aufzubrechen.",["Ich","werde","in einer Stunde","bereit","sein",",","aufzubrechen","."]],
-              ["Ich möchte diesem netten Mann meinen mit Marmelade gefüllten Berliner geben.",["Ich","möchte","diesem netten Mann","meinen mit Marmelade gefüllten Berliner","geben","."]]
+              ["Ich möchte diesem netten Mann meinen mit Marmelade gefüllten Berliner geben.",["Ich","möchte","diesem netten Mann","meinen mit Marmelade gefüllten Berliner","geben","."]],
+              ["Wann fahren Sie in den Urlaub nach Prag?",["Wann","fahren","Sie","in den Urlaub","nach Prag","?"]],
+              ["Ich gebe keinem netten Mann einen Apfel.",["Ich","gebe","keinem netten Mann","einen Apfel","."]]
             ];
             tests.forEach(([q,exp])=>{const got=parseGermanPhrases(q).map(x=>x.words.join(" "));if(JSON.stringify(got)!==JSON.stringify(exp))console.error("GRAMMAR PARSER TEST FAILED",q,{got,exp})})
         })();
@@ -2995,7 +3089,7 @@ Describe its grammatical role, case, gender where relevant, and endings in this 
 
     <script>
         function setMobileAppTab(tabName) {
-            const allowed = ['translate', 'german', 'tutor', 'study'];
+            const allowed = ['translate', 'tutor', 'study'];
             if (!allowed.includes(tabName)) return;
 
             document.body.dataset.mobileTab = tabName;
@@ -3023,7 +3117,7 @@ Describe its grammatical role, case, gender where relevant, and endings in this 
             let saved = 'translate';
             try {
                 const candidate = localStorage.getItem('deutschlerner-mobile-tab');
-                if (['translate', 'german', 'tutor', 'study'].includes(candidate)) saved = candidate;
+                if (candidate === 'german') saved = 'translate'; else if (['translate', 'tutor', 'study'].includes(candidate)) saved = candidate;
             } catch (e) {}
             document.body.dataset.mobileTab = saved;
         })();
