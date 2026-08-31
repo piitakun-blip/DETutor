@@ -2195,17 +2195,22 @@
                     <span id="ai-loading-text">Translating English to German...</span>
                 </div>`;
 
+            document.getElementById("german-english-translation").value = "Checking English meaning...";
+
             try {
                 // Normal translation never spends AI tokens.
                 // AI is reserved for explicit Tutor / Ask AI actions.
                 let germanSentence = await googleTranslateApiCall(sourceText, "en", "de");
 
+                // Round-trip the translated German back into English.
+                // This acts as a free meaning/correction check and does not use AI tokens.
+                let correctedEnglish = await googleTranslateApiCall(germanSentence, "de", "en");
+
                 document.getElementById("target-text").value = germanSentence;
 
-                // Mirror output to the German input card on the right
+                // Mirror output to the German input card on the right.
                 document.getElementById("german-source-text").value = germanSentence;
-                document.getElementById("target-text").value = germanSentence;
-                document.getElementById("german-english-translation").value = sourceText;
+                document.getElementById("german-english-translation").value = correctedEnglish;
 
                 currentGermanSentence = germanSentence;
                 if (networkBanner) networkBanner.classList.add("hidden"); // Hide banner if successful
