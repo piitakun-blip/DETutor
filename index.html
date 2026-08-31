@@ -2066,9 +2066,9 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
             "mag","magst","mögen","möchte","möchtest","möchten"
         ]);
 
-        function isHelpingVerb(word) {
-            return helpingVerbForms.has(word.toLowerCase());
-        }
+        const modalVerbForms = new Set(["kann","kannst","können","konnte","konnten","muss","musst","müssen","musste","mussten","soll","sollst","sollen","sollte","sollten","will","willst","wollen","wollte","wollten","darf","darfst","dürfen","durfte","durften","mag","magst","mögen","möchte","möchtest","möchten"]);
+        function isHelpingVerb(word) { return helpingVerbForms.has(word.toLowerCase()); }
+        function helpingVerbLabel(word) { return modalVerbForms.has(word.toLowerCase()) ? "Modal Verb" : "Auxiliary Verb"; }
 
         function looksLikeVerb(word) {
             const w = word.toLowerCase();
@@ -2146,67 +2146,64 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
 
             const chunks = [];
             let i = 0;
+            const pronounWords = new Set(["ich","du","er","sie","es","wir","ihr","mich","mir","dich","dir","ihn","ihm","uns","ihnen"]);
+            const determinerStarts = new Set(["der","die","das","den","dem","des","ein","eine","einen","einem","einer","eines","dieser","diese","dieses","diesen","diesem"]);
+            function startsDeterminer(word) {
+                const w=word.toLowerCase();
+                return determinerStarts.has(w) || possessiveDeterminerPattern.test(w);
+            }
+            function isCapitalizedNoun(word) {
+                return /^[A-ZÄÖÜ]/.test(word) && !pronounWords.has(word.toLowerCase());
+            }
+            function pushStandalone(word) {
+                chunks.push({words:[word],isPunctuation:false,type:"standalone"});
+            }
 
-            // Simple Phrase Chunker Rule Engine
+            // Boundary-aware phrase chunker: verbs/pronouns stop noun phrases.
             while (i < tokens.length) {
-                const token = tokens[i];
-                const lowerToken = token.toLowerCase();
-                const isPunc = /^[.,!?;]+$/.test(token);
-
-                if (isPunc) {
-                    chunks.push({ words: [token], isPunctuation: true });
-                    i++;
-                    continue;
+                const token=tokens[i], lower=token.toLowerCase();
+                if (/^[.,!?;]+$/.test(token)) {
+                    chunks.push({words:[token],isPunctuation:true}); i++; continue;
                 }
-
-                // Check if starting a Prepositional Phrase
-                if (germanPrepositions.includes(lowerToken)) {
-                    const chunk = { words: [token], isPunctuation: false, type: "prepositional" };
-                    i++;
-                    // Try to grab subsequent articles/pronouns and adjectives/nouns
+                if (pronounWords.has(lower) || looksLikeVerb(lower)) {
+                    pushStandalone(token); i++; continue;
+                }
+                if (startsDeterminer(lower)) {
+                    const words=[token]; i++;
                     while (i < tokens.length) {
-                        const nextToken = tokens[i];
-                        const nextLower = nextToken.toLowerCase();
-                        if (/^[.,!?;]+$/.test(nextToken)) break; // End on punctuation
-
-                        // If it is a known article, pronoun, adjective, or capitalized noun, group it!
-                        if (germanGrammarDictionary[nextLower] !== undefined ||
-                            looksLikeAdjective(nextLower) ||
-                            /^[A-ZÄÖÜ]/.test(nextToken)) {
-                            chunk.words.push(nextToken);
-                            i++;
-                        } else {
-                            break;
+                        const w=tokens[i], wl=w.toLowerCase();
+                        if (/^[.,!?;]+$/.test(w) || pronounWords.has(wl) || looksLikeVerb(wl) || startsDeterminer(wl)) break;
+                        if (looksLikeAdjective(wl)) { words.push(w); i++; continue; }
+                        if (germanPrepositions.includes(wl)) {
+                            words.push(w); i++;
+                            while (i < tokens.length) {
+                                const mw=tokens[i], ml=mw.toLowerCase();
+                                if (/^[.,!?;]+$/.test(mw) || pronounWords.has(ml) || looksLikeVerb(ml) || startsDeterminer(ml)) break;
+                                words.push(mw); i++;
+                                if (looksLikeAdjective(ml)) break;
+                            }
+                            continue;
                         }
+                        if (isCapitalizedNoun(w)) {
+                            words.push(w); i++;
+                            if (i>=tokens.length || !germanPrepositions.includes(tokens[i].toLowerCase())) break;
+                            continue;
+                        }
+                        break;
                     }
-                    chunks.push(chunk);
-                    continue;
+                    chunks.push({words,isPunctuation:false,type:"noun_phrase"}); continue;
                 }
-
-                // Check if starting a Noun Phrase (headed by an article/determiner)
-                if (germanGrammarDictionary[lowerToken] !== undefined || possessiveDeterminerPattern.test(lowerToken)) {
-                    const chunk = { words: [token], isPunctuation: false, type: "noun_phrase" };
-                    i++;
+                if (germanPrepositions.includes(lower)) {
+                    const words=[token]; i++;
                     while (i < tokens.length) {
-                        const nextToken = tokens[i];
-                        const nextLower = nextToken.toLowerCase();
-                        if (/^[.,!?;]+$/.test(nextToken)) break;
-
-                        // Group subsequent adjectives or capitalized nouns
-                        if (looksLikeAdjective(nextLower) || /^[A-ZÄÖÜ]/.test(nextToken)) {
-                            chunk.words.push(nextToken);
-                            i++;
-                        } else {
-                            break;
-                        }
+                        const w=tokens[i], wl=w.toLowerCase();
+                        if (/^[.,!?;]+$/.test(w) || pronounWords.has(wl) || looksLikeVerb(wl)) break;
+                        words.push(w); i++;
+                        if (isCapitalizedNoun(w)) break;
                     }
-                    chunks.push(chunk);
-                    continue;
+                    chunks.push({words,isPunctuation:false,type:"prepositional"}); continue;
                 }
-
-                // Default standalone word fallback
-                chunks.push({ words: [token], isPunctuation: false, type: "standalone" });
-                i++;
+                pushStandalone(token); i++;
             }
 
             // Context pass for common ditransitive patterns such as:
@@ -2309,14 +2306,14 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
                         caseLabel = dictEntry.case.split(" | ")[0].split(" (")[0];
                     }
                     if (dictEntry.gender === "Verb") {
-                        displaySubtitle = (chunk.words.length === 1 && isHelpingVerb(chunk.words[0])) ? "Helping Verb" : caseLabel;
+                        displaySubtitle = (chunk.words.length === 1 && isHelpingVerb(chunk.words[0])) ? helpingVerbLabel(chunk.words[0]) : caseLabel;
                     } else {
                         const rawGender = dictEntry.gender.split(" / ")[0].substring(0, 4);
                         displaySubtitle = `${caseLabel} (${rawGender})`;
                     }
                 } else {
                     if (chunk.words.length === 1 && isHelpingVerb(chunk.words[0])) {
-                        displaySubtitle = "Helping Verb";
+                        displaySubtitle = helpingVerbLabel(chunk.words[0]);
                     } else if (chunk.words.length === 1 && looksLikeVerb(chunk.words[0])) {
                         displaySubtitle = "Verb";
                     } else if (/^[A-ZÄÖÜ]/.test(chunk.words[0])) {
