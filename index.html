@@ -407,10 +407,10 @@
 
         /* Word-level gender coloring inside grammar cards.
            The card background communicates case; gender-bearing words carry the gender color. */
-        #tiles-container button.gender-masc,
-        #tiles-container button.gender-fem,
-        #tiles-container button.gender-neut,
-        #tiles-container button.gender-plural {
+        #tiles-container .grammar-tile.gender-masc,
+        #tiles-container .grammar-tile.gender-fem,
+        #tiles-container .grammar-tile.gender-neut,
+        #tiles-container .grammar-tile.gender-plural {
             color:#334155 !important;
         }
         #tiles-container .grammar-word.gender-masc { color:#2563eb !important; }
@@ -419,18 +419,18 @@
         #tiles-container .grammar-word.gender-plural { color:#7c3aed !important; }
 
         /* Cleaner parser cards: case is shown by background, gender by text only. */
-        #tiles-container button {
+        #tiles-container .grammar-tile {
             border-color:#cbd5e1 !important;
             border-width:1px !important;
         }
-        #tiles-container button.case-nom { border-color:#bfdbfe !important; }
-        #tiles-container button.case-acc { border-color:#bbf7d0 !important; }
-        #tiles-container button.case-dat { border-color:#fef08a !important; }
-        #tiles-container button.case-gen { border-color:#e9d5ff !important; }
-        #tiles-container button.case-multi { border-color:#fed7aa !important; }
+        #tiles-container .grammar-tile.case-nom { border-color:#bfdbfe !important; }
+        #tiles-container .grammar-tile.case-acc { border-color:#bbf7d0 !important; }
+        #tiles-container .grammar-tile.case-dat { border-color:#fef08a !important; }
+        #tiles-container .grammar-tile.case-gen { border-color:#e9d5ff !important; }
+        #tiles-container .grammar-tile.case-multi { border-color:#fed7aa !important; }
 
-        #tiles-container button { cursor:pointer; }
-        #tiles-container button:active { transform:scale(.98); }
+        #tiles-container .grammar-tile { cursor:pointer; }
+        #tiles-container .grammar-tile:active { transform:scale(.98); }
 
         /* Make editable text-entry areas easier to identify on desktop/Mac. */
         @media (min-width: 641px) {
@@ -672,7 +672,7 @@
                 gap:10px !important;
             }
 
-            #tiles-container button {
+            #tiles-container .grammar-tile {
                 min-width:82px !important;
                 max-width:100%;
             }
@@ -709,6 +709,56 @@
             .grammar-speech-btn svg {
                 width:19px;
                 height:19px;
+            }
+        }
+
+        /* Visible pronunciation control on every grammar tile */
+        #tiles-container .grammar-tile {
+            padding-right:42px !important;
+            cursor:pointer;
+        }
+        #tiles-container .grammar-speech-btn {
+            position:absolute !important;
+            top:8px !important;
+            right:8px !important;
+            display:flex !important;
+            align-items:center !important;
+            justify-content:center !important;
+            width:30px !important;
+            height:30px !important;
+            padding:0 !important;
+            margin:0 !important;
+            border-radius:9999px !important;
+            border:1px solid #93c5fd !important;
+            background:#ffffff !important;
+            color:#2563eb !important;
+            box-shadow:0 1px 3px rgba(15,23,42,.12) !important;
+            opacity:1 !important;
+            visibility:visible !important;
+            z-index:5 !important;
+            cursor:pointer !important;
+        }
+        #tiles-container .grammar-speech-btn svg {
+            display:block !important;
+            width:18px !important;
+            height:18px !important;
+        }
+        #tiles-container .grammar-speech-btn:hover {
+            background:#eff6ff !important;
+        }
+        @media (max-width:640px) {
+            #tiles-container .grammar-tile {
+                padding-right:44px !important;
+            }
+            #tiles-container .grammar-speech-btn {
+                width:34px !important;
+                height:34px !important;
+                top:7px !important;
+                right:7px !important;
+            }
+            #tiles-container .grammar-speech-btn svg {
+                width:20px !important;
+                height:20px !important;
             }
         }
 </style>
@@ -2730,10 +2780,11 @@
                 else if(g==="neuter")gc="gender-neut";
                 else if(g==="plural")gc="gender-plural";
 
-                const b=document.createElement("button");
-                b.type="button";
+                const b=document.createElement("div");
+                b.setAttribute("role","button");
+                b.setAttribute("tabindex","0");
                 b.setAttribute("aria-label",`Show grammar details for ${text}`);
-                b.className=`${cc} ${gc} px-4 py-3 rounded-xl font-bold shadow-sm hover:scale-105 active:scale-95 transition duration-150 flex flex-col items-center justify-center min-w-[90px] border border-2`;
+                b.className=`grammar-tile ${cc} ${gc} relative px-4 py-3 rounded-xl font-bold shadow-sm hover:scale-105 active:scale-95 transition duration-150 flex flex-col items-center justify-center min-w-[90px] border border-2`;
 
                 const a=document.createElement("span");
                 a.className="text-sm tracking-wide";
@@ -2754,13 +2805,12 @@
                 }
                 b.append(a,sub);
 
-                const speechBtn=document.createElement("span");
-                speechBtn.className="grammar-speech-btn mt-2 inline-flex items-center justify-center rounded-full";
-                speechBtn.setAttribute("role","button");
-                speechBtn.setAttribute("tabindex","0");
+                const speechBtn=document.createElement("button");
+                speechBtn.type="button";
+                speechBtn.className="grammar-speech-btn";
                 speechBtn.setAttribute("aria-label",`Pronounce ${text}`);
                 speechBtn.setAttribute("title","Pronounce");
-                speechBtn.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.8 8.5H4.5A1.5 1.5 0 0 0 3 10v4a1.5 1.5 0 0 0 1.5 1.5h2.3L11 19V5Zm4.2 3.2a5.4 5.4 0 0 1 0 7.6M17.8 5.7a9 9 0 0 1 0 12.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+                speechBtn.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.8 8.5H4.5A1.5 1.5 0 0 0 3 10v4a1.5 1.5 0 0 0 1.5 1.5h2.3L11 19V5Zm4.2 3.2a5.4 5.4 0 0 1 0 7.6M17.8 5.7a9 9 0 0 1 0 12.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
                 const speakCard=(event)=>{
                     event.preventDefault();
@@ -2768,11 +2818,6 @@
                     speakRawText(text,"de-DE");
                 };
                 speechBtn.addEventListener("click",speakCard);
-                speechBtn.addEventListener("keydown",(event)=>{
-                    if(event.key==="Enter" || event.key===" "){
-                        speakCard(event);
-                    }
-                });
                 b.appendChild(speechBtn);
 
                 const firstWord=ch.words[0]||"";
@@ -2782,9 +2827,15 @@
                 };
 
                 b.addEventListener("click",(event)=>{
+                    if (event.target.closest(".grammar-speech-btn")) return;
                     event.preventDefault();
-                    event.stopPropagation();
                     selectTile(text,firstWord,detailEntry);
+                });
+                b.addEventListener("keydown",(event)=>{
+                    if ((event.key==="Enter" || event.key===" ") && !event.target.closest(".grammar-speech-btn")) {
+                        event.preventDefault();
+                        selectTile(text,firstWord,detailEntry);
+                    }
                 });
 
                 box.appendChild(b);
