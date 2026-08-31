@@ -378,13 +378,6 @@
                 flex: 0 0 auto !important;
             }
         }
-
-    
-        @media (max-width: 640px) {
-            /* Keep API-key controls directly accessible on iPhone. */
-            #settings-panel {
-                display: block !important;
-            }
             #settings-panel > div {
                 padding: 12px 14px !important;
                 gap: 10px !important;
@@ -469,114 +462,6 @@
             </div>
         </div>
     </div>
-
-    <div id="gemini-diagnostic-panel" class="bg-slate-950 border-b border-slate-700 px-4 py-3 text-xs text-slate-200">
-        <div class="max-w-7xl mx-auto">
-            <div class="font-bold text-amber-300 mb-1">Gemini connection diagnostic</div>
-            <div id="gemini-diagnostic-status" class="text-slate-300 mb-2">
-                Paste your key and tap Save Key. The exact result will appear here.
-            </div>
-            <pre id="gemini-diagnostic-details" style="white-space:pre-wrap;word-break:break-word;margin:0;color:#cbd5e1;font-size:11px;line-height:1.45;max-height:260px;overflow:auto;-webkit-overflow-scrolling:touch;user-select:text;-webkit-user-select:text;"></pre>
-        </div>
-    </div>
-
-    <!-- Network Alert Banner (Hidden by default, shown on failure) -->
-    <div id="network-alert-banner" class="hidden bg-rose-50 border-b border-rose-200 px-6 py-4 text-rose-900 animate-fadeIn">
-        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs font-semibold">
-            <div class="flex items-start gap-2.5">
-                <svg class="w-5 h-5 text-rose-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.233-1.89 1.328-2.937L13.33 4.737c-.77-1.025-2.22-1.025-2.99 0L3.61 16.063c-.904 1.047-.21 2.937 1.328 2.937z"></path></svg>
-                <div>
-                    <span class="font-bold text-sm block">Corporate Proxy or CORS Policy Restriction Detected</span>
-                    <p class="font-normal text-slate-600 mt-0.5 leading-relaxed">
-                        Your computer's corporate firewall or browser security is blocking automated translation requests. You can bypass this entirely by using the **German Input Console** right next to the English console to type or paste your German text directly! All offline parsing, audio pronunciations, and quiz arenas will still work perfectly offline.
-                    </p>
-                </div>
-            </div>
-            <button onclick="document.getElementById('german-source-text').scrollIntoView({ behavior: 'smooth', block: 'nearest' })" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg shrink-0 transition shadow-sm">
-                Scroll to German Input
-            </button>
-        </div>
-    </div>
-
-
-    <!-- iPhone app navigation: hidden on tablet/desktop -->
-    <nav class="mobile-app-tabs" aria-label="Mobile app sections">
-        <button type="button" class="mobile-app-tab mobile-tab-translate" onclick="setMobileAppTab('translate')" aria-label="Translate">
-            <i class="fa-solid fa-language"></i>
-            <span>Translate</span>
-        </button>
-        <button type="button" class="mobile-app-tab mobile-tab-german" onclick="setMobileAppTab('german')" aria-label="German input">
-            <i class="fa-solid fa-pen"></i>
-            <span>German</span>
-        </button>
-        <button type="button" class="mobile-app-tab mobile-tab-tutor" onclick="setMobileAppTab('tutor')" aria-label="AI tutor">
-            <i class="fa-solid fa-comments"></i>
-            <span>Tutor</span>
-        </button>
-        <button type="button" class="mobile-app-tab mobile-tab-study" onclick="setMobileAppTab('study')" aria-label="Study">
-            <i class="fa-solid fa-graduation-cap"></i>
-            <span>Study</span>
-        </button>
-    </nav>
-
-    <!-- Main Content Container -->
-    <main class="flex-grow max-w-7xl mx-auto w-full px-4 py-6 md:py-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        <!-- Left Section: Translation Console (2 Columns wide) -->
-        <div id="mobile-left-column" class="lg:col-span-2 space-y-6">
-
-
-
-            <!-- Inputs and Outputs Console (Two Separate Workspaces) -->
-            <div id="mobile-input-workspaces" class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-
-                <!-- CARD 1: English to German Workspace -->
-                <div id="mobile-english-card" class="mobile-section mobile-translate bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between space-y-4">
-                    <div class="space-y-4 flex-grow">
-                        <!-- Column Header -->
-                        <div class="flex items-center gap-2 text-blue-600 border-b border-slate-100 pb-2">
-                            <svg class="w-5 h-5 text-blue-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138A14.25 14.25 0 0010.5 17.5m-3-12.25a14.25 14.25 0 01-1.5 6.75"></path></svg>
-                            <span class="font-bold text-sm tracking-tight">English to German (Translate & Parse)</span>
-                        </div>
-
-                        <!-- Top Part: English Input -->
-                        <div class="space-y-1">
-                            <div class="bg-slate-100/80 px-4 py-2 flex justify-between items-center border border-slate-200 border-b-0 rounded-t-xl text-xs font-bold text-slate-600">
-                                <span class="text-slate-700">English Source Phrase</span>
-                                <div class="flex flex-col items-center shrink-0 ml-4">
-                                    <button onclick="speakText('source-text')" class="text-blue-600 hover:text-blue-800 transition p-1 rounded-full hover:bg-slate-200 flex items-center justify-center" title="Listen (English)">
-                                        <svg class="w-5 h-5 text-blue-600 hover:text-blue-800" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"></path></svg>
-                                    </button>
-                                    <input type="range" id="speech-speed-en" min="0.4" max="1.6" step="0.1" value="1.0" class="w-14 h-1 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-blue-600 hover:accent-blue-700" title="Adjust speed">
-                                    <span id="speech-speed-en-val" class="font-mono text-[9px] text-slate-500 mt-0.5">1.0x</span>
-                                </div>
-                            </div>
-                            <textarea id="source-text" rows="3"
-                                class="w-full p-4 rounded-b-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-150 resize-none font-medium text-slate-700 text-xs"
-                                placeholder="Enter an English sentence here. Press Enter to Translate & Parse..."></textarea>
-                            <button id="mobile-translate-btn" type="button" class="iphone-action bg-blue-600 hover:bg-blue-700 text-white">
-                                Translate &amp; Parse
-                            </button>
-                        </div>
-
-                        <!-- Bottom Part: German Translation -->
-                        <div class="space-y-1">
-                            <div class="bg-slate-100/80 px-4 py-2 flex justify-between items-center border border-slate-200 border-b-0 rounded-t-xl text-xs font-bold text-slate-600">
-                                <span class="text-slate-700">German Translation</span>
-                                <div class="flex flex-col items-center shrink-0 ml-4">
-                                    <button onclick="speakText('target-text', 'de-DE')" class="text-blue-600 hover:text-blue-800 transition p-1 rounded-full hover:bg-slate-200 flex items-center justify-center" title="Listen (German)">
-                                        <svg class="w-5 h-5 text-blue-600 hover:text-blue-800" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"></path></svg>
-                                    </button>
-                                    <input type="range" id="speech-speed-de" min="0.4" max="1.6" step="0.1" value="1.0" class="w-14 h-1 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-blue-600 hover:accent-blue-700" title="Adjust speed">
-                                    <span id="speech-speed-de-val" class="font-mono text-[9px] text-slate-500 mt-0.5">1.0x</span>
-                                </div>
-                            </div>
-                            <textarea id="target-text" rows="3"
-                                class="w-full p-4 rounded-b-xl border border-slate-200 bg-slate-50 focus:bg-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 resize-none font-medium text-slate-700 text-xs"
-                                placeholder="German translation will appear here..." readonly></textarea>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- CARD 2: German Auto-Correct & Parse Workspace -->
                 <div id="mobile-german-card" class="mobile-section mobile-german bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between space-y-4">
@@ -1146,55 +1031,44 @@
             }
         }
 
-        // Save and verify Gemini API Key, showing exact diagnostics
+        // Save and verify Gemini API Key
         async function saveApiKey() {
             const input = document.getElementById("gemini-api-key-input");
             const inputVal = input ? input.value.trim() : "";
 
             if (!inputVal) {
-                showGeminiDiagnostic("No API key entered.", {
-                    stage: "input",
-                    message: "Paste a Gemini API key first."
-                }, false);
+                alert("Please paste a Gemini API key first.");
                 return;
             }
 
             const previousKey = getGeminiKey();
             setGeminiKey(inputVal);
 
-            showGeminiDiagnostic("Testing Gemini connection…", {
-                model: "gemini-3.6-flash",
-                origin: window.location.origin,
-                online: navigator.onLine
-            }, true);
+            const saveButtons = Array.from(document.querySelectorAll('button[onclick="saveApiKey()"]'));
+            saveButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.dataset.oldHtml = btn.innerHTML;
+                btn.innerHTML = "Testing...";
+            });
 
             try {
-                const reply = await callGeminiApi(
-                    "Reply with exactly these two words and nothing else: CONNECTION OK"
-                );
-
+                await callGeminiApi("Reply with exactly these two words and nothing else: CONNECTION OK");
                 updateApiStatusHeader();
-                showGeminiDiagnostic("SUCCESS — Gemini answered.", {
-                    model: "gemini-3.6-flash",
-                    reply: reply,
-                    origin: window.location.origin
-                }, true);
-
                 alert("Gemini connection successful.");
+
+                const panel = document.getElementById("settings-panel");
+                if (panel && !panel.classList.contains("hidden")) {
+                    panel.classList.add("hidden");
+                }
             } catch (err) {
                 setGeminiKey(previousKey);
                 updateApiStatusHeader();
-
-                const details = Object.assign({
-                    errorName: err && err.name ? err.name : "Error",
-                    errorMessage: err && err.message ? err.message : String(err),
-                    origin: window.location.origin,
-                    online: navigator.onLine
-                }, err && err.diagnostic ? err.diagnostic : {});
-
-                showGeminiDiagnostic("FAILED — exact diagnostic below", details, false);
-
-                alert("Gemini test failed. Scroll to the diagnostic box and send me a screenshot of what it says.");
+                alert("Gemini connection failed: " + (err && err.message ? err.message : String(err)));
+            } finally {
+                saveButtons.forEach(btn => {
+                    btn.disabled = false;
+                    btn.innerHTML = btn.dataset.oldHtml || "Save Key";
+                });
             }
         }
 
@@ -1249,25 +1123,15 @@
             }
         }
 
-        // Google Gemini API browser REST call with detailed diagnostics
+        // Google Gemini API browser REST call
         async function callGeminiApi(prompt) {
             const apiKey = getGeminiKey();
-            if (!apiKey) {
-                const err = new Error("No Gemini API key is saved.");
-                err.diagnostic = { stage: "before request" };
-                throw err;
-            }
+            if (!apiKey) throw new Error("No Gemini API key is saved.");
 
-            const model = "gemini-3.6-flash";
-            const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/" +
-                model + ":generateContent";
-
-            let response;
-            try {
-                response = await fetch(endpoint, {
+            const response = await fetch(
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+                {
                     method: "POST",
-                    mode: "cors",
-                    cache: "no-store",
                     headers: {
                         "Content-Type": "application/json",
                         "x-goog-api-key": apiKey
@@ -1278,48 +1142,19 @@
                             parts: [{ text: prompt }]
                         }]
                     })
-                });
-            } catch (networkError) {
-                const err = new Error(
-                    "Browser/network request failed before Google returned an HTTP response: " +
-                    (networkError && networkError.message ? networkError.message : String(networkError))
-                );
-                err.diagnostic = {
-                    stage: "fetch/network",
-                    name: networkError && networkError.name ? networkError.name : "Unknown",
-                    message: networkError && networkError.message ? networkError.message : String(networkError),
-                    endpoint: endpoint,
-                    origin: window.location.origin,
-                    online: navigator.onLine,
-                    userAgent: navigator.userAgent
-                };
-                throw err;
-            }
+                }
+            );
 
             const rawText = await response.text();
             let data = null;
-            try {
-                data = rawText ? JSON.parse(rawText) : null;
-            } catch (e) {}
+            try { data = rawText ? JSON.parse(rawText) : null; } catch (e) {}
 
             if (!response.ok) {
-                const googleMessage =
+                const message =
                     (data && data.error && data.error.message) ||
                     rawText ||
-                    ("HTTP " + response.status + " " + response.statusText);
-
-                const err = new Error(googleMessage);
-                err.diagnostic = {
-                    stage: "Google HTTP response",
-                    httpStatus: response.status,
-                    httpStatusText: response.statusText,
-                    googleStatus: data && data.error ? (data.error.status || "") : "",
-                    googleCode: data && data.error ? (data.error.code || "") : "",
-                    googleMessage: data && data.error ? (data.error.message || "") : rawText,
-                    endpoint: endpoint,
-                    origin: window.location.origin
-                };
-                throw err;
+                    ("HTTP " + response.status);
+                throw new Error(message);
             }
 
             const text = data && data.candidates && data.candidates[0] &&
@@ -1327,37 +1162,8 @@
                 ? data.candidates[0].content.parts.map(part => part.text || "").join("").trim()
                 : "";
 
-            if (!text) {
-                const err = new Error("Google returned HTTP 200, but no text response was found.");
-                err.diagnostic = {
-                    stage: "response parsing",
-                    httpStatus: response.status,
-                    responsePreview: rawText.slice(0, 1200)
-                };
-                throw err;
-            }
-
+            if (!text) throw new Error("Gemini returned an empty response.");
             return text;
-        }
-
-        function showGeminiDiagnostic(title, details, success) {
-            const status = document.getElementById("gemini-diagnostic-status");
-            const box = document.getElementById("gemini-diagnostic-details");
-
-            if (status) {
-                status.textContent = title;
-                status.style.color = success ? "#86efac" : "#fca5a5";
-            }
-
-            if (box) {
-                try {
-                    box.textContent = typeof details === "string"
-                        ? details
-                        : JSON.stringify(details, null, 2);
-                } catch (e) {
-                    box.textContent = String(details);
-                }
-            }
         }
 
         // Offline German Case & Gender Morphological Dictionary
