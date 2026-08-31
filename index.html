@@ -1945,42 +1945,66 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
             detailCard.classList.remove("hidden");
             detailCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-            // Check if Gemini API key exists to load dynamic contextual analysis
+            // Show the normal grammar explanation immediately.
+            // Gemini is only called if the learner explicitly taps the Ask AI button.
+            renderStaticExplanation(keyWord, entry, dExplanation);
+
             const apiKey = getGeminiKey();
             if (apiKey) {
-                dExplanation.innerHTML = `
-                    <div class="flex items-center gap-2.5 text-blue-600 font-bold animate-pulse p-2">
-                        <svg class="animate-spin h-4 w-4 text-blue-600 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        <span>AI Tutor analyzing grammar context...</span>
-                    </div>`;
+                const aiButton = document.createElement("button");
+                aiButton.type = "button";
+                aiButton.className = "phrase-ai-explain-btn mt-3 w-full sm:w-auto px-3 py-2.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-200 text-xs font-bold transition";
+                aiButton.innerHTML = '<span class="inline-flex items-center gap-1.5">✨ Ask AI about this phrase</span>';
 
-                // Fetch explanation asynchronously
-                (async () => {
+                aiButton.addEventListener("click", async () => {
+                    aiButton.disabled = true;
+                    aiButton.innerText = "Asking Gemini…";
+
+                    const staticHtml = dExplanation.innerHTML;
+                    const loading = document.createElement("div");
+                    loading.className = "mt-3 flex items-center gap-2 text-amber-700 text-xs font-semibold";
+                    loading.innerHTML = `
+                        <svg class="animate-spin w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+                        <span>AI Tutor analyzing this phrase…</span>`;
+                    dExplanation.appendChild(loading);
+
                     try {
-                        const prompt = `You are an expert German language tutor. The student clicked the phrase "${phraseText}" in the sentence: "${currentGermanSentence}".
-Describe its grammatical role, case, gender, and noun endings in this specific sentence context in 2-3 concise, friendly, and highly educational sentences. Be encouraging and clear.`;
+                        const prompt = `You are an expert German language tutor. The student selected the phrase "${phraseText}" in the sentence: "${currentGermanSentence}".
+Describe its grammatical role, case, gender where relevant, and endings in this specific sentence context in 2-3 concise, friendly, highly educational sentences. Be encouraging and clear.`;
+
                         const aiExplanation = await callGeminiApi(prompt);
 
-                        // Check if the user hasn't selected another tile in the meantime
                         if (currentSelectedPhrase === phraseText) {
-                            dExplanation.innerHTML = `
-                                <div class="space-y-1 animate-fadeIn">
-                                    <span class="block font-bold text-amber-600 text-[10px] uppercase flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5 shrink-0 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
-                                        Live AI Grammar Explanation:
-                                    </span>
-                                    <p class="bg-amber-50/50 text-amber-950 border border-amber-100 p-2.5 rounded-lg font-medium leading-relaxed">${aiExplanation.trim()}</p>
-                                </div>`;
+                            loading.remove();
+
+                            const aiResult = document.createElement("div");
+                            aiResult.className = "mt-3 space-y-1 animate-fadeIn";
+                            aiResult.innerHTML = `
+                                <span class="block font-bold text-amber-600 text-[10px] uppercase">
+                                    Live AI Grammar Explanation
+                                </span>
+                                <p class="bg-amber-50/50 text-amber-950 border border-amber-100 p-2.5 rounded-lg font-medium leading-relaxed">${escapeHtml(aiExplanation.trim())}</p>`;
+                            dExplanation.appendChild(aiResult);
                         }
                     } catch (e) {
-                        console.error("AI dynamic explanation failed, using fallback:", e);
+                        console.error("AI phrase explanation failed:", e);
                         if (currentSelectedPhrase === phraseText) {
-                            renderStaticExplanation(keyWord, entry, dExplanation);
+                            loading.remove();
+                            const errorNote = document.createElement("div");
+                            errorNote.className = "mt-3 text-rose-600 text-xs font-semibold";
+                            errorNote.textContent = "AI explanation failed: " + (e && e.message ? e.message : String(e));
+                            dExplanation.appendChild(errorNote);
                         }
+                    } finally {
+                        aiButton.disabled = false;
+                        aiButton.innerHTML = '<span class="inline-flex items-center gap-1.5">✨ Ask AI again</span>';
                     }
-                })();
-            } else {
-                renderStaticExplanation(keyWord, entry, dExplanation);
+                });
+
+                dExplanation.appendChild(aiButton);
             }
 
             // Trigger translation automatically!
