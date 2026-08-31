@@ -687,29 +687,12 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- English Back-Translation Check Column -->
-            <div id="mobile-verification-card" class="mobile-section mobile-translate mobile-german bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-3">
-                <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2">
-                    <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    English Verification Re-Translation (Strict Check)
-                </h3>
-                <p class="text-xs text-slate-400">
-                    We translate the German output back to English. This allows you to verify if the German words convey your exact original intent.
-                </p>
-                <div class="p-4 bg-emerald-50/30 border border-emerald-100 rounded-xl relative flex flex-col items-start gap-3">
-                    <div class="flex items-center gap-3 w-full">
-                        <p id="back-translation-output" class="font-medium text-slate-600 italic flex-grow">Click "Run Verification" to check accuracy offline...</p>
-                        <button id="verify-now-btn" onclick="runManualVerification()" class="hidden px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-sm transition duration-150 flex items-center gap-1.5">
-                            <svg class="w-4 h-4 mr-1.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"></path></svg> Run Verification
-                        </button>
-                    </div>
+                            <div class="pt-2">
                     <button id="save-vocab-btn" onclick="saveToVocabulary()" class="hidden px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-lg shadow-sm transition duration-150 flex items-center gap-2">
                         <svg class="w-4 h-4 mr-2 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"></path></svg> Save to Study List
                     </button>
                 </div>
-            </div>
+</div>
 
             <!-- Vocabulary Builder & Practice Arena Card -->
             <div id="mobile-study-card" class="mobile-section mobile-study bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
@@ -1510,7 +1493,6 @@
         async function processEnglishTranslation() {
             const sourceText = document.getElementById("source-text").value.trim();
             const tilesContainer = document.getElementById("tiles-container");
-            const backTranslationEl = document.getElementById("back-translation-output");
             const networkBanner = document.getElementById("network-alert-banner");
 
             if (!sourceText) {
@@ -1561,10 +1543,6 @@ English: "${sourceText}"`;
                     document.getElementById("ai-coach-note").innerText = "";
                 }
 
-                // Set up manual back-translation check
-                backTranslationEl.innerText = "Translation loaded! Click 'Run Verification' to check semantic accuracy on-demand.";
-                document.getElementById("verify-now-btn").classList.remove("hidden");
-
                 currentGermanSentence = germanSentence;
                 if (networkBanner) networkBanner.classList.add("hidden"); // Hide banner if successful
 
@@ -1572,7 +1550,7 @@ English: "${sourceText}"`;
                 renderGrammarTiles(germanSentence);
 
                 // Show the Save button
-                document.getElementById("save-vocab-btn").classList.remove("hidden");
+                document.getElementById("save-vocab-btn")?.classList.remove("hidden");
 
             } catch (error) {
                 console.error("Translation processing error:", error);
@@ -1669,7 +1647,7 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
                 renderGrammarTiles(currentGermanSentence);
 
                 // Show the Save button
-                document.getElementById("save-vocab-btn").classList.remove("hidden");
+                document.getElementById("save-vocab-btn")?.classList.remove("hidden");
 
             } catch (error) {
                 console.error("German Correction error:", error);
@@ -2034,46 +2012,7 @@ Describe its grammatical role, case, gender where relevant, and endings in this 
             }
         }
 
-        // On-Demand Verification Translation (Throttling Failsafe)
-        async function runManualVerification() {
-            const verifyBtn = document.getElementById("verify-now-btn");
-            const backTranslationEl = document.getElementById("back-translation-output");
-
-            if (!currentGermanSentence) return;
-
-            const originalBtn = verifyBtn.innerHTML;
-            verifyBtn.innerHTML = `<svg class="animate-spin h-4 w-4 text-blue-600 inline shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing...`;
-            verifyBtn.disabled = true;
-
-            try {
-                let sl = "de", tl = "en";
-                let textToTranslate = currentGermanSentence;
-
-                if (appMode === "de-en") {
-                    // German direct mode translates input to English
-                    textToTranslate = document.getElementById("source-text").value.trim();
-                }
-
-                const translation = await googleTranslateApiCall(textToTranslate, sl, tl);
-
-                if (appMode === "en-de") {
-                    backTranslationEl.innerText = `"${translation}"`;
-                } else {
-                    document.getElementById("target-text").value = translation;
-                    backTranslationEl.innerText = `Original German Input translates to: "${translation}"`;
-                }
-
-                verifyBtn.classList.add("hidden"); // Successfully fetched! Hide button
-            } catch (err) {
-                console.error("Manual verification failed:", err);
-                alert("Failed to reach translation engine. Please try again in a few seconds.");
-            } finally {
-                verifyBtn.innerHTML = originalBtn;
-                verifyBtn.disabled = false;
-            }
-        }
-
-                // Comprehensive offline dictionary of exact simple translations for core words and prepositions
+        // Comprehensive offline dictionary of exact simple translations for core words and prepositions
         const offlineWordTranslations = {
             "der": "the",
             "die": "the",
