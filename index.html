@@ -1163,7 +1163,7 @@
             setGeminiKey(inputVal);
 
             showGeminiDiagnostic("Testing Gemini connection…", {
-                model: "gemini-2.5-flash",
+                model: "gemini-3.6-flash",
                 origin: window.location.origin,
                 online: navigator.onLine
             }, true);
@@ -1175,7 +1175,7 @@
 
                 updateApiStatusHeader();
                 showGeminiDiagnostic("SUCCESS — Gemini answered.", {
-                    model: "gemini-2.5-flash",
+                    model: "gemini-3.6-flash",
                     reply: reply,
                     origin: window.location.origin
                 }, true);
@@ -1258,7 +1258,7 @@
                 throw err;
             }
 
-            const model = "gemini-2.5-flash";
+            const model = "gemini-3.6-flash";
             const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/" +
                 model + ":generateContent";
 
