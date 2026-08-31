@@ -1566,6 +1566,49 @@
                 explanation: "Unambiguous Genitive marker! Shows possession for masculine or neuter nouns (e.g., die Tür eines Autos)."
             },
 
+            // Possessive determiners (mein-/dein-/sein-/ihr-/unser-/euer-/Ihr-)
+            "mein": { case: "Nominative (Masc/Neut) | Accusative (Neut)", gender: "Masculine / Neuter", explanation: "Possessive determiner meaning 'my'. The noun and sentence role determine the exact case." },
+            "meine": { case: "Nominative | Accusative", gender: "Feminine / Plural", explanation: "Possessive determiner meaning 'my', used with feminine singular or plural nouns." },
+            "meinen": { case: "Accusative (Masc) | Dative (Plural)", gender: "Masculine / Plural", explanation: "Possessive determiner meaning 'my'. It marks Accusative masculine or Dative plural." },
+            "meinem": { case: "Dative", gender: "Masculine / Neuter", explanation: "Possessive determiner meaning 'my'. It marks Dative masculine or neuter." },
+            "meiner": { case: "Dative (Fem) | Genitive (Fem/Plural)", gender: "Feminine / Plural", explanation: "Possessive determiner meaning 'my'. It marks Dative feminine or Genitive feminine/plural." },
+            "meines": { case: "Genitive", gender: "Masculine / Neuter", explanation: "Possessive determiner meaning 'my'. It marks Genitive masculine or neuter." },
+
+            "dein": { case: "Nominative (Masc/Neut) | Accusative (Neut)", gender: "Masculine / Neuter", explanation: "Possessive determiner meaning 'your' (informal singular)." },
+            "deine": { case: "Nominative | Accusative", gender: "Feminine / Plural", explanation: "Possessive determiner meaning 'your' (informal singular)." },
+            "deinen": { case: "Accusative (Masc) | Dative (Plural)", gender: "Masculine / Plural", explanation: "Possessive determiner meaning 'your' (informal singular)." },
+            "deinem": { case: "Dative", gender: "Masculine / Neuter", explanation: "Possessive determiner meaning 'your' (informal singular)." },
+            "deiner": { case: "Dative (Fem) | Genitive (Fem/Plural)", gender: "Feminine / Plural", explanation: "Possessive determiner meaning 'your' (informal singular)." },
+            "deines": { case: "Genitive", gender: "Masculine / Neuter", explanation: "Possessive determiner meaning 'your' (informal singular)." },
+
+            "sein": { case: "Nominative (Masc/Neut) | Accusative (Neut)", gender: "Masculine / Neuter", explanation: "Possessive determiner meaning 'his/its'." },
+            "seine": { case: "Nominative | Accusative", gender: "Feminine / Plural", explanation: "Possessive determiner meaning 'his/its'." },
+            "seinen": { case: "Accusative (Masc) | Dative (Plural)", gender: "Masculine / Plural", explanation: "Possessive determiner meaning 'his/its'." },
+            "seinem": { case: "Dative", gender: "Masculine / Neuter", explanation: "Possessive determiner meaning 'his/its'." },
+            "seiner": { case: "Dative (Fem) | Genitive (Fem/Plural)", gender: "Feminine / Plural", explanation: "Possessive determiner meaning 'his/its'." },
+            "seines": { case: "Genitive", gender: "Masculine / Neuter", explanation: "Possessive determiner meaning 'his/its'." },
+
+            "ihr": { case: "Nominative (Masc/Neut) | Accusative (Neut) | Dative pronoun", gender: "Masculine / Neuter / Feminine pronoun", explanation: "Can be a possessive determiner ('her/their') or the Dative pronoun 'to her'; context determines the role." },
+            "ihre": { case: "Nominative | Accusative", gender: "Feminine / Plural", explanation: "Possessive determiner meaning 'her/their'." },
+            "ihren": { case: "Accusative (Masc) | Dative (Plural)", gender: "Masculine / Plural", explanation: "Possessive determiner meaning 'her/their'." },
+            "ihrem": { case: "Dative", gender: "Masculine / Neuter", explanation: "Possessive determiner meaning 'her/their'." },
+            "ihrer": { case: "Dative (Fem) | Genitive (Fem/Plural)", gender: "Feminine / Plural", explanation: "Possessive determiner meaning 'her/their'." },
+            "ihres": { case: "Genitive", gender: "Masculine / Neuter", explanation: "Possessive determiner meaning 'her/their'." },
+
+            "unser": { case: "Nominative (Masc/Neut) | Accusative (Neut)", gender: "Masculine / Neuter", explanation: "Possessive determiner meaning 'our'." },
+            "unsere": { case: "Nominative | Accusative", gender: "Feminine / Plural", explanation: "Possessive determiner meaning 'our'." },
+            "unseren": { case: "Accusative (Masc) | Dative (Plural)", gender: "Masculine / Plural", explanation: "Possessive determiner meaning 'our'." },
+            "unserem": { case: "Dative", gender: "Masculine / Neuter", explanation: "Possessive determiner meaning 'our'." },
+            "unserer": { case: "Dative (Fem) | Genitive (Fem/Plural)", gender: "Feminine / Plural", explanation: "Possessive determiner meaning 'our'." },
+            "unseres": { case: "Genitive", gender: "Masculine / Neuter", explanation: "Possessive determiner meaning 'our'." },
+
+            "euer": { case: "Nominative (Masc/Neut) | Accusative (Neut)", gender: "Masculine / Neuter", explanation: "Possessive determiner meaning 'your' (informal plural)." },
+            "eure": { case: "Nominative | Accusative", gender: "Feminine / Plural", explanation: "Possessive determiner meaning 'your' (informal plural)." },
+            "euren": { case: "Accusative (Masc) | Dative (Plural)", gender: "Masculine / Plural", explanation: "Possessive determiner meaning 'your' (informal plural)." },
+            "eurem": { case: "Dative", gender: "Masculine / Neuter", explanation: "Possessive determiner meaning 'your' (informal plural)." },
+            "eurer": { case: "Dative (Fem) | Genitive (Fem/Plural)", gender: "Feminine / Plural", explanation: "Possessive determiner meaning 'your' (informal plural)." },
+            "eures": { case: "Genitive", gender: "Masculine / Neuter", explanation: "Possessive determiner meaning 'your' (informal plural)." },
+
             // Common Pronouns
             "ich": { case: "Nominative", gender: "1st Person (I)", explanation: "Subject pronoun. Performing the action of the sentence." },
             "mich": { case: "Accusative", gender: "1st Person (Me)", explanation: "Direct object pronoun receiving the action directly (e.g., 'Er sieht mich')." },
@@ -1594,11 +1637,27 @@
             "sind": { case: "Verb (Copula)", gender: "Verb", explanation: "The third-person plural of 'sein' (are). It links a plural subject to its complements (both in the Nominative case)." },
             "bin": { case: "Verb (Copula)", gender: "Verb", explanation: "The first-person singular of 'sein' (I am)." },
             "habe": { case: "Verb", gender: "Verb", explanation: "The first-person singular of 'haben' (I have)." },
-            "haben": { case: "Verb", gender: "Verb", explanation: "The infinitive verb meaning 'to have'. Usually triggers an Accusative direct object." }
+            "haben": { case: "Verb", gender: "Verb", explanation: "The infinitive verb meaning 'to have'. Usually triggers an Accusative direct object." },
+            "werde": { case: "Verb (Auxiliary)", gender: "Verb", explanation: "First-person singular of 'werden'. It can serve as an auxiliary, for example in future constructions." },
+            "werden": { case: "Verb (Auxiliary / Infinitive)", gender: "Verb", explanation: "Infinitive of 'werden'; also used as an auxiliary." },
+            "schenken": { case: "Verb (Infinitive)", gender: "Verb", explanation: "Means 'to give as a gift'. It commonly takes a Dative recipient and an Accusative thing." },
+            "besorgen": { case: "Verb (Infinitive)", gender: "Verb", explanation: "Means 'to get/obtain'. It can take a Dative recipient and an Accusative thing." },
+            "bringen": { case: "Verb (Infinitive)", gender: "Verb", explanation: "Means 'to bring'. It can take a Dative recipient and an Accusative thing." },
+            "zeigen": { case: "Verb (Infinitive)", gender: "Verb", explanation: "Means 'to show'. It commonly takes a Dative recipient and an Accusative thing." }
         };
 
-        // German Adjective Endings that typically append inside noun phrases
-        const weakAdjectives = ["großen", "große", "großes", "großer", "kleinen", "kleine", "kleines", "kleiner", "guten", "gute", "gutes", "guter", "netten", "nette", "nettes", "netter", "schönen", "schöne", "schönes", "schöner", "freundlichen", "freundliche", "freundliches", "freundlicher"];
+        // Common adjective stems plus an ending-based fallback.
+        const commonAdjectiveStems = [
+            "groß","klein","gut","nett","schön","freundlich","neu","alt","jung","teuer","billig",
+            "lang","kurz","schnell","langsam","wichtig","interessant","deutsch","rot","blau","grün",
+            "schwarz","weiß","warm","kalt","lieb","toll","schlecht","einfach","schwierig"
+        ];
+
+        function looksLikeAdjective(word) {
+            const w = word.toLowerCase();
+            if (commonAdjectiveStems.some(stem => w === stem || w.startsWith(stem))) return true;
+            return /^[a-zäöüß]{3,}(e|en|er|es|em)$/i.test(w);
+        }
 
         // Common German Prepositions to bundle into Prepositional Phrases
         const germanPrepositions = ["mit", "zu", "von", "nach", "bei", "aus", "seit", "für", "durch", "gegen", "ohne", "um", "an", "auf", "in", "über", "unter", "vor", "hinter", "neben", "zwischen"];
@@ -1964,10 +2023,34 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
         // This can be expanded over time without using AI/API credits.
         const germanNounGender = {
             frau: "Feminine", mutter: "Feminine", schwester: "Feminine", freundin: "Feminine",
+            katze: "Feminine", schule: "Feminine", straße: "Feminine", tür: "Feminine", tasche: "Feminine",
             mann: "Masculine", vater: "Masculine", bruder: "Masculine", freund: "Masculine",
-            hund: "Masculine", apfel: "Masculine",
-            buch: "Neuter", kind: "Neuter", haus: "Neuter", auto: "Neuter", geld: "Neuter"
+            hund: "Masculine", apfel: "Masculine", lehrer: "Masculine", tisch: "Masculine", stuhl: "Masculine",
+            buch: "Neuter", kind: "Neuter", haus: "Neuter", auto: "Neuter", geld: "Neuter",
+            essen: "Neuter", wasser: "Neuter", mädchen: "Neuter", zimmer: "Neuter", geschenk: "Neuter"
         };
+
+        const knownVerbForms = new Set([
+            "bin","bist","ist","sind","seid","war","waren","werde","wirst","wird","werden",
+            "habe","hast","hat","haben","hatte","hatten",
+            "möchte","möchtest","möchten","kann","kannst","können","muss","musst","müssen",
+            "will","willst","wollen","soll","sollst","sollen","darf","darfst","dürfen",
+            "gebe","gibst","gibt","geben","schenke","schenkst","schenkt","schenken",
+            "bringe","bringst","bringt","bringen","zeige","zeigst","zeigt","zeigen",
+            "schicke","schickst","schickt","schicken","kaufe","kaufst","kauft","kaufen",
+            "besorge","besorgst","besorgt","besorgen","sehe","siehst","sieht","sehen",
+            "mache","machst","macht","machen","gehe","gehst","geht","gehen",
+            "komme","kommst","kommt","kommen","lerne","lernst","lernt","lernen"
+        ]);
+
+        function looksLikeVerb(word) {
+            const w = word.toLowerCase();
+            if (knownVerbForms.has(w)) return true;
+            if (/^[a-zäöüß]{3,}(en|eln|ern)$/i.test(w)) return true; // likely infinitive
+            return false;
+        }
+
+        const possessiveDeterminerPattern = /^(mein|dein|sein|ihr|unser|euer)(e|en|em|er|es)?$/i;
 
         function phraseLastNoun(words) {
             for (let i = words.length - 1; i >= 0; i--) {
@@ -1978,50 +2061,49 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
         }
 
         function resolvedPhraseEntry(words, baseEntry) {
-            if (!baseEntry || !words || !words.length) return baseEntry;
+            if (!words || !words.length) return baseEntry;
 
             const det = words[0].toLowerCase();
             const noun = phraseLastNoun(words);
             const nounGender = germanNounGender[noun] || "";
             const hasAdjEn = words.slice(1, -1).some(w => /en$/i.test(w));
 
-            // Strongly identifiable demonstrative + adjective/noun patterns.
-            if (det === "dieser" && nounGender === "Feminine" && hasAdjEn) {
-                return {
-                    case: "Dative",
-                    gender: "Feminine",
-                    explanation: "This whole noun phrase is Dative feminine. 'Dieser' is the Dative feminine form of 'dies-', and the adjective takes -en: e.g. 'dieser netten Frau'."
-                };
-            }
-            if (det === "diesem") {
+            // Determiners with unambiguous endings.
+            if (/^(dies|mein|dein|sein|ihr|unser|euer).*em$/i.test(det)) {
                 return {
                     case: "Dative",
                     gender: nounGender || "Masculine / Neuter",
-                    explanation: "'Diesem' unambiguously marks Dative masculine or neuter. The noun determines which gender applies."
+                    explanation: "The determiner ending -em marks Dative masculine or neuter. The noun determines the gender."
                 };
             }
-            if (det === "diesen" && nounGender === "Plural") {
+            if (/^(dies|mein|dein|sein|ihr|unser|euer).*en$/i.test(det)) {
+                if (nounGender === "Plural") {
+                    return { case: "Dative", gender: "Plural", explanation: "The -en determiner form with a plural noun marks Dative plural." };
+                }
+                if (nounGender === "Masculine") {
+                    return { case: "Accusative", gender: "Masculine", explanation: "The -en determiner form before a masculine singular noun marks Accusative masculine." };
+                }
+            }
+            if (/^(dies|mein|dein|sein|ihr|unser|euer).*er$/i.test(det) && nounGender === "Feminine" && hasAdjEn) {
                 return {
                     case: "Dative",
-                    gender: "Plural",
-                    explanation: "'Diesen' with a plural noun marks a Dative plural noun phrase."
+                    gender: "Feminine",
+                    explanation: "This noun phrase is Dative feminine. The determiner form and adjective ending -en support the Dative reading."
                 };
             }
 
-            // Resolve common indefinite-article ambiguity from the noun itself.
-            if (det === "ein" && nounGender === "Neuter") {
-                return {
-                    case: "Nominative | Accusative",
-                    gender: "Neuter",
-                    explanation: "'Ein' with a neuter noun can be Nominative or Accusative. In object position, as in 'ein Buch besorgen', it functions as the Accusative direct object."
-                };
+            // ein-word / possessive zero-ending forms: use noun gender, then syntax may resolve case.
+            if (/^(ein|mein|dein|sein|ihr|unser|euer)$/i.test(det)) {
+                if (nounGender === "Neuter") {
+                    return { case: "Nominative | Accusative", gender: "Neuter", explanation: "This zero-ending determiner with a neuter noun can be Nominative or Accusative; sentence role resolves the case." };
+                }
+                if (nounGender === "Masculine") {
+                    return { case: "Nominative", gender: "Masculine", explanation: "This zero-ending determiner with a masculine noun marks Nominative masculine." };
+                }
             }
-            if (det === "eine" && nounGender === "Feminine") {
-                return {
-                    case: "Nominative | Accusative",
-                    gender: "Feminine",
-                    explanation: "'Eine' with a feminine noun can be Nominative or Accusative; sentence role determines the case."
-                };
+
+            if (/^(eine|meine|deine|seine|ihre|unsere|eure|diese)$/i.test(det) && nounGender === "Feminine") {
+                return { case: "Nominative | Accusative", gender: "Feminine", explanation: "This feminine determiner form can be Nominative or Accusative; sentence role resolves the case." };
             }
 
             return baseEntry;
@@ -2062,7 +2144,7 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
 
                         // If it is a known article, pronoun, adjective, or capitalized noun, group it!
                         if (germanGrammarDictionary[nextLower] !== undefined ||
-                            weakAdjectives.includes(nextLower) ||
+                            looksLikeAdjective(nextLower) ||
                             /^[A-ZÄÖÜ]/.test(nextToken)) {
                             chunk.words.push(nextToken);
                             i++;
@@ -2074,8 +2156,8 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
                     continue;
                 }
 
-                // Check if starting a Noun Phrase (headed by an article/pronoun)
-                if (germanGrammarDictionary[lowerToken] !== undefined) {
+                // Check if starting a Noun Phrase (headed by an article/determiner)
+                if (germanGrammarDictionary[lowerToken] !== undefined || possessiveDeterminerPattern.test(lowerToken)) {
                     const chunk = { words: [token], isPunctuation: false, type: "noun_phrase" };
                     i++;
                     while (i < tokens.length) {
@@ -2084,7 +2166,7 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
                         if (/^[.,!?;]+$/.test(nextToken)) break;
 
                         // Group subsequent adjectives or capitalized nouns
-                        if (weakAdjectives.includes(nextLower) || /^[A-ZÄÖÜ]/.test(nextToken)) {
+                        if (looksLikeAdjective(nextLower) || /^[A-ZÄÖÜ]/.test(nextToken)) {
                             chunk.words.push(nextToken);
                             i++;
                         } else {
@@ -2103,7 +2185,9 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
             // Context pass for common ditransitive patterns such as:
             // "Ich möchte dieser netten Frau ein Buch besorgen."
             const sentenceLower = sentence.toLowerCase();
-            const hasDativeRecipientVerb = /\b(besorgen|geben|schenken|bringen|zeigen|schicken|kaufen)\b/.test(sentenceLower);
+            const hasDativeRecipientVerb = /\b(besorgen|geben|schenken|bringen|zeigen|schicken|kaufen|geben|senden)\b/.test(sentenceLower);
+            const finiteVerbIndex = chunks.findIndex(c => c.words && c.words.length === 1 && looksLikeVerb(c.words[0]));
+            const subjectPronounIndex = chunks.findIndex(c => c.words && c.words.length === 1 && ["ich","du","er","sie","es","wir","ihr"].includes(c.words[0].toLowerCase()));
 
             // Render generated phrase chunk cards
             chunks.forEach((chunk) => {
@@ -2138,11 +2222,11 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
                     const noun = phraseLastNoun(chunk.words);
                     const nounGender = germanNounGender[noun] || "";
 
-                    if (hasDativeRecipientVerb && det === "ein" && nounGender === "Neuter") {
+                    if (hasDativeRecipientVerb && /^(ein|mein|dein|sein|ihr|unser|euer)$/i.test(det) && nounGender === "Neuter") {
                         dictEntry = {
                             case: "Accusative",
                             gender: "Neuter",
-                            explanation: "This noun phrase is the thing being obtained/given, so it functions as the Accusative direct object. 'Buch' is neuter: das Buch → ein Buch."
+                            explanation: "This noun phrase is the thing being given/obtained, so it functions as the Accusative direct object. The neuter noun keeps the zero-ending determiner form."
                         };
                     }
                 }
@@ -2204,8 +2288,9 @@ Return ONLY raw JSON, with no markdown formatting blocks or backticks.`;
                         displaySubtitle = `${caseLabel} (${rawGender})`;
                     }
                 } else {
-                    // Check if it starts with a capitalized German noun
-                    if (/^[A-ZÄÖÜ]/.test(chunk.words[0])) {
+                    if (chunk.words.length === 1 && looksLikeVerb(chunk.words[0])) {
+                        displaySubtitle = "Verb";
+                    } else if (/^[A-ZÄÖÜ]/.test(chunk.words[0])) {
                         displaySubtitle = "Noun";
                     } else {
                         displaySubtitle = "Word";
