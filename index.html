@@ -834,26 +834,23 @@
                         </h4>
                         <button type="button" onclick="closeDetailCard()" class="text-slate-400 hover:text-slate-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                         <div>
-                            <span class="block font-bold uppercase tracking-wider text-slate-400 text-[10px]">Identified Case</span>
+                            <span class="block font-bold uppercase tracking-wider text-slate-400 text-[10px]">Case</span>
                             <span id="detail-case" class="text-sm font-semibold"></span>
                         </div>
                         <div>
-                            <span class="block font-bold uppercase tracking-wider text-slate-400 text-[10px]">Grammatical Gender</span>
+                            <span class="block font-bold uppercase tracking-wider text-slate-400 text-[10px]">Gender</span>
                             <span id="detail-gender" class="text-sm font-semibold text-slate-700"></span>
                         </div>
                         <div>
-                            <span class="block font-bold uppercase tracking-wider text-slate-400 text-[10px]">Phrase Translation</span>
+                            <span class="block font-bold uppercase tracking-wider text-slate-400 text-[10px]">Translation</span>
                             <div class="mt-1.5">
                                 <span id="detail-translation" class="text-sm font-bold text-emerald-700 italic">Translating...</span>
                             </div>
                         </div>
-                        <div>
-                            <span class="block font-bold uppercase tracking-wider text-slate-400 text-[10px]">Explanation</span>
-                            <span id="detail-explanation" class="text-sm text-slate-600"></span>
-                        </div>
                     </div>
+                    <div id="detail-explanation" class="pt-2"></div>
                 </div>
                             <div class="pt-2">
                     <button id="save-vocab-btn" onclick="saveToVocabulary()" class="hidden px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-lg shadow-sm transition duration-150 flex items-center gap-2">
@@ -2468,99 +2465,71 @@
             const dGender = document.getElementById("detail-gender");
             const dExplanation = document.getElementById("detail-explanation");
 
-            if (!detailCard || !dWord || !dCase || !dGender || !dExplanation) {
-                console.error("Phrase detail panel is missing required elements.");
-                return;
-            }
+            if (!detailCard || !dWord || !dCase || !dGender || !dExplanation) return;
 
             currentSelectedPhrase = phraseText;
-            dWord.innerText = phraseText;
-
-            if (entry) {
-                dCase.innerText = entry.case;
-                dCase.className = "text-sm font-bold text-slate-800";
-                dGender.innerText = entry.gender;
-            } else {
-                dCase.innerText = "General Structure";
-                dCase.className = "text-sm font-semibold text-slate-500 italic";
-                dGender.innerText = "Context Dependent";
-            }
-
-            detailCard.classList.remove("hidden");
-            detailCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-            // Keep the default card details concise.
-            // No offline explanation paragraph is shown; AI remains strictly opt-in.
+            dWord.textContent = phraseText;
+            dCase.textContent = entry && entry.case ? entry.case : "—";
+            dGender.textContent = entry && entry.gender ? entry.gender : "—";
             dExplanation.innerHTML = "";
 
-            // Phrase details are offline by default.
-            // AI is NEVER called by selecting a card.
+            detailCard.classList.remove("hidden");
+            detailCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
             const apiKey = getActiveAIKey();
             if (apiKey) {
-                const aiHint = document.createElement("div");
-                aiHint.className = "text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1";
-                aiHint.textContent = "Optional explanation";
-                dExplanation.appendChild(aiHint);
-                window.setTimeout(() => {
-                    // Do not add the button if the user already selected another phrase.
-                    if (currentSelectedPhrase !== phraseText) return;
+                const aiButton = document.createElement("button");
+                aiButton.type = "button";
+                aiButton.className = "phrase-ai-explain-btn mt-2 w-full sm:w-auto px-3 py-2.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-xs font-bold transition";
+                aiButton.textContent = "✨ Ask AI about this phrase";
 
-                    const aiButton = document.createElement("button");
-                    aiButton.type = "button";
-                    aiButton.className = "phrase-ai-explain-btn mt-3 w-full sm:w-auto px-3 py-2.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-xs font-bold transition";
-                    aiButton.textContent = "✨ Ask AI about this phrase";
+                aiButton.addEventListener("click", async (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    aiButton.disabled = true;
+                    aiButton.textContent = "Asking Tutor…";
 
-                    aiButton.addEventListener("click", async (event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        aiButton.disabled = true;
-                        aiButton.textContent = "Asking Tutor…";
+                    const loading = document.createElement("div");
+                    loading.className = "mt-3 text-amber-700 text-xs font-semibold";
+                    loading.textContent = "AI Tutor analyzing this phrase…";
+                    dExplanation.appendChild(loading);
 
-                        const loading = document.createElement("div");
-                        loading.className = "mt-3 text-amber-700 text-xs font-semibold";
-                        loading.textContent = "AI Tutor analyzing this phrase…";
-                        dExplanation.appendChild(loading);
+                    try {
+                        const prompt = `You are an expert German language tutor. The student selected the phrase "${phraseText}" in the sentence: "${currentGermanSentence}". Explain its grammatical role, case, gender where relevant, and endings in 2-3 concise educational sentences.`;
+                        const aiExplanation = await callAI(prompt);
 
-                        try {
-                            const prompt = `You are an expert German language tutor. The student selected the phrase "${phraseText}" in the sentence: "${currentGermanSentence}".
-Describe its grammatical role, case, gender where relevant, and endings in this specific sentence context in 2-3 concise educational sentences.`;
-
-                            const aiExplanation = await callAI(prompt);
-
-                            if (currentSelectedPhrase === phraseText) {
-                                loading.remove();
-                                const aiResult = document.createElement("div");
-                                aiResult.className = "mt-3 space-y-1 animate-fadeIn";
-                                aiResult.innerHTML = `
-                                    <span class="block font-bold text-amber-600 text-[10px] uppercase">Live AI Grammar Explanation</span>
-                                    <p class="bg-amber-50/50 text-amber-950 border border-amber-100 p-2.5 rounded-lg font-medium leading-relaxed">${escapeHtml(String(aiExplanation ?? "").trim())}</p>`;
-                                dExplanation.appendChild(aiResult);
-                            }
-                        } catch (e) {
+                        if (currentSelectedPhrase === phraseText) {
                             loading.remove();
-                            const errorNote = document.createElement("div");
-                            errorNote.className = "mt-3 text-rose-600 text-xs font-semibold";
-                            errorNote.textContent = "AI explanation failed: " + (e && e.message ? e.message : String(e));
-                            dExplanation.appendChild(errorNote);
-                        } finally {
-                            aiButton.disabled = false;
-                            aiButton.textContent = "✨ Ask AI again";
+
+                            const aiResult = document.createElement("div");
+                            aiResult.className = "mt-3 space-y-1 animate-fadeIn";
+
+                            const aiLabel = document.createElement("span");
+                            aiLabel.className = "block font-bold text-amber-600 text-[10px] uppercase";
+                            aiLabel.textContent = "AI Grammar Explanation";
+
+                            const aiText = document.createElement("p");
+                            aiText.className = "bg-amber-50 text-amber-950 border border-amber-100 p-3 rounded-lg font-medium leading-relaxed";
+                            aiText.textContent = String(aiExplanation || "").trim();
+
+                            aiResult.append(aiLabel, aiText);
+                            dExplanation.appendChild(aiResult);
                         }
-                    });
+                    } catch (e) {
+                        loading.remove();
+                        const errorNote = document.createElement("div");
+                        errorNote.className = "mt-3 text-rose-600 text-xs font-semibold";
+                        errorNote.textContent = "AI explanation failed: " + ((e && e.message) ? e.message : String(e));
+                        dExplanation.appendChild(errorNote);
+                    } finally {
+                        aiButton.disabled = false;
+                        aiButton.textContent = "✨ Ask AI again";
+                    }
+                });
 
-                    dExplanation.appendChild(aiButton);
-                }, 350);
+                dExplanation.appendChild(aiButton);
             }
 
-            if (!apiKey) {
-                const noAiNote = document.createElement("div");
-                noAiNote.className = "text-xs text-slate-400 italic";
-                noAiNote.textContent = "Add an AI key to enable optional explanations.";
-                dExplanation.appendChild(noAiNote);
-            }
-
-            // Phrase translation uses the normal translation service, never the AI tutor.
-            // Run it after the local details are already visible.
             try {
                 triggerAutoPhraseTranslation(phraseText);
             } catch (e) {
