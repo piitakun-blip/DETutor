@@ -1391,6 +1391,11 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                 min-width:0 !important;
             }
         }
+
+        #builder-noun-language,
+        #article-tool-noun-language {
+            min-width: 0 !important;
+        }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
@@ -1986,11 +1991,13 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                             <div id="verb-extra-info" class="hidden px-4 py-3 border-t border-slate-100 bg-white text-[11px] text-slate-600"></div>
                         </div>
                     
+
+</section>
 <div class="grammar-section-ai">
                             <button type="button" onclick="askGrammarSectionAI('verb', this)" class="grammar-section-ai-btn">✨ Ask AI about this verb</button>
                             <div id="grammar-ai-verb" class="grammar-section-ai-result hidden"></div>
                         </div>
-</section>
+
                     
                         
 
@@ -2017,7 +2024,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                             <div>
                                 <div class="text-sm font-bold text-slate-800">Build a phrase</div>
                                 <div class="text-[11px] text-slate-500 mt-0.5">
-                                    Choose the preposition first, then the article meaning and noun. Enter the noun in German or English. The translation service detects the language and translates the noun together with “the,” so the German article and noun are resolved in the same step. A Dative check distinguishes feminine from plural when needed.
+                                    Choose the preposition first, then the article meaning and noun. Enter the noun in German or English. Choose German or English for the noun. This skips language detection and lets the translation service go directly to the noun/article check.
                                 </div>
                             </div>
 
@@ -2059,7 +2066,13 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                                     </select>
                                 </label>
 
-                                <label class="case-builder-field">Noun — German or English
+                                <label class="case-builder-field">Noun language
+                                    <select id="builder-noun-language" onchange="updateCaseBuilder()" class="case-builder-input">
+                                        <option value="de" selected>German</option>
+                                        <option value="en">English</option>
+                                    </select>
+                                </label>
+                                <label class="case-builder-field">Noun
                                     <input id="builder-noun" type="text" value="Mann" oninput="scheduleCaseBuilderUpdate()" class="case-builder-input" placeholder="e.g. Mann or man">
                                 </label>
 
@@ -2116,11 +2129,13 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                         <section id="cheat-tool-prep" class="space-y-4">
                         <div id="prep-tool-result" class="grammar-case-card rounded-xl border p-4 space-y-4"></div>
                     
+
+</section>
 <div class="grammar-section-ai">
                             <button type="button" onclick="askGrammarSectionAI('prep', this)" class="grammar-section-ai-btn">✨ Ask AI about this preposition</button>
                             <div id="grammar-ai-prep" class="grammar-section-ai-result hidden"></div>
                         </div>
-</section>
+
 <!-- Grammatical Prepositions Rule Engine -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-3">
                 <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
@@ -2151,7 +2166,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                         <div class="grammar-topic-intro">
                             <div class="text-sm font-bold text-slate-800">Article Finder</div>
                             <p class="text-[11px] text-slate-500 mt-1">
-                                Choose the case first, then the article meaning and noun. The translation service detects the noun’s language and translates it together with “the,” so the German article and noun are resolved in the same step. A Dative check distinguishes feminine from plural when needed.
+                                Choose the case first, then the article meaning and noun. Choose German or English for the noun. This skips language detection and lets the translation service go directly to the noun/article check.
                             </p>
                         </div>
 
@@ -2173,7 +2188,13 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                                     </select>
                                 </label>
 
-                                <label class="case-builder-field">Noun — German or English
+                                <label class="case-builder-field">Noun language
+                                    <select id="article-tool-noun-language" onchange="updateArticleFinder()" class="case-builder-input">
+                                        <option value="de" selected>German</option>
+                                        <option value="en">English</option>
+                                    </select>
+                                </label>
+                                <label class="case-builder-field">Noun
                                     <input id="article-tool-noun" type="text" value="Mann" oninput="scheduleArticleFinderUpdate()" class="case-builder-input" placeholder="e.g. Mann or man">
                                 </label>
                             </div>
@@ -5099,43 +5120,39 @@ Do not include pronouns inside the form strings.`;
             updateArticleFinder();
         }
 
-        async function determineGermanNounGrammarOnline(raw) {
+        async function determineGermanNounGrammarOnline(raw, sourceLanguage="de") {
             const entered = String(raw || "").trim();
             if (!entered) {
-                return {noun:"", gender:"", number:"", translated:false, detectedLanguage:""};
+                return {noun:"", gender:"", number:"", translated:false, detectedLanguage:sourceLanguage};
             }
 
-            // First detect/translate the entered noun.
-            let detected;
-            try {
-                detected = await detectAndTranslateWordToGerman(entered);
-            } catch (e) {
-                console.warn("Could not detect noun language:", e);
-                return {noun:entered, gender:"", number:"", translated:false, detectedLanguage:""};
-            }
-
-            const detectedLanguage = String(detected.detectedLanguage || "").toLowerCase();
-            const enteredIsGerman = detectedLanguage === "de";
-
-            // Build the article probe from the English noun when possible.
-            // If English was entered, use the original English noun directly.
-            // If German was entered, obtain an English gloss first.
+            const enteredIsGerman = sourceLanguage === "de";
             let englishNoun = entered;
+            let fallbackGermanNoun = entered;
+
+            // Explicit language selection avoids the extra auto-detection request.
             if (enteredIsGerman) {
                 try {
                     englishNoun = String(
                         await googleTranslateApiCall(entered, "de", "en")
                     ).trim();
                 } catch (e) {
-                    console.warn("Could not translate German noun to English for article probe:", e);
+                    console.warn("Could not obtain English gloss for noun article check:", e);
+                }
+            } else {
+                try {
+                    fallbackGermanNoun = String(
+                        await googleTranslateApiCall(entered, "en", "de")
+                    ).trim();
+                } catch (e) {
+                    console.warn("Could not translate English noun:", e);
                 }
             }
 
-            englishNoun = String(englishNoun || "").replace(/^to\s+/i, "").trim();
+            englishNoun = String(englishNoun || "").trim();
 
-            // Translate the noun WITH "the" so the translator returns the German article
-            // and German noun together in one phrase. This is more reliable than
-            // translating the bare noun first and then trying to infer its article.
+            // Translate "the + noun" as one phrase so the translator returns
+            // the German article and noun together.
             let nominativeProbe = "";
             try {
                 nominativeProbe = String(
@@ -5159,33 +5176,26 @@ Do not include pronouns inside the form strings.`;
                 } else if (article === "das") {
                     gender = "neuter";
                 } else {
-                    // "die" can mean feminine singular or plural.
-                    // Use a Dative phrase to distinguish: "mit der" vs "mit den".
-                    let dativeProbe = "";
+                    // "die" can be feminine singular or plural.
+                    // A Dative probe distinguishes "mit der" from "mit den".
                     try {
-                        dativeProbe = String(
+                        const dativeProbe = String(
                             await googleTranslateApiCall(`with the ${englishNoun}`, "en", "de")
-                        ).trim();
+                        ).trim().toLowerCase();
+
+                        if (/^mit\s+den\b/.test(dativeProbe)) {
+                            gender = "plural";
+                            number = "plural";
+                        } else if (/^mit\s+der\b/.test(dativeProbe)) {
+                            gender = "feminine";
+                        }
                     } catch (e) {
                         console.warn("Dative noun/article probe failed:", e);
-                    }
-
-                    const dat = dativeProbe.toLowerCase().trim();
-                    if (/^mit\s+den\b/.test(dat)) {
-                        gender = "plural";
-                        number = "plural";
-                    } else if (/^mit\s+der\b/.test(dat)) {
-                        gender = "feminine";
                     }
                 }
             }
 
-            // If the phrase probe did not parse, still display the translator's
-            // German noun result while leaving gender unresolved.
-            if (!germanNoun) {
-                germanNoun = String(detected.text || entered).trim();
-            }
-
+            if (!germanNoun) germanNoun = fallbackGermanNoun;
             if (germanNoun) {
                 germanNoun = germanNoun.charAt(0).toUpperCase() + germanNoun.slice(1);
             }
@@ -5195,7 +5205,7 @@ Do not include pronouns inside the form strings.`;
                 gender,
                 number: gender === "plural" ? "plural" : number,
                 translated:!enteredIsGerman,
-                detectedLanguage,
+                detectedLanguage:sourceLanguage,
                 nominativeProbe
             };
         }
@@ -5212,7 +5222,8 @@ Do not include pronouns inside the form strings.`;
 
             const requestId = ++articleFinderRequestId;
             const rawNoun = nounEl.value.trim() || "Noun";
-            const resolvedNoun = await determineGermanNounGrammarOnline(rawNoun);
+            const nounLanguage = document.getElementById("builder-noun-language")?.value || "de";
+            const resolvedNoun = await determineGermanNounGrammarOnline(rawNoun, nounLanguage);
             if (requestId !== articleFinderRequestId) return;
             const noun = resolvedNoun.noun || rawNoun;
             articleResolvedNoun = noun;
@@ -5697,7 +5708,8 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
 
             const requestId = ++caseBuilderRequestId;
             const rawNoun = nounEl.value.trim() || "Noun";
-            const resolvedNoun = await determineGermanNounGrammarOnline(rawNoun);
+            const nounLanguage = document.getElementById("article-tool-noun-language")?.value || "de";
+            const resolvedNoun = await determineGermanNounGrammarOnline(rawNoun, nounLanguage);
             if (requestId !== caseBuilderRequestId) return;
             const noun = resolvedNoun.noun || rawNoun;
             builderResolvedNoun = noun;
