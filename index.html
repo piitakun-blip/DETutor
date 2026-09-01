@@ -1396,6 +1396,21 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
         #article-tool-noun-language {
             min-width: 0 !important;
         }
+
+        .case-builder-language-check {
+            display:flex;
+            align-items:center;
+            gap:8px;
+            font-size:12px;
+            font-weight:600;
+            color:#475569;
+            min-height:36px;
+        }
+        .case-builder-language-check input {
+            width:18px;
+            height:18px;
+            flex:0 0 auto;
+        }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
@@ -2024,7 +2039,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                             <div>
                                 <div class="text-sm font-bold text-slate-800">Build a phrase</div>
                                 <div class="text-[11px] text-slate-500 mt-0.5">
-                                    Choose the preposition first, then the article meaning and noun. Enter the noun in German or English. Choose German or English for the noun. This skips language detection and lets the translation service go directly to the noun/article check.
+                                    Choose the preposition first, then the article meaning and noun. Enter the noun in German or English. Enter the noun normally in German. If you type it in English, check “Noun entered in English” so the translation service can skip language detection and go straight to the noun/article check.
                                 </div>
                             </div>
 
@@ -2066,14 +2081,12 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                                     </select>
                                 </label>
 
-                                <label class="case-builder-field">Noun language
-                                    <select id="builder-noun-language" onchange="updateCaseBuilder()" class="case-builder-input">
-                                        <option value="de" selected>German</option>
-                                        <option value="en">English</option>
-                                    </select>
-                                </label>
                                 <label class="case-builder-field">Noun
                                     <input id="builder-noun" type="text" value="Mann" oninput="scheduleCaseBuilderUpdate()" class="case-builder-input" placeholder="e.g. Mann or man">
+                                </label>
+                                <label class="case-builder-language-check">
+                                    <input id="builder-noun-english" type="checkbox" onchange="updateCaseBuilder()">
+                                    <span>Noun entered in English</span>
                                 </label>
 
                                 <label id="builder-motion-field" class="case-builder-field hidden">Two-way use
@@ -2166,7 +2179,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                         <div class="grammar-topic-intro">
                             <div class="text-sm font-bold text-slate-800">Article Finder</div>
                             <p class="text-[11px] text-slate-500 mt-1">
-                                Choose the case first, then the article meaning and noun. Choose German or English for the noun. This skips language detection and lets the translation service go directly to the noun/article check.
+                                Choose the case first, then the article meaning and noun. Enter the noun normally in German. If you type it in English, check “Noun entered in English” so the translation service can skip language detection and go straight to the noun/article check.
                             </p>
                         </div>
 
@@ -2188,14 +2201,12 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                                     </select>
                                 </label>
 
-                                <label class="case-builder-field">Noun language
-                                    <select id="article-tool-noun-language" onchange="updateArticleFinder()" class="case-builder-input">
-                                        <option value="de" selected>German</option>
-                                        <option value="en">English</option>
-                                    </select>
-                                </label>
                                 <label class="case-builder-field">Noun
                                     <input id="article-tool-noun" type="text" value="Mann" oninput="scheduleArticleFinderUpdate()" class="case-builder-input" placeholder="e.g. Mann or man">
+                                </label>
+                                <label class="case-builder-language-check">
+                                    <input id="article-tool-noun-english" type="checkbox" onchange="updateArticleFinder()">
+                                    <span>Noun entered in English</span>
                                 </label>
                             </div>
 
@@ -5222,7 +5233,7 @@ Do not include pronouns inside the form strings.`;
 
             const requestId = ++articleFinderRequestId;
             const rawNoun = nounEl.value.trim() || "Noun";
-            const nounLanguage = document.getElementById("builder-noun-language")?.value || "de";
+            const nounLanguage = document.getElementById("article-tool-noun-english")?.checked ? "en" : "de";
             const resolvedNoun = await determineGermanNounGrammarOnline(rawNoun, nounLanguage);
             if (requestId !== articleFinderRequestId) return;
             const noun = resolvedNoun.noun || rawNoun;
@@ -5708,7 +5719,7 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
 
             const requestId = ++caseBuilderRequestId;
             const rawNoun = nounEl.value.trim() || "Noun";
-            const nounLanguage = document.getElementById("article-tool-noun-language")?.value || "de";
+            const nounLanguage = document.getElementById("builder-noun-english")?.checked ? "en" : "de";
             const resolvedNoun = await determineGermanNounGrammarOnline(rawNoun, nounLanguage);
             if (requestId !== caseBuilderRequestId) return;
             const noun = resolvedNoun.noun || rawNoun;
