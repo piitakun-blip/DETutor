@@ -2018,7 +2018,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                             <div>
                                 <div class="text-sm font-bold text-slate-800">Build a phrase</div>
                                 <div class="text-[11px] text-slate-500 mt-0.5">
-                                    Choose the preposition first, then the article meaning and noun. Enter the noun in German or English. The translation service detects the language and translates English to German before the app determines gender and builds the phrase.
+                                    Choose the preposition first, then the article meaning and noun. Enter the noun in German or English. The translation service detects the language, translates when needed, and checks German article forms to determine singular/plural and gender before building the phrase.
                                 </div>
                             </div>
 
@@ -2145,7 +2145,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                         <div class="grammar-topic-intro">
                             <div class="text-sm font-bold text-slate-800">Article Finder</div>
                             <p class="text-[11px] text-slate-500 mt-1">
-                                Choose the case first, then the article meaning and noun. The noun may be German or English; the translation service detects the language and translates it to German before the article is built.
+                                Choose the case first, then the article meaning and noun. The translation service detects the noun’s language, translates when needed, and checks German article forms to determine singular/plural and gender.
                             </p>
                         </div>
 
@@ -3345,7 +3345,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
             katze: "Feminine", schule: "Feminine", straße: "Feminine", tür: "Feminine", tasche: "Feminine",
             mann: "Masculine", vater: "Masculine", bruder: "Masculine", freund: "Masculine",
             hund: "Masculine", apfel: "Masculine", lehrer: "Masculine", tisch: "Masculine", stuhl: "Masculine",
-            buch: "Neuter", kind: "Neuter", haus: "Neuter", auto: "Neuter", geld: "Neuter",
+            buch: "Neuter", kind: "Neuter", haus: "Neuter", auto: "Neuter", geld: "Neuter", hausaufgabe: "Feminine",
             essen: "Neuter", wasser: "Neuter", mädchen: "Neuter", zimmer: "Neuter", geschenk: "Neuter"
         };
 
@@ -5096,6 +5096,76 @@ Do not include pronouns inside the form strings.`;
             updateArticleFinder();
         }
 
+        async function determineGermanNounGrammarOnline(raw) {
+            const base = await resolveGermanNounInput(raw);
+            const germanNoun = String(base.noun || raw || "").trim();
+            if (!germanNoun) {
+                return {noun:"", gender:"", number:"", translated:false, detectedLanguage:""};
+            }
+
+            let englishGloss = String(raw || "").trim();
+
+            // If the learner entered German, get an English gloss first so the
+            // translation service can generate diagnostic German article phrases.
+            if (!base.translated) {
+                try {
+                    englishGloss = await googleTranslateApiCall(germanNoun, "de", "en");
+                } catch (e) {
+                    console.warn("Could not get English gloss for noun article check:", e);
+                }
+            }
+
+            englishGloss = String(englishGloss || "").trim();
+            let nominativeProbe = "";
+            let dativeProbe = "";
+            let gender = "";
+            let number = "singular";
+
+            try {
+                nominativeProbe = String(
+                    await googleTranslateApiCall(`the ${englishGloss}`, "en", "de")
+                ).trim();
+            } catch (e) {
+                console.warn("Nominative article probe failed:", e);
+            }
+
+            const nom = nominativeProbe.toLowerCase();
+
+            if (/^der\b/.test(nom)) {
+                gender = "masculine";
+            } else if (/^das\b/.test(nom)) {
+                gender = "neuter";
+            } else if (/^die\b/.test(nom)) {
+                // "die" is ambiguous between feminine singular and plural.
+                // Dative distinguishes them: mit der vs mit den.
+                try {
+                    dativeProbe = String(
+                        await googleTranslateApiCall(`with the ${englishGloss}`, "en", "de")
+                    ).trim();
+                } catch (e) {
+                    console.warn("Dative article probe failed:", e);
+                }
+
+                const dat = dativeProbe.toLowerCase();
+                if (/^mit den\b/.test(dat)) {
+                    gender = "plural";
+                    number = "plural";
+                } else if (/^mit der\b/.test(dat)) {
+                    gender = "feminine";
+                }
+            }
+
+            return {
+                noun:germanNoun,
+                gender,
+                number: gender === "plural" ? "plural" : number,
+                translated:Boolean(base.translated),
+                detectedLanguage:base.detectedLanguage || "",
+                nominativeProbe,
+                dativeProbe
+            };
+        }
+
         async function updateArticleFinder() {
             const nounEl = document.getElementById("article-tool-noun");
             const caseEl = document.getElementById("article-tool-case");
@@ -5107,12 +5177,11 @@ Do not include pronouns inside the form strings.`;
             if (!nounEl || !caseEl || !typeEl || !resultEl || !ruleEl) return;
 
             const rawNoun = nounEl.value.trim() || "Noun";
-            const resolvedNoun = await resolveGermanNounInput(rawNoun);
+            const resolvedNoun = await determineGermanNounGrammarOnline(rawNoun);
             const noun = resolvedNoun.noun || rawNoun;
-            builderResolvedNoun = noun;
-            const inferred = inferBuilderGender(noun);
+            articleResolvedNoun = noun;
 
-            let gender = inferred.gender;
+            let gender = resolvedNoun.gender;
             if (articleGenderOverrideActive && genderEl) {
                 gender = genderEl.value;
             } else if (gender && genderEl) {
@@ -5128,7 +5197,7 @@ Do not include pronouns inside the form strings.`;
 
             if (genderDisplay) {
                 if (gender) {
-                    genderDisplay.textContent = labels[gender] + (inferred.confidence === "pattern" ? " (likely)" : "") + (resolvedNoun.translated ? ` · ${noun}` : "");
+                    genderDisplay.textContent = labels[gender] + (resolvedNoun.translated ? ` · ${noun}` : "");
                     genderDisplay.className = "text-sm font-bold " + grammarGenderClass(gender);
                 } else {
                     genderDisplay.textContent = "Unknown — choose Change";
@@ -5139,7 +5208,7 @@ Do not include pronouns inside the form strings.`;
             if (!gender) {
                 resultEl.textContent = "— " + noun;
                 applyGrammarColorScheme(resultEl.parentElement, "None", "");
-                ruleEl.textContent = "I do not know this noun's gender locally yet. Tap Change to select it, or use Ask AI about this article choice.";
+                ruleEl.textContent = "The translation service could not determine this noun’s article automatically. Tap Change to select gender/number manually, or use Ask AI about this article choice.";
                 return;
             }
 
@@ -5507,7 +5576,8 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
 
                     const knownPlural = new Set([
                 "kinder","männer","frauen","freunde","freundinnen","eltern","häuser",
-                "bücher","autos","hunde","katzen","lehrer","lehrerinnen","schüler","schülerinnen"
+                "bücher","autos","hunde","katzen","lehrer","lehrerinnen","schüler","schülerinnen",
+                "hausaufgaben"
             ]);
             if (knownPlural.has(clean)) return {gender:"plural", confidence:"known"};
 
@@ -5588,12 +5658,11 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
             if (motionField) motionField.classList.toggle("hidden", data?.type !== "two-way");
 
             const rawNoun = nounEl.value.trim() || "Noun";
-            const resolvedNoun = await resolveGermanNounInput(rawNoun);
+            const resolvedNoun = await determineGermanNounGrammarOnline(rawNoun);
             const noun = resolvedNoun.noun || rawNoun;
-            articleResolvedNoun = noun;
-            const inferred = inferBuilderGender(noun);
+            builderResolvedNoun = noun;
 
-            let gender = inferred.gender;
+            let gender = resolvedNoun.gender;
             if (builderGenderOverrideActive && genderEl) {
                 gender = genderEl.value;
             } else if (gender && genderEl) {
@@ -5609,7 +5678,7 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
 
             if (detectedEl) {
                 if (gender) {
-                    detectedEl.textContent = displayNames[gender] + (inferred.confidence === "pattern" ? " (likely)" : "") + (resolvedNoun.translated ? ` · ${noun}` : "");
+                    detectedEl.textContent = displayNames[gender] + (resolvedNoun.translated ? ` · ${noun}` : "");
                     detectedEl.className = "text-sm font-bold " + grammarGenderClass(gender);
                 } else {
                     detectedEl.textContent = "Unknown — choose Change";
@@ -5620,7 +5689,7 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
             if (!gender) {
                 resultEl.textContent = `${prep} … ${noun}`;
                 applyGrammarColorScheme(resultEl.parentElement, "None", "");
-                ruleEl.textContent = "I do not know this noun's gender locally yet. Tap Change to select it, or use Ask AI about this phrase to verify the noun.";
+                ruleEl.textContent = "The translation service could not determine this noun’s article automatically. Tap Change to select gender/number manually, or use Ask AI about this phrase.";
                 return;
             }
 
