@@ -5236,6 +5236,13 @@ Do not include pronouns inside the form strings.`;
             savePersistentNounGrammarCache();
         }
 
+        function getCachedNounGrammarResult(raw, sourceLanguage="de") {
+            const entered = String(raw || "").trim();
+            if (!entered) return null;
+            const cacheKey = `${sourceLanguage}:${entered.toLowerCase()}`;
+            return nounGrammarAICache.get(cacheKey) || null;
+        }
+
         loadPersistentNounGrammarCache();
 
         async function determineGermanNounGrammarOnline(raw, sourceLanguage="de") {
@@ -5406,12 +5413,16 @@ Rules:
             const requestId = ++articleFinderRequestId;
             const rawNoun = nounEl.value.trim() || "Noun";
             const nounLanguage = document.getElementById("article-tool-noun-english")?.checked ? "en" : "de";
-            if (genderDisplay) {
-                genderDisplay.textContent = "Checking noun…";
-                genderDisplay.className = "text-sm font-bold text-slate-500";
+
+            let resolvedNoun = getCachedNounGrammarResult(rawNoun, nounLanguage);
+            if (!resolvedNoun) {
+                if (genderDisplay) {
+                    genderDisplay.textContent = "Checking noun…";
+                    genderDisplay.className = "text-sm font-bold text-slate-500";
+                }
+                resolvedNoun = await determineGermanNounGrammarOnline(rawNoun, nounLanguage);
+                if (requestId !== articleFinderRequestId) return;
             }
-            const resolvedNoun = await determineGermanNounGrammarOnline(rawNoun, nounLanguage);
-            if (requestId !== articleFinderRequestId) return;
             const noun = resolvedNoun.noun || rawNoun;
             articleResolvedNoun = noun;
 
@@ -5843,12 +5854,12 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
 
         function scheduleCaseBuilderUpdate() {
             clearTimeout(caseBuilderInputTimer);
-            caseBuilderInputTimer = setTimeout(() => updateCaseBuilder(), 600);
+            caseBuilderInputTimer = setTimeout(() => updateCaseBuilder(), 700);
         }
 
         function scheduleArticleFinderUpdate() {
             clearTimeout(articleFinderInputTimer);
-            articleFinderInputTimer = setTimeout(() => updateArticleFinder(), 600);
+            articleFinderInputTimer = setTimeout(() => updateArticleFinder(), 700);
         }
 
         async function resolveGermanNounInput(raw) {
@@ -5896,12 +5907,16 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
             const requestId = ++caseBuilderRequestId;
             const rawNoun = nounEl.value.trim() || "Noun";
             const nounLanguage = document.getElementById("builder-noun-english")?.checked ? "en" : "de";
-            if (detectedEl) {
-                detectedEl.textContent = "Checking noun…";
-                detectedEl.className = "text-sm font-bold text-slate-500";
+
+            let resolvedNoun = getCachedNounGrammarResult(rawNoun, nounLanguage);
+            if (!resolvedNoun) {
+                if (detectedEl) {
+                    detectedEl.textContent = "Checking noun…";
+                    detectedEl.className = "text-sm font-bold text-slate-500";
+                }
+                resolvedNoun = await determineGermanNounGrammarOnline(rawNoun, nounLanguage);
+                if (requestId !== caseBuilderRequestId) return;
             }
-            const resolvedNoun = await determineGermanNounGrammarOnline(rawNoun, nounLanguage);
-            if (requestId !== caseBuilderRequestId) return;
             const noun = resolvedNoun.noun || rawNoun;
             builderResolvedNoun = noun;
 
