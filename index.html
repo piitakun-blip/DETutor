@@ -1361,6 +1361,36 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                 font-size:16px !important;
             }
         }
+
+        /* Give the Case Builder noun field more room.
+           Row 1: Preposition full width
+           Row 2: Article meaning (compact) | Noun (wide) */
+        .case-builder-compact-grid {
+            grid-template-columns:minmax(120px,.75fr) minmax(0,1.6fr) !important;
+        }
+        .case-builder-preposition-wide {
+            grid-column:1 / -1 !important;
+        }
+        .case-builder-compact-grid > label:nth-child(2) {
+            grid-column:1 !important; /* Article meaning */
+        }
+        .case-builder-compact-grid > label:nth-child(3) {
+            grid-column:2 !important; /* Noun */
+        }
+
+        @media (max-width:640px) {
+            .case-builder-compact-grid {
+                grid-template-columns:minmax(125px,.8fr) minmax(0,1.7fr) !important;
+                gap:8px !important;
+            }
+            #builder-article-type {
+                width:100% !important;
+            }
+            #builder-noun {
+                width:100% !important;
+                min-width:0 !important;
+            }
+        }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
