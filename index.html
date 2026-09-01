@@ -1159,43 +1159,47 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                 width:100%;
             }
         }
-
-        .grammar-tools-color-legend {
-            display:flex;
-            flex-direction:column;
-            gap:6px;
-        }
-        .grammar-tools-legend-row {
-            display:flex;
-            flex-wrap:wrap;
-            gap:5px;
-        }
-        .grammar-tools-legend-chip,
-        .grammar-tools-gender-chip {
-            display:inline-flex;
-            align-items:center;
-            min-height:25px;
-            padding:4px 7px;
-            border-radius:7px;
-            font-size:9px;
-            font-weight:800;
-        }
-        .grammar-tools-gender-chip {
-            background:#fff;
-            border:1px solid #e2e8f0;
-        }
-
-        /* Let parser case backgrounds remain visible in Grammar Tools result cards. */
+/* Let parser case backgrounds remain visible in Grammar Tools result cards. */
         #builder-result,
         #article-tool-result {
             color:inherit;
         }
+.case-builder-compact-grid {
+            display:grid;
+            grid-template-columns:minmax(0,1.35fr) minmax(0,1fr) minmax(0,.9fr);
+            gap:8px;
+            align-items:end;
+        }
+        .builder-detected-inline {
+            display:flex;
+            align-items:center;
+            flex-wrap:wrap;
+            gap:6px;
+        }
 
         @media (max-width:640px) {
-            .grammar-tools-legend-chip,
-            .grammar-tools-gender-chip {
-                font-size:10px;
-                min-height:28px;
+            .case-builder-compact-grid {
+                grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+                gap:8px;
+            }
+            .case-builder-compact-grid > label:first-child {
+                grid-column:1;
+            }
+            .case-builder-compact-grid > label:nth-child(2) {
+                grid-column:2;
+            }
+            .case-builder-compact-grid > label:nth-child(3) {
+                grid-column:1 / -1;
+            }
+            #builder-motion-field:not(.hidden) {
+                grid-column:1 / -1;
+            }
+            #builder-noun,
+            #builder-prep,
+            #builder-article-type,
+            #builder-motion {
+                min-height:44px !important;
+                font-size:16px !important;
             }
         }
 </style>
@@ -1734,20 +1738,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                     <div class="p-3 sm:p-4 border-b border-slate-100 bg-slate-50/70">
                         <div class="text-sm font-bold text-slate-800">Grammar Tools</div>
                         <div class="text-[10px] text-slate-500 mt-0.5">Choose the grammar area you want to work with.</div>
-                        <div class="grammar-tools-color-legend mt-3">
-                            <div class="grammar-tools-legend-row">
-                                <span class="case-nom grammar-tools-legend-chip">Nominative</span>
-                                <span class="case-acc grammar-tools-legend-chip">Accusative</span>
-                                <span class="case-dat grammar-tools-legend-chip">Dative</span>
-                                <span class="case-gen grammar-tools-legend-chip">Genitive</span>
-                            </div>
-                            <div class="grammar-tools-legend-row">
-                                <span class="gender-masc grammar-tools-gender-chip">Masculine</span>
-                                <span class="gender-fem grammar-tools-gender-chip">Feminine</span>
-                                <span class="gender-neut grammar-tools-gender-chip">Neuter</span>
-                                <span class="gender-plural grammar-tools-gender-chip">Plural</span>
-                            </div>
-                        </div>
+                        
 
                         <div class="grammar-main-tabs grammar-main-tabs-three mt-3" role="tablist" aria-label="Grammar topics">
                             <button type="button" id="grammar-tab-verbs" class="grammar-main-tab active" onclick="setGrammarMainTab('verbs')" role="tab" aria-selected="true">Verbs</button>
@@ -1774,7 +1765,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                         </div>
 
                         <section id="cheat-tool-verb" class="space-y-4">
-                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
                             <div>
                                 <div class="text-sm font-bold text-slate-800">Verb Conjugator</div>
                                 <div class="text-[11px] text-slate-500 mt-0.5">Enter an infinitive or a conjugated form such as <em>bringe</em>, <em>möchtest</em>, <em>fährt</em>, <em>mitbringen</em>, or <em>rufe an</em>.</div>
@@ -1819,12 +1810,85 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                         <div class="grammar-topic-intro">
                             <div class="text-sm font-bold text-slate-800">Prepositions & Cases</div>
                             <p class="text-[11px] text-slate-500 mt-1">
-                                Learn which case a preposition requires, then build the correct phrase with the matching article.
+                                Build a phrase first, then use the explorer below to understand why the preposition requires that case and article.
                             </p>
                         </div>
 
                         <div class="grammar-topic-subsection">
-                            <div class="grammar-topic-subheading">Preposition Explorer</div>
+                            <div class="grammar-topic-subheading">Build a phrase</div>
+                            
+
+
+                        <div class="grammar-section-ai">
+                            <button type="button" onclick="askGrammarSectionAI('builder', this)" class="grammar-section-ai-btn">✨ Ask AI about this phrase</button>
+                            <div id="grammar-ai-builder" class="grammar-section-ai-result hidden"></div>
+                        </div>
+
+                        <section id="cheat-tool-builder" class="space-y-3">
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                            <div>
+                                <div class="text-sm font-bold text-slate-800">Build a phrase</div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">
+                                    Enter the noun first. The app determines its gender when known, then the preposition determines the case and the article changes automatically.
+                                </div>
+                            </div>
+
+                            <div class="case-builder-compact-grid">
+                                <label class="case-builder-field">Noun
+                                    <input id="builder-noun" type="text" value="Mann" oninput="updateCaseBuilder()" class="case-builder-input" placeholder="e.g. Mann">
+                                </label>
+
+                                <label class="case-builder-field">Preposition
+                                    <select id="builder-prep" onchange="updateCaseBuilder()" class="case-builder-input"></select>
+                                </label>
+
+                                <label class="case-builder-field">Article meaning
+                                    <select id="builder-article-type" onchange="updateCaseBuilder()" class="case-builder-input">
+                                        <option value="definite">the</option>
+                                        <option value="indefinite">a / an</option>
+                                    </select>
+                                </label>
+
+                                <label id="builder-motion-field" class="case-builder-field hidden">Two-way use
+                                    <select id="builder-motion" onchange="updateCaseBuilder()" class="case-builder-input">
+                                        <option value="location">Location — Wo?</option>
+                                        <option value="destination">Destination/change — Wohin?</option>
+                                    </select>
+                                </label>
+                            </div>
+
+                            <div id="builder-detected-box" class="builder-detected-inline rounded-lg border border-slate-200 bg-white px-3 py-2">
+                                <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Detected:</span>
+                                <span id="builder-detected-gender" class="text-sm font-bold text-slate-800">Masculine</span>
+                                <button type="button" id="builder-override-btn" onclick="toggleBuilderGenderOverride()" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800">Change</button>
+
+                                <div id="builder-gender-override-wrap" class="hidden w-full mt-2">
+                                    <label class="case-builder-field">Override gender / number
+                                        <select id="builder-gender" onchange="updateCaseBuilder()" class="case-builder-input">
+                                            <option value="masculine">Masculine</option>
+                                            <option value="feminine">Feminine</option>
+                                            <option value="neuter">Neuter</option>
+                                            <option value="plural">Plural</option>
+                                        </select>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                            <div class="text-[10px] uppercase tracking-wider font-bold text-amber-700">Built phrase</div>
+                            <div id="builder-result" data-grammar-gender-text class="text-xl font-bold mt-1 break-words"></div>
+                            <div id="builder-rule" class="text-[11px] text-slate-600 mt-2"></div>
+                        </div>
+                    </section>
+                    
+                        
+                        </div>
+
+                        <div class="grammar-topic-divider"></div>
+
+                        <div class="grammar-topic-subsection">
+                            <div class="grammar-topic-subheading">Learn why: Preposition Explorer</div>
                             
 
 
@@ -1864,81 +1928,6 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                     </div>
                 </div>
             </div>
-                    
-                        
-                        </div>
-
-                        <div class="grammar-topic-divider"></div>
-
-                        <div class="grammar-topic-subsection">
-                            <div class="grammar-topic-subheading">Case Builder</div>
-                            
-
-
-                        <div class="grammar-section-ai">
-                            <button type="button" onclick="askGrammarSectionAI('builder', this)" class="grammar-section-ai-btn">✨ Ask AI about this phrase</button>
-                            <div id="grammar-ai-builder" class="grammar-section-ai-result hidden"></div>
-                        </div>
-
-                        <section id="cheat-tool-builder" class="space-y-4">
-                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
-                            <div>
-                                <div class="text-sm font-bold text-slate-800">Build a phrase</div>
-                                <div class="text-[11px] text-slate-500 mt-0.5">
-                                    Enter the noun first. The app determines its gender when known, then the preposition determines the case and the article changes automatically.
-                                </div>
-                            </div>
-
-                            <div class="case-builder-grid">
-                                <label class="case-builder-field case-builder-noun">Noun
-                                    <input id="builder-noun" type="text" value="Mann" oninput="updateCaseBuilder()" class="case-builder-input" placeholder="e.g. Mann, Frau, Kind">
-                                </label>
-
-                                <label class="case-builder-field">Preposition
-                                    <select id="builder-prep" onchange="updateCaseBuilder()" class="case-builder-input"></select>
-                                </label>
-
-                                <label class="case-builder-field">Meaning of article
-                                    <select id="builder-article-type" onchange="updateCaseBuilder()" class="case-builder-input">
-                                        <option value="definite">the</option>
-                                        <option value="indefinite">a / an</option>
-                                    </select>
-                                </label>
-
-                                <label id="builder-motion-field" class="case-builder-field hidden">Two-way use
-                                    <select id="builder-motion" onchange="updateCaseBuilder()" class="case-builder-input">
-                                        <option value="location">Location — Wo?</option>
-                                        <option value="destination">Destination/change — Wohin?</option>
-                                    </select>
-                                </label>
-                            </div>
-
-                            <div id="builder-detected-box" class="rounded-lg border border-slate-200 bg-white px-3 py-2.5">
-                                <div class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Detected noun information</div>
-                                <div class="mt-1 flex flex-wrap items-center gap-2">
-                                    <span id="builder-detected-gender" class="text-sm font-bold text-slate-800">Masculine</span>
-                                    <button type="button" id="builder-override-btn" onclick="toggleBuilderGenderOverride()" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800">Change</button>
-                                </div>
-
-                                <div id="builder-gender-override-wrap" class="hidden mt-2">
-                                    <label class="case-builder-field">Override gender / number
-                                        <select id="builder-gender" onchange="updateCaseBuilder()" class="case-builder-input">
-                                            <option value="masculine">Masculine</option>
-                                            <option value="feminine">Feminine</option>
-                                            <option value="neuter">Neuter</option>
-                                            <option value="plural">Plural</option>
-                                        </select>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                            <div class="text-[10px] uppercase tracking-wider font-bold text-amber-700">Built phrase</div>
-                            <div id="builder-result" data-grammar-gender-text class="text-xl font-bold mt-1 break-words"></div>
-                            <div id="builder-rule" class="text-[11px] text-slate-600 mt-2"></div>
-                        </div>
-                    </section>
                     
                         
                         </div>
