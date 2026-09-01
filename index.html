@@ -1974,7 +1974,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                         <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
                             <div>
                                 <div class="text-sm font-bold text-slate-800">Verb Conjugator</div>
-                                <div class="text-[11px] text-slate-500 mt-0.5">Enter a German infinitive/conjugated form, or check “Verb entered in English” before entering an English verb such as <em>walk</em> or <em>drive</em>.</div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">German is assumed by default for immediate conjugation. If you enter an English verb such as <em>walk</em> or <em>drive</em>, check “Verb entered in English” first.</div>
                             </div>
                             <div class="space-y-3">
                                 <label class="block">
@@ -5054,25 +5054,15 @@ Before returning, verify that the explanation itself is English.`;
 
                 lookup = translated;
                 translatedFromEnglish = true;
-            } else if (looksLikeEnglishEntry(raw)) {
-                // Preserve the previous automatic behavior when the checkbox is not used.
-                // The checkbox is simply the faster explicit route.
-                status.textContent = "Checking language…";
-                status.className = "text-[10px] font-semibold text-slate-500";
-                status.classList.remove("hidden");
-
-                const translated = await translateSingleWordToGerman(raw);
-                if (translated && translated.toLowerCase() !== raw.toLowerCase()) {
-                    lookup = translated;
-                    translatedFromEnglish = true;
-                }
             }
+            // If English is NOT checked, assume the learner entered German.
+            // Do not perform language detection. This makes German conjugation immediate.
 
             const result = identifyVerbLocally(lookup);
             if (!result) {
                 status.textContent = translatedFromEnglish
                     ? `Translated as "${lookup}", but I could not confidently conjugate it locally. Try the AI check.`
-                    : "I could not confidently identify that form locally. Try the AI check.";
+                    : "I could not confidently identify that German form. If you entered English, check “Verb entered in English”; otherwise try Verify conjugation with AI.";
                 status.className = "text-[10px] font-semibold text-amber-700";
                 status.classList.remove("hidden");
                 document.getElementById("verb-tool-result").classList.add("hidden");
