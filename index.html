@@ -772,7 +772,7 @@
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
 
     <!-- Header Section -->
-    <!-- HEADER-V4-GERMAN-TO-ENGLISH-MEANING-CHECK -->
+    <!-- HEADER-V5-ROUNDTRIP-NORMALIZED -->
     <header class="text-white shadow-md" style="background:linear-gradient(180deg,#111111 0%,#111111 72%,#dd0000 72%,#dd0000 86%,#ffcc00 86%,#ffcc00 100%);">
         <div class="max-screen-xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
@@ -783,7 +783,7 @@
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight" style="color:#fbbf24 !important;">
                         DeutschLerner
-                        <span style="font-size:9px;font-weight:500;color:#cbd5e1;letter-spacing:.04em;white-space:nowrap;vertical-align:baseline;margin-left:7px;">2026 by Peter Ward, Ed.D.</span>
+                        <span style="font-size:9px;font-weight:500;color:#cbd5e1;letter-spacing:.04em;white-space:nowrap;vertical-align:baseline;margin-left:7px;">by Peter Ward, Ed.D.</span>
                     </h1>
                     <p class="text-xs text-amber-100">Interactive German Grammar & Translation Companion</p>
                 </div>
@@ -2176,6 +2176,16 @@
         }
 
         // English to German Router
+        function normalizeSentencePresentation(text, lang = "en") {
+            let t = String(text || "").trim();
+            if (!t) return "";
+            t = t.replace(/^([^A-Za-zÄÖÜäöüß]*)([A-Za-zÄÖÜäöüß])/, (m, lead, first) =>
+                lead + first.toLocaleUpperCase(lang === "de" ? "de-DE" : "en-US")
+            );
+            if (!/[.!?…]["'”’)]*$/.test(t)) t += ".";
+            return t;
+        }
+
         async function processEnglishTranslation() {
             const sourceText = document.getElementById("source-text").value.trim();
             const tilesContainer = document.getElementById("tiles-container");
@@ -2201,21 +2211,22 @@
                 // Normal translation never spends AI tokens.
                 // AI is reserved for explicit Tutor / Ask AI actions.
                 let germanSentence = await googleTranslateApiCall(sourceText, "en", "de");
+                germanSentence = normalizeSentencePresentation(germanSentence, "de");
 
                 document.getElementById("target-text").value = germanSentence;
 
                 // Mirror the translated German into the German workspace.
                 document.getElementById("german-source-text").value = germanSentence;
 
-                // IMPORTANT: The English Meaning Check is generated from the GERMAN OUTPUT,
-                // never copied from the original English input.
-                // This gives us: English input -> German -> fresh English translation.
+                // IMPORTANT: The English Meaning Check is generated ONLY from the German output.
+                // Flow: English input -> German output -> fresh English translation.
                 const germanForMeaningCheck = document.getElementById("target-text").value.trim();
-                const englishMeaningFromGerman = await googleTranslateApiCall(
+                let englishMeaningFromGerman = await googleTranslateApiCall(
                     germanForMeaningCheck,
                     "de",
                     "en"
                 );
+                englishMeaningFromGerman = normalizeSentencePresentation(englishMeaningFromGerman, "en");
 
                 document.getElementById("german-english-translation").value = englishMeaningFromGerman;
                 console.debug("[DeutschLerner] Meaning Check generated from German output:", {
