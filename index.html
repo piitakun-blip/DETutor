@@ -1299,6 +1299,36 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
         #grammar-main-articles table .gender-fem { color:#db2777 !important; }
         #grammar-main-articles table .gender-neut { color:#0d9488 !important; }
         #grammar-main-articles table .gender-plural { color:#7c3aed !important; }
+
+        @media (max-width:640px) {
+            .case-builder-compact-grid > label:nth-child(2) { grid-column:1 !important; }
+            .case-builder-compact-grid > label:nth-child(3) { grid-column:2 !important; }
+        }
+
+        .article-finder-input-grid {
+            display:grid;
+            grid-template-columns:minmax(0,.9fr) minmax(0,1.35fr);
+            gap:8px;
+            align-items:end;
+        }
+        .article-finder-case-wide {
+            grid-column:1 / -1;
+        }
+        @media (max-width:640px) {
+            .article-finder-input-grid {
+                grid-template-columns:minmax(0,.9fr) minmax(0,1.35fr);
+                gap:8px;
+            }
+            .article-finder-case-wide {
+                grid-column:1 / -1;
+            }
+            #article-tool-case,
+            #article-tool-type,
+            #article-tool-noun {
+                min-height:44px !important;
+                font-size:16px !important;
+            }
+        }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
@@ -1926,7 +1956,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                             <div>
                                 <div class="text-sm font-bold text-slate-800">Build a phrase</div>
                                 <div class="text-[11px] text-slate-500 mt-0.5">
-                                    Enter the noun first. The app determines its gender when known, then the preposition determines the case and the article changes automatically.
+                                    Choose the preposition first, then the article meaning and noun. The app determines the noun’s gender when known and builds the correct phrase automatically.
                                 </div>
                             </div>
 
@@ -1935,15 +1965,15 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                                     <select id="builder-prep" onchange="updateCaseBuilder(); renderPrepositionExplorer();" class="case-builder-input"></select>
                                 </label>
 
-                                <label class="case-builder-field">Noun
-                                    <input id="builder-noun" type="text" value="Mann" oninput="updateCaseBuilder()" class="case-builder-input" placeholder="e.g. Mann">
-                                </label>
-
                                 <label class="case-builder-field">Article meaning
                                     <select id="builder-article-type" onchange="updateCaseBuilder()" class="case-builder-input">
                                         <option value="definite">the</option>
                                         <option value="indefinite">a / an</option>
                                     </select>
+                                </label>
+
+                                <label class="case-builder-field">Noun
+                                    <input id="builder-noun" type="text" value="Mann" oninput="updateCaseBuilder()" class="case-builder-input" placeholder="e.g. Mann">
                                 </label>
 
                                 <label id="builder-motion-field" class="case-builder-field hidden">Two-way use
@@ -2027,17 +2057,13 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                         <div class="grammar-topic-intro">
                             <div class="text-sm font-bold text-slate-800">Article Finder</div>
                             <p class="text-[11px] text-slate-500 mt-1">
-                                Enter a noun. The app detects its gender/number when known, then you choose the case and article meaning.
+                                Choose the case first, then the article meaning and noun. The app detects the noun’s gender/number when known and builds the correct form.
                             </p>
                         </div>
 
                         <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
-                            <label class="case-builder-field">Noun
-                                <input id="article-tool-noun" type="text" value="Mann" oninput="updateArticleFinder()" class="case-builder-input" placeholder="e.g. Mann, Frau, Kind">
-                            </label>
-
-                            <div class="case-builder-grid">
-                                <label class="case-builder-field">Case
+                            <div class="article-finder-input-grid">
+                                <label class="case-builder-field article-finder-case-wide">Case
                                     <select id="article-tool-case" onchange="updateArticleFinder()" class="case-builder-input">
                                         <option value="Nominative">Nominative</option>
                                         <option value="Accusative">Accusative</option>
@@ -2051,6 +2077,10 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                                         <option value="definite">the</option>
                                         <option value="indefinite">a / an</option>
                                     </select>
+                                </label>
+
+                                <label class="case-builder-field">Noun
+                                    <input id="article-tool-noun" type="text" value="Mann" oninput="updateArticleFinder()" class="case-builder-input" placeholder="e.g. Mann, Frau, Kind">
                                 </label>
                             </div>
 
@@ -5066,14 +5096,16 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
         }
 
         function initGrammarTools() {
-            const prepSelect = document.getElementById("prep-tool-select");
             const builderPrep = document.getElementById("builder-prep");
-            if (!prepSelect || !builderPrep) return;
-            const options = Object.keys(prepositionData).map(p => `<option value="${p}">${p} — ${prepositionData[p].case}</option>`).join("");
-            prepSelect.innerHTML = options;
+            if (!builderPrep) return;
+
+            const options = Object.keys(prepositionData)
+                .map(p => `<option value="${p}">${p} — ${prepositionData[p].case} — ${prepositionData[p].meaning}</option>`)
+                .join("");
+
             builderPrep.innerHTML = options;
-            prepSelect.value = "mit";
             builderPrep.value = "mit";
+
             renderPrepositionExplorer();
             updateCaseBuilder();
             updateArticleFinder();
