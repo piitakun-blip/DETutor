@@ -5095,9 +5095,11 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
                     <div class="flex flex-wrap gap-2">${data.examples.map(ex=>`<span class="rounded-lg bg-slate-50 border border-slate-200 px-2.5 py-2 text-[11px] font-semibold text-slate-700">${ex}</span>`).join("")}</div>
                 </div>`;
 
-            out.classList.remove("case-nom","case-acc","case-dat","case-gen","case-multi","case-none");
-            if (data.type === "two-way") out.classList.add("case-multi");
-            else out.classList.add(grammarCaseClass(data.case));
+            if (data.type === "two-way") {
+                applyGrammarColorScheme(out, "multi", "");
+            } else {
+                applyGrammarColorScheme(out, data.case, "");
+            }
         }
 
         function resolveBuilderCase(prep, motion) {
@@ -5116,7 +5118,10 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
                 Nominative: "case-nom",
                 Accusative: "case-acc",
                 Dative: "case-dat",
-                Genitive: "case-gen"
+                Genitive: "case-gen",
+                multi: "case-multi",
+                Multi: "case-multi",
+                None: "case-none"
             };
             return map[caseName] || "case-none";
         }
@@ -5133,8 +5138,25 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
 
         function applyGrammarColorScheme(element, caseName, gender) {
             if (!element) return;
+
+            const caseKey = String(caseName || "").toLowerCase();
+            const palette = {
+                nominative: {bg:"#dbeafe", border:"#bfdbfe"},
+                accusative: {bg:"#c7f5d8", border:"#9ee8bb"},
+                dative:     {bg:"#fef9c3", border:"#fef08a"},
+                genitive:   {bg:"#f3e8ff", border:"#e9d5ff"},
+                multi:      {bg:"#ffedd5", border:"#fed7aa"},
+                none:       {bg:"#f3f4f6", border:"#e5e7eb"}
+            };
+            const colors = palette[caseKey] || palette.none;
+
             element.classList.remove("case-nom","case-acc","case-dat","case-gen","case-multi","case-none");
             element.classList.add(grammarCaseClass(caseName));
+
+            // Explicit inline colors make the case cue reliable even when older
+            // Tailwind/background utilities are still present in the page.
+            element.style.setProperty("background-color", colors.bg, "important");
+            element.style.setProperty("border-color", colors.border, "important");
 
             const genderTarget = element.querySelector("[data-grammar-gender-text]") || element;
             genderTarget.classList.remove("gender-masc","gender-fem","gender-neut","gender-plural","gender-multi","gender-none");
