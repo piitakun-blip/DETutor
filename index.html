@@ -2039,7 +2039,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                             <div>
                                 <div class="text-sm font-bold text-slate-800">Build a phrase</div>
                                 <div class="text-[11px] text-slate-500 mt-0.5">
-                                    Choose the preposition first, then the article meaning and noun. Enter the noun in German or English. Enter the noun normally in German. If you type it in English, check “Noun entered in English” so the translation service can skip language detection and go straight to the noun/article check.
+                                    Choose the preposition first, then the article meaning and noun. Enter the noun in German or English. Enter the noun in German. If it is English, check “Noun entered in English.” The app uses one quick noun lookup to get the German noun, article, gender, and number together.
                                 </div>
                             </div>
 
@@ -2179,7 +2179,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                         <div class="grammar-topic-intro">
                             <div class="text-sm font-bold text-slate-800">Article Finder</div>
                             <p class="text-[11px] text-slate-500 mt-1">
-                                Choose the case first, then the article meaning and noun. Enter the noun normally in German. If you type it in English, check “Noun entered in English” so the translation service can skip language detection and go straight to the noun/article check.
+                                Choose the case first, then the article meaning and noun. Enter the noun in German. If it is English, check “Noun entered in English.” The app uses one quick noun lookup to get the German noun, article, gender, and number together.
                             </p>
                         </div>
 
@@ -5131,17 +5131,123 @@ Do not include pronouns inside the form strings.`;
             updateArticleFinder();
         }
 
+        const NOUN_GRAMMAR_CACHE_KEY = "deutschlerner_noun_grammar_cache_v1";
+        const NOUN_GRAMMAR_CACHE_MAX = 400;
+        const nounGrammarAICache = new Map();
+
+        function loadPersistentNounGrammarCache() {
+            try {
+                const raw = safeStorageGet(NOUN_GRAMMAR_CACHE_KEY);
+                if (!raw) return;
+
+                const saved = JSON.parse(raw);
+                if (!saved || typeof saved !== "object") return;
+
+                Object.entries(saved).forEach(([key, value]) => {
+                    if (!value || typeof value !== "object") return;
+                    const validGender = ["masculine","feminine","neuter","plural"].includes(value.gender);
+                    const validNumber = ["singular","plural"].includes(value.number);
+                    if (value.noun && validGender && validNumber) {
+                        nounGrammarAICache.set(key, value);
+                    }
+                });
+            } catch (e) {
+                console.warn("Could not load noun grammar cache:", e);
+            }
+        }
+
+        function savePersistentNounGrammarCache() {
+            try {
+                const entries = Array.from(nounGrammarAICache.entries());
+                const trimmed = entries.slice(-NOUN_GRAMMAR_CACHE_MAX);
+                safeStorageSet(NOUN_GRAMMAR_CACHE_KEY, JSON.stringify(Object.fromEntries(trimmed)));
+            } catch (e) {
+                console.warn("Could not save noun grammar cache:", e);
+            }
+        }
+
+        function cacheNounGrammarResult(cacheKey, result) {
+            nounGrammarAICache.set(cacheKey, result);
+            savePersistentNounGrammarCache();
+        }
+
+        loadPersistentNounGrammarCache();
+
         async function determineGermanNounGrammarOnline(raw, sourceLanguage="de") {
             const entered = String(raw || "").trim();
             if (!entered) {
                 return {noun:"", gender:"", number:"", translated:false, detectedLanguage:sourceLanguage};
             }
 
+            const cacheKey = `${sourceLanguage}:${entered.toLowerCase()}`;
+            if (nounGrammarAICache.has(cacheKey)) {
+                return nounGrammarAICache.get(cacheKey);
+            }
+
+            // Preferred path: one narrow AI lookup returns the German noun,
+            // nominative article, gender, and number in one structured response.
+            if (getActiveAIKey()) {
+                try {
+                    const prompt = `You are a German noun grammar lookup service.
+
+Input word: "${entered}"
+Input language: ${sourceLanguage === "en" ? "English" : "German"}
+
+Return ONLY valid JSON in exactly this shape:
+{
+  "noun": "German noun with normal capitalization",
+  "article": "der|die|das",
+  "gender": "masculine|feminine|neuter|plural",
+  "number": "singular|plural"
+}
+
+Rules:
+- If the input is English, translate it to the most natural everyday German noun first.
+- If the English word normally maps to a plural German noun in this meaning, return the plural noun and gender "plural".
+- For a singular German noun, article must be its nominative definite article.
+- For plural, use article "die" and gender "plural".
+- Do not include explanations or Markdown.`;
+
+                    const parsed = parseAIJson(await callAI(prompt));
+                    const noun = String(parsed?.noun || "").trim();
+                    const article = String(parsed?.article || "").trim().toLowerCase();
+                    let gender = String(parsed?.gender || "").trim().toLowerCase();
+                    let number = String(parsed?.number || "").trim().toLowerCase();
+
+                    if (gender === "plural" || number === "plural") {
+                        gender = "plural";
+                        number = "plural";
+                    }
+
+                    const validGender = ["masculine","feminine","neuter","plural"].includes(gender);
+                    const validNumber = ["singular","plural"].includes(number);
+                    const validArticle = ["der","die","das"].includes(article);
+
+                    if (noun && validGender && validNumber && validArticle) {
+                        const result = {
+                            noun,
+                            article,
+                            gender,
+                            number,
+                            translated:sourceLanguage === "en",
+                            detectedLanguage:sourceLanguage,
+                            source:"AI"
+                        };
+                        cacheNounGrammarResult(cacheKey, result);
+                        return result;
+                    }
+
+                    throw new Error("AI noun lookup returned incomplete grammar data.");
+                } catch (e) {
+                    console.warn("Automatic AI noun lookup failed; using translation fallback:", e);
+                }
+            }
+
+            // Fallback: preserve the existing translation-service approach.
             const enteredIsGerman = sourceLanguage === "de";
             let englishNoun = entered;
             let fallbackGermanNoun = entered;
 
-            // Explicit language selection avoids the extra auto-detection request.
             if (enteredIsGerman) {
                 try {
                     englishNoun = String(
@@ -5160,10 +5266,6 @@ Do not include pronouns inside the form strings.`;
                 }
             }
 
-            englishNoun = String(englishNoun || "").trim();
-
-            // Translate "the + noun" as one phrase so the translator returns
-            // the German article and noun together.
             let nominativeProbe = "";
             try {
                 nominativeProbe = String(
@@ -5176,10 +5278,11 @@ Do not include pronouns inside the form strings.`;
             let germanNoun = "";
             let gender = "";
             let number = "singular";
+            let article = "";
 
             const articleMatch = nominativeProbe.match(/^(der|die|das)\s+(.+)$/i);
             if (articleMatch) {
-                const article = articleMatch[1].toLowerCase();
+                article = articleMatch[1].toLowerCase();
                 germanNoun = articleMatch[2].trim();
 
                 if (article === "der") {
@@ -5187,8 +5290,6 @@ Do not include pronouns inside the form strings.`;
                 } else if (article === "das") {
                     gender = "neuter";
                 } else {
-                    // "die" can be feminine singular or plural.
-                    // A Dative probe distinguishes "mit der" from "mit den".
                     try {
                         const dativeProbe = String(
                             await googleTranslateApiCall(`with the ${englishNoun}`, "en", "de")
@@ -5211,14 +5312,20 @@ Do not include pronouns inside the form strings.`;
                 germanNoun = germanNoun.charAt(0).toUpperCase() + germanNoun.slice(1);
             }
 
-            return {
+            const result = {
                 noun:germanNoun,
+                article,
                 gender,
                 number: gender === "plural" ? "plural" : number,
                 translated:!enteredIsGerman,
                 detectedLanguage:sourceLanguage,
-                nominativeProbe
+                source:"Translation fallback"
             };
+
+            if (result.noun && result.gender) {
+                cacheNounGrammarResult(cacheKey, result);
+            }
+            return result;
         }
 
         async function updateArticleFinder() {
@@ -5234,6 +5341,10 @@ Do not include pronouns inside the form strings.`;
             const requestId = ++articleFinderRequestId;
             const rawNoun = nounEl.value.trim() || "Noun";
             const nounLanguage = document.getElementById("article-tool-noun-english")?.checked ? "en" : "de";
+            if (genderDisplay) {
+                genderDisplay.textContent = "Checking noun…";
+                genderDisplay.className = "text-sm font-bold text-slate-500";
+            }
             const resolvedNoun = await determineGermanNounGrammarOnline(rawNoun, nounLanguage);
             if (requestId !== articleFinderRequestId) return;
             const noun = resolvedNoun.noun || rawNoun;
@@ -5667,12 +5778,12 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
 
         function scheduleCaseBuilderUpdate() {
             clearTimeout(caseBuilderInputTimer);
-            caseBuilderInputTimer = setTimeout(() => updateCaseBuilder(), 250);
+            caseBuilderInputTimer = setTimeout(() => updateCaseBuilder(), 600);
         }
 
         function scheduleArticleFinderUpdate() {
             clearTimeout(articleFinderInputTimer);
-            articleFinderInputTimer = setTimeout(() => updateArticleFinder(), 250);
+            articleFinderInputTimer = setTimeout(() => updateArticleFinder(), 600);
         }
 
         async function resolveGermanNounInput(raw) {
@@ -5720,6 +5831,10 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
             const requestId = ++caseBuilderRequestId;
             const rawNoun = nounEl.value.trim() || "Noun";
             const nounLanguage = document.getElementById("builder-noun-english")?.checked ? "en" : "de";
+            if (detectedEl) {
+                detectedEl.textContent = "Checking noun…";
+                detectedEl.className = "text-sm font-bold text-slate-500";
+            }
             const resolvedNoun = await determineGermanNounGrammarOnline(rawNoun, nounLanguage);
             if (requestId !== caseBuilderRequestId) return;
             const noun = resolvedNoun.noun || rawNoun;
