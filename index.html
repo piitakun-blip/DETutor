@@ -1931,10 +1931,10 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                             </div>
                             <div class="space-y-3">
                                 <label class="block">
-                                    <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-2">Verb input</div>
+                                    <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-2">Verb input — German or English</div>
                                     <input id="verb-tool-input" type="text" inputmode="text" autocomplete="off"
                                         class="verb-tool-input w-full min-w-0 rounded-xl border-2 border-indigo-200 bg-white px-4 py-4 text-lg text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-                                        placeholder="Enter a German verb form, e.g. haben, fährt, mitbringen">
+                                        placeholder="German or English, e.g. haben, fährt, to drive">
                                 </label>
                                 <div class="verb-tool-actions">
                                     <button type="button" onclick="runLocalVerbConjugator()" class="min-h-[46px] px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm">Conjugate</button>
@@ -2030,8 +2030,8 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                                     </select>
                                 </label>
 
-                                <label class="case-builder-field">Noun
-                                    <input id="builder-noun" type="text" value="Mann" oninput="updateCaseBuilder()" class="case-builder-input" placeholder="e.g. Mann">
+                                <label class="case-builder-field">Noun — German or English
+                                    <input id="builder-noun" type="text" value="Mann" oninput="scheduleCaseBuilderUpdate()" class="case-builder-input" placeholder="e.g. Mann or man">
                                 </label>
 
                                 <label id="builder-motion-field" class="case-builder-field hidden">Two-way use
@@ -2137,8 +2137,8 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                                     </select>
                                 </label>
 
-                                <label class="case-builder-field">Noun
-                                    <input id="article-tool-noun" type="text" value="Mann" oninput="updateArticleFinder()" class="case-builder-input" placeholder="e.g. Mann, Frau, Kind">
+                                <label class="case-builder-field">Noun — German or English
+                                    <input id="article-tool-noun" type="text" value="Mann" oninput="scheduleArticleFinderUpdate()" class="case-builder-input" placeholder="e.g. Mann or man">
                                 </label>
                             </div>
 
@@ -4774,6 +4774,39 @@ Before returning, verify that the explanation itself is English.`;
             return null;
         }
 
+        function looksLikeEnglishEntry(raw) {
+            const text = String(raw || "").trim().toLowerCase();
+            if (!text) return false;
+            if (/^to\s+[a-z][a-z\s-]*$/.test(text)) return true;
+            if (/^[a-z][a-z\s-]*$/.test(text) && !/[äöüß]/.test(text)) {
+                const commonGerman = new Set([
+                    "sein","haben","werden","gehen","kommen","fahren","geben","nehmen","sehen","sprechen",
+                    "essen","lesen","schlafen","laufen","tragen","helfen","treffen","vergessen","bringen",
+                    "denken","kennen","tun","stehen","finden","bleiben","schreiben","arbeiten","lernen",
+                    "machen","kaufen","fragen","wohnen","sagen","mitbringen","anrufen","aufstehen","einkaufen",
+                    "anfangen","mitkommen","ausgehen","zurückkommen","mann","frau","kind","buch","hotel",
+                    "haus","zimmer","auto","arzt","bahnhof","park","urlaub","schule","stadt","arbeit","tasche"
+                ]);
+                return !commonGerman.has(text);
+            }
+            return false;
+        }
+
+        async function translateSingleWordToGerman(raw) {
+            const text = String(raw || "").trim();
+            if (!text) return "";
+            if (!looksLikeEnglishEntry(text)) return text;
+
+            let clean = text.replace(/^to\s+/i, "").trim();
+            try {
+                const translated = await googleTranslateApiCall(clean, "en", "de");
+                return String(translated || "").trim();
+            } catch (e) {
+                console.warn("Single-word translation failed:", e);
+                return "";
+            }
+        }
+
         function renderVerbConjugation(result, source="Local") {
             const resultBox = document.getElementById("verb-tool-result");
             const grid = document.getElementById("verb-conjugation-grid");
@@ -4822,19 +4855,49 @@ Before returning, verify that the explanation itself is English.`;
             resultBox.classList.remove("hidden");
         }
 
-        function runLocalVerbConjugator() {
+        async function runLocalVerbConjugator() {
             const input = document.getElementById("verb-tool-input");
             const status = document.getElementById("verb-tool-status");
-            const result = identifyVerbLocally(input.value);
+            const raw = input.value.trim();
+            if (!raw) return;
+
+            let lookup = raw;
+            let translatedFromEnglish = false;
+
+            if (looksLikeEnglishEntry(raw)) {
+                status.textContent = "Translating to German…";
+                status.className = "text-[10px] font-semibold text-slate-500";
+                status.classList.remove("hidden");
+
+                const translated = await translateSingleWordToGerman(raw);
+                if (!translated) {
+                    status.textContent = "I could not translate that English verb. Try the AI check.";
+                    status.className = "text-[10px] font-semibold text-amber-700";
+                    return;
+                }
+                lookup = translated;
+                translatedFromEnglish = true;
+            }
+
+            const result = identifyVerbLocally(lookup);
             if (!result) {
-                status.textContent = "I could not confidently identify that form locally. Try the AI check.";
+                status.textContent = translatedFromEnglish
+                    ? `Translated as "${lookup}", but I could not confidently conjugate it locally. Try the AI check.`
+                    : "I could not confidently identify that form locally. Try the AI check.";
                 status.className = "text-[10px] font-semibold text-amber-700";
                 status.classList.remove("hidden");
                 document.getElementById("verb-tool-result").classList.add("hidden");
                 return;
             }
+
+            if (translatedFromEnglish) {
+                result.info = result.info || {};
+                if (!result.info.meaning) result.info.meaning = raw.replace(/^to\s+/i, "");
+                result.extra = `English input → ${lookup}`;
+            }
+
             status.classList.add("hidden");
-            renderVerbConjugation(result, "Local");
+            renderVerbConjugation(result, translatedFromEnglish ? "Translated" : "Local");
         }
 
         async function runAiVerbConjugator() {
@@ -4856,7 +4919,7 @@ Before returning, verify that the explanation itself is English.`;
             btn.textContent = "Checking…";
             try {
                 const prompt = `You are a German verb conjugation tool for an English-speaking learner.
-The user entered this German verb form: "${raw}".
+The user entered this verb in German or English: "${raw}". If it is English, translate it to the natural German infinitive first.
 
 Identify the infinitive and give PRESENT-TENSE forms only.
 Return ONLY valid JSON:
@@ -4944,7 +5007,7 @@ Do not include pronouns inside the form strings.`;
             updateArticleFinder();
         }
 
-        function updateArticleFinder() {
+        async function updateArticleFinder() {
             const nounEl = document.getElementById("article-tool-noun");
             const caseEl = document.getElementById("article-tool-case");
             const typeEl = document.getElementById("article-tool-type");
@@ -4954,7 +5017,10 @@ Do not include pronouns inside the form strings.`;
             const ruleEl = document.getElementById("article-tool-rule");
             if (!nounEl || !caseEl || !typeEl || !resultEl || !ruleEl) return;
 
-            const noun = nounEl.value.trim() || "Noun";
+            const rawNoun = nounEl.value.trim() || "Noun";
+            const resolvedNoun = await resolveGermanNounInput(rawNoun);
+            const noun = resolvedNoun.noun || rawNoun;
+            builderResolvedNoun = noun;
             const inferred = inferBuilderGender(noun);
 
             let gender = inferred.gender;
@@ -4973,7 +5039,7 @@ Do not include pronouns inside the form strings.`;
 
             if (genderDisplay) {
                 if (gender) {
-                    genderDisplay.textContent = labels[gender] + (inferred.confidence === "pattern" ? " (likely)" : "");
+                    genderDisplay.textContent = labels[gender] + (inferred.confidence === "pattern" ? " (likely)" : "") + (resolvedNoun.translated ? ` · ${noun}` : "");
                     genderDisplay.className = "text-sm font-bold " + grammarGenderClass(gender);
                 } else {
                     genderDisplay.textContent = "Unknown — choose Change";
@@ -4984,7 +5050,7 @@ Do not include pronouns inside the form strings.`;
             if (!gender) {
                 resultEl.textContent = "— " + noun;
                 applyGrammarColorScheme(resultEl.parentElement, "None", "");
-                ruleEl.textContent = "I do not know this noun's gender locally yet. Tap Change to select it.";
+                ruleEl.textContent = "I do not know this noun's gender locally yet. Tap Change to select it, or use Ask AI about this article choice.";
                 return;
             }
 
@@ -5325,7 +5391,32 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
             }
 
             // A few useful plural forms / high-frequency nouns not always present in the parser lexicon.
-            const knownPlural = new Set([
+            const builderGenderFallback = {
+                "hotel":"neuter",
+                "restaurant":"neuter",
+                "haus":"neuter",
+                "zimmer":"neuter",
+                "auto":"neuter",
+                "kind":"neuter",
+                "buch":"neuter",
+                "mann":"masculine",
+                "freund":"masculine",
+                "arzt":"masculine",
+                "bahnhof":"masculine",
+                "park":"masculine",
+                "urlaub":"masculine",
+                "frau":"feminine",
+                "freundin":"feminine",
+                "schule":"feminine",
+                "stadt":"feminine",
+                "arbeit":"feminine",
+                "tasche":"feminine"
+            };
+            if (builderGenderFallback[clean]) {
+                return {gender:builderGenderFallback[clean], confidence:"known"};
+            }
+
+                    const knownPlural = new Set([
                 "kinder","männer","frauen","freunde","freundinnen","eltern","häuser",
                 "bücher","autos","hunde","katzen","lehrer","lehrerinnen","schüler","schülerinnen"
             ]);
@@ -5350,7 +5441,40 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
             updateCaseBuilder();
         }
 
-        function updateCaseBuilder() {
+        let caseBuilderInputTimer = null;
+        let articleFinderInputTimer = null;
+        let builderResolvedNoun = "";
+        let articleResolvedNoun = "";
+
+        function scheduleCaseBuilderUpdate() {
+            clearTimeout(caseBuilderInputTimer);
+            caseBuilderInputTimer = setTimeout(() => updateCaseBuilder(), 250);
+        }
+
+        function scheduleArticleFinderUpdate() {
+            clearTimeout(articleFinderInputTimer);
+            articleFinderInputTimer = setTimeout(() => updateArticleFinder(), 250);
+        }
+
+        async function resolveGermanNounInput(raw) {
+            const text = String(raw || "").trim();
+            if (!text) return {noun:"", translated:false};
+
+            if (!looksLikeEnglishEntry(text)) {
+                return {noun:text, translated:false};
+            }
+
+            const translated = await translateSingleWordToGerman(text);
+            if (!translated) return {noun:text, translated:false};
+
+            // For noun lookup, use the first lexical word and normalize capitalization.
+            const first = translated.split(/[;,/]/)[0].trim();
+            const noun = first ? first.charAt(0).toUpperCase() + first.slice(1) : translated;
+            return {noun, translated:true};
+        }
+
+        async function updateCaseBuilder() {
+
             const prepEl = document.getElementById("builder-prep");
             const genderEl = document.getElementById("builder-gender");
             const articleTypeEl = document.getElementById("builder-article-type");
@@ -5366,7 +5490,10 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
             const data = prepositionData[prep];
             if (motionField) motionField.classList.toggle("hidden", data?.type !== "two-way");
 
-            const noun = nounEl.value.trim() || "Noun";
+            const rawNoun = nounEl.value.trim() || "Noun";
+            const resolvedNoun = await resolveGermanNounInput(rawNoun);
+            const noun = resolvedNoun.noun || rawNoun;
+            articleResolvedNoun = noun;
             const inferred = inferBuilderGender(noun);
 
             let gender = inferred.gender;
@@ -5385,7 +5512,7 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
 
             if (detectedEl) {
                 if (gender) {
-                    detectedEl.textContent = displayNames[gender] + (inferred.confidence === "pattern" ? " (likely)" : "");
+                    detectedEl.textContent = displayNames[gender] + (inferred.confidence === "pattern" ? " (likely)" : "") + (resolvedNoun.translated ? ` · ${noun}` : "");
                     detectedEl.className = "text-sm font-bold " + grammarGenderClass(gender);
                 } else {
                     detectedEl.textContent = "Unknown — choose Change";
@@ -5396,7 +5523,7 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
             if (!gender) {
                 resultEl.textContent = `${prep} … ${noun}`;
                 applyGrammarColorScheme(resultEl.parentElement, "None", "");
-                ruleEl.textContent = "I do not know this noun's gender locally yet. Tap Change to select it, or use Ask AI about this phrase.";
+                ruleEl.textContent = "I do not know this noun's gender locally yet. Tap Change to select it, or use Ask AI about this phrase to verify the noun.";
                 return;
             }
 
