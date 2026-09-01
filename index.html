@@ -1988,7 +1988,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                             <div>
                                 <div class="text-sm font-bold text-slate-800">Build a phrase</div>
                                 <div class="text-[11px] text-slate-500 mt-0.5">
-                                    Choose the preposition first, then the article meaning and noun. The app determines the noun’s gender when known and builds the correct phrase automatically.
+                                    Choose the preposition first, then the article meaning and noun. Enter the noun in German or English. The translation service detects the language and translates English to German before the app determines gender and builds the phrase.
                                 </div>
                             </div>
 
@@ -2115,7 +2115,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                         <div class="grammar-topic-intro">
                             <div class="text-sm font-bold text-slate-800">Article Finder</div>
                             <p class="text-[11px] text-slate-500 mt-1">
-                                Choose the case first, then the article meaning and noun. The app detects the noun’s gender/number when known and builds the correct form.
+                                Choose the case first, then the article meaning and noun. The noun may be German or English; the translation service detects the language and translates it to German before the article is built.
                             </p>
                         </div>
 
@@ -4792,19 +4792,78 @@ Before returning, verify that the explanation itself is English.`;
             return false;
         }
 
-        async function translateSingleWordToGerman(raw) {
+        async function detectAndTranslateWordToGerman(raw) {
             const text = String(raw || "").trim();
-            if (!text) return "";
-            if (!looksLikeEnglishEntry(text)) return text;
+            if (!text) return {text:"", detectedLanguage:"", translated:false};
 
-            let clean = text.replace(/^to\s+/i, "").trim();
-            try {
-                const translated = await googleTranslateApiCall(clean, "en", "de");
-                return String(translated || "").trim();
-            } catch (e) {
-                console.warn("Single-word translation failed:", e);
-                return "";
+            const clean = text.replace(/^to\s+/i, "").trim();
+
+            // Official Google Cloud Translation: omit source so Google detects it.
+            if (getTranslationKey()) {
+                try {
+                    const response = await fetch("https://translation.googleapis.com/language/translate/v2", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json; charset=utf-8",
+                            "x-goog-api-key": getTranslationKey()
+                        },
+                        body: JSON.stringify({
+                            q: clean,
+                            target: "de",
+                            format: "text"
+                        })
+                    });
+
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok) {
+                        throw new Error(data?.error?.message || ("Google Cloud Translation HTTP " + response.status));
+                    }
+
+                    const item = data?.data?.translations?.[0];
+                    const translated = sanitizeTranslation(decodeHtmlEntities(item?.translatedText || ""));
+                    const detected = String(item?.detectedSourceLanguage || "").toLowerCase();
+
+                    if (translated) {
+                        return {
+                            text: detected === "de" ? clean : translated,
+                            detectedLanguage: detected,
+                            translated: detected !== "de"
+                        };
+                    }
+                } catch (e) {
+                    console.warn("Cloud language detection failed; trying public Google Translate:", e);
+                }
             }
+
+            // Public Google Translate also supports automatic source-language detection.
+            const response = await fetch(
+                `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=de&dt=t&q=${encodeURIComponent(clean)}`
+            );
+            if (!response.ok) throw new Error("Public Google Translation HTTP " + response.status);
+
+            const result = await response.json();
+            let translated = "";
+            if (Array.isArray(result) && result[0]) {
+                result[0].forEach(row => {
+                    if (row && row[0]) translated += row[0];
+                });
+            }
+
+            translated = sanitizeTranslation(translated);
+            const detected = String(result?.[2] || "").toLowerCase();
+
+            if (!translated) throw new Error("Translation returned no text.");
+
+            return {
+                text: detected === "de" ? clean : translated,
+                detectedLanguage: detected,
+                translated: detected !== "de"
+            };
+        }
+
+        async function translateSingleWordToGerman(raw) {
+            const result = await detectAndTranslateWordToGerman(raw);
+            return result.text;
         }
 
         function renderVerbConjugation(result, source="Local") {
@@ -5458,19 +5517,27 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
 
         async function resolveGermanNounInput(raw) {
             const text = String(raw || "").trim();
-            if (!text) return {noun:"", translated:false};
+            if (!text) return {noun:"", translated:false, detectedLanguage:""};
 
-            if (!looksLikeEnglishEntry(text)) {
-                return {noun:text, translated:false};
+            try {
+                const result = await detectAndTranslateWordToGerman(text);
+                const translatedText = String(result.text || text).trim();
+
+                // Keep the first translation candidate and format it as a German noun.
+                const first = translatedText.split(/[;,/]/)[0].trim();
+                const noun = first
+                    ? first.charAt(0).toUpperCase() + first.slice(1)
+                    : text;
+
+                return {
+                    noun,
+                    translated:Boolean(result.translated),
+                    detectedLanguage:result.detectedLanguage || ""
+                };
+            } catch (e) {
+                console.warn("Noun detection/translation failed:", e);
+                return {noun:text, translated:false, detectedLanguage:""};
             }
-
-            const translated = await translateSingleWordToGerman(text);
-            if (!translated) return {noun:text, translated:false};
-
-            // For noun lookup, use the first lexical word and normalize capitalization.
-            const first = translated.split(/[;,/]/)[0].trim();
-            const noun = first ? first.charAt(0).toUpperCase() + first.slice(1) : translated;
-            return {noun, translated:true};
         }
 
         async function updateCaseBuilder() {
