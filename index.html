@@ -767,6 +767,178 @@
                 align-items:flex-start !important;
             }
         }
+
+        /* Interactive Cheat Sheet Tools */
+        .cheat-tool-tabs {
+            display:flex;
+            gap:6px;
+            flex-wrap:wrap;
+            padding:4px;
+            border-radius:12px;
+            background:#f1f5f9;
+            border:1px solid #e2e8f0;
+        }
+        .cheat-tool-tab {
+            min-height:40px;
+            padding:8px 11px;
+            border-radius:9px;
+            font-size:11px;
+            font-weight:800;
+            color:#64748b;
+            background:transparent;
+        }
+        .cheat-tool-tab.active {
+            background:#fff;
+            color:#4338ca;
+            box-shadow:0 1px 2px rgba(15,23,42,.08);
+        }
+        .verb-conjugation-grid {
+            display:grid;
+            grid-template-columns:repeat(2,minmax(0,1fr));
+            background:#fff;
+        }
+        .verb-conjugation-row {
+            min-width:0;
+            display:grid;
+            grid-template-columns:86px minmax(0,1fr) 34px;
+            align-items:center;
+            gap:8px;
+            padding:10px 12px;
+            border-bottom:1px solid #f1f5f9;
+        }
+        .verb-conjugation-row:nth-child(odd) {
+            border-right:1px solid #f1f5f9;
+        }
+        .verb-pronoun {
+            color:#64748b;
+            font-size:11px;
+            font-weight:700;
+        }
+        .verb-form {
+            color:#1e293b;
+            font-size:14px;
+            font-weight:800;
+            min-width:0;
+            overflow-wrap:anywhere;
+        }
+        .verb-speak-btn {
+            width:32px;
+            height:32px;
+            border-radius:9999px;
+            border:1px solid #bfdbfe;
+            background:#eff6ff;
+            font-size:14px;
+        }
+        .prep-article-grid {
+            display:grid;
+            grid-template-columns:repeat(4,minmax(0,1fr));
+            gap:6px;
+        }
+        .prep-article-grid > div {
+            border:1px solid #e2e8f0;
+            background:#f8fafc;
+            border-radius:9px;
+            padding:8px;
+            text-align:center;
+        }
+        .prep-article-grid span {
+            display:block;
+            font-size:9px;
+            color:#94a3b8;
+            font-weight:800;
+            text-transform:uppercase;
+        }
+        .prep-article-grid strong {
+            display:block;
+            margin-top:2px;
+            font-size:15px;
+            color:#334155;
+        }
+        .case-builder-grid {
+            display:grid;
+            grid-template-columns:repeat(2,minmax(0,1fr));
+            gap:10px;
+        }
+        .case-builder-field {
+            min-width:0;
+            display:flex;
+            flex-direction:column;
+            gap:5px;
+            font-size:10px;
+            font-weight:800;
+            color:#64748b;
+            text-transform:uppercase;
+            letter-spacing:.04em;
+        }
+        .case-builder-noun {
+            grid-column:1 / -1;
+        }
+        .case-builder-input {
+            width:100%;
+            min-width:0;
+            min-height:42px;
+            border:1px solid #cbd5e1;
+            border-radius:9px;
+            background:#fff;
+            padding:8px 10px;
+            color:#1e293b;
+            font-size:14px;
+            font-weight:600;
+            text-transform:none;
+            letter-spacing:normal;
+        }
+
+        @media (max-width:640px) {
+            /* Keep Cheat Sheets usable inside the existing Tutor mobile tab. */
+            #mobile-right-column {
+                min-width:0;
+            }
+            #cheat-sheet-container {
+                min-width:0;
+                overflow-x:hidden;
+            }
+            .cheat-tool-tabs {
+                display:grid;
+                grid-template-columns:repeat(2,minmax(0,1fr));
+                gap:6px;
+            }
+            .cheat-tool-tab {
+                width:100%;
+                min-height:44px;
+                padding:8px 6px;
+                white-space:normal;
+                line-height:1.2;
+            }
+            .verb-conjugation-grid {
+                grid-template-columns:1fr;
+            }
+            .verb-conjugation-row {
+                grid-template-columns:76px minmax(0,1fr) 38px;
+                min-height:48px;
+                padding:9px 10px;
+            }
+            .verb-conjugation-row:nth-child(odd) {
+                border-right:0;
+            }
+            .verb-speak-btn {
+                width:36px;
+                height:36px;
+            }
+            .prep-article-grid {
+                grid-template-columns:repeat(2,minmax(0,1fr));
+            }
+            .case-builder-grid {
+                grid-template-columns:1fr;
+            }
+            .case-builder-noun {
+                grid-column:auto;
+            }
+            .case-builder-input,
+            #verb-tool-input,
+            #prep-tool-select {
+                font-size:16px !important; /* prevents iPhone Safari zoom */
+            }
+        }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
@@ -1292,7 +1464,124 @@
             </button>
 
             <!-- Collapsible Cheat Sheet Content Container -->
-            <div id="cheat-sheet-container" class="hidden space-y-6 animate-fadeIn">
+            
+<div id="cheat-sheet-container" class="hidden space-y-6 animate-fadeIn">
+
+                <!-- Interactive Grammar Tools -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-5 space-y-4">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-800">Interactive Grammar Tools</h3>
+                            <p class="text-[11px] text-slate-500 mt-1">Offline-first. AI is only used when you explicitly press an AI button.</p>
+                        </div>
+                    </div>
+
+                    <div class="cheat-tool-tabs" role="tablist" aria-label="Grammar tools">
+                        <button type="button" class="cheat-tool-tab active" data-cheat-tool="verb" onclick="setCheatTool('verb')">Verb Conjugator</button>
+                        <button type="button" class="cheat-tool-tab" data-cheat-tool="prep" onclick="setCheatTool('prep')">Prepositions</button>
+                        <button type="button" class="cheat-tool-tab" data-cheat-tool="builder" onclick="setCheatTool('builder')">Case Builder</button>
+                        <button type="button" class="cheat-tool-tab" data-cheat-tool="reference" onclick="setCheatTool('reference')">Article Tables</button>
+                    </div>
+
+                    <!-- Verb Conjugator -->
+                    <section id="cheat-tool-verb" class="cheat-tool-panel space-y-4">
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                            <div>
+                                <div class="text-sm font-bold text-slate-800">Verb Conjugator</div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">Enter an infinitive or a conjugated form such as <em>bringe</em>, <em>möchtest</em>, <em>fährt</em>, <em>mitbringen</em>, or <em>rufe an</em>.</div>
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <input id="verb-tool-input" type="text" inputmode="text" autocomplete="off"
+                                    class="flex-1 min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base sm:text-sm text-slate-800 outline-none focus:border-indigo-500"
+                                    placeholder="Enter a German verb form">
+                                <button type="button" onclick="runLocalVerbConjugator()" class="min-h-[44px] px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs">Conjugate</button>
+                                <button id="verb-ai-btn" type="button" onclick="runAiVerbConjugator()" class="min-h-[44px] px-4 py-2 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold text-xs">✨ Check with AI</button>
+                            </div>
+                            <div id="verb-tool-status" class="hidden text-[10px] font-semibold"></div>
+                        </div>
+
+                        <div id="verb-tool-result" class="hidden rounded-xl border border-slate-200 overflow-hidden">
+                            <div class="bg-slate-50 px-4 py-3 flex flex-wrap justify-between gap-2 border-b border-slate-200">
+                                <div>
+                                    <span class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Infinitive</span>
+                                    <div id="verb-result-infinitive" class="text-lg font-bold text-indigo-700"></div>
+                                </div>
+                                <div class="text-right">
+                                    <span id="verb-result-source" class="inline-block text-[9px] uppercase tracking-wider font-bold px-2 py-1 rounded-full bg-slate-200 text-slate-600"></span>
+                                    <div id="verb-result-note" class="text-[10px] text-slate-500 mt-1"></div>
+                                </div>
+                            </div>
+                            <div id="verb-conjugation-grid" class="verb-conjugation-grid"></div>
+                            <div id="verb-extra-info" class="hidden px-4 py-3 border-t border-slate-100 bg-white text-[11px] text-slate-600"></div>
+                        </div>
+                    </section>
+
+                    <!-- Preposition Explorer -->
+                    <section id="cheat-tool-prep" class="cheat-tool-panel hidden space-y-4">
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                            <div>
+                                <div class="text-sm font-bold text-slate-800">Preposition Explorer</div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">Choose a preposition to see its case rule, article forms, and examples.</div>
+                            </div>
+                            <select id="prep-tool-select" onchange="renderPrepositionExplorer()" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base sm:text-sm text-slate-800">
+                            </select>
+                        </div>
+                        <div id="prep-tool-result" class="rounded-xl border border-slate-200 bg-white p-4 space-y-4"></div>
+                    </section>
+
+                    <!-- Case Builder -->
+                    <section id="cheat-tool-builder" class="cheat-tool-panel hidden space-y-4">
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                            <div>
+                                <div class="text-sm font-bold text-slate-800">Case Builder</div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">Build a prepositional phrase and see which article the case requires.</div>
+                            </div>
+                            <div class="case-builder-grid">
+                                <label class="case-builder-field">Preposition
+                                    <select id="builder-prep" onchange="updateCaseBuilder()" class="case-builder-input"></select>
+                                </label>
+                                <label class="case-builder-field">Gender / number
+                                    <select id="builder-gender" onchange="updateCaseBuilder()" class="case-builder-input">
+                                        <option value="masculine">Masculine</option>
+                                        <option value="feminine">Feminine</option>
+                                        <option value="neuter">Neuter</option>
+                                        <option value="plural">Plural</option>
+                                    </select>
+                                </label>
+                                <label class="case-builder-field">Article
+                                    <select id="builder-article-type" onchange="updateCaseBuilder()" class="case-builder-input">
+                                        <option value="definite">Definite (the)</option>
+                                        <option value="indefinite">Indefinite (a/an)</option>
+                                    </select>
+                                </label>
+                                <label id="builder-motion-field" class="case-builder-field hidden">Two-way use
+                                    <select id="builder-motion" onchange="updateCaseBuilder()" class="case-builder-input">
+                                        <option value="location">Location — Wo?</option>
+                                        <option value="destination">Destination/change — Wohin?</option>
+                                    </select>
+                                </label>
+                                <label class="case-builder-field case-builder-noun">Noun
+                                    <input id="builder-noun" type="text" value="Mann" oninput="updateCaseBuilder()" class="case-builder-input" placeholder="e.g. Mann">
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                            <div class="text-[10px] uppercase tracking-wider font-bold text-amber-700">Built phrase</div>
+                            <div id="builder-result" class="text-xl font-bold text-slate-900 mt-1 break-words"></div>
+                            <div id="builder-rule" class="text-[11px] text-slate-600 mt-2"></div>
+                        </div>
+                    </section>
+
+                    <!-- Article reference entry point -->
+                    <section id="cheat-tool-reference" class="cheat-tool-panel hidden">
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                            The full definite and indefinite article tables are directly below these tools.
+                            <button type="button" onclick="document.getElementById('definite-articles-heading')?.scrollIntoView({behavior:'smooth',block:'start'})" class="mt-3 w-full sm:w-auto min-h-[44px] px-4 py-2 rounded-lg bg-white border border-slate-300 font-bold text-xs text-indigo-700">Jump to article tables</button>
+                        </div>
+                    </section>
+                </div>
+
 
                 <!-- Quick Reference Table: Definite & Indefinite Articles -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-4">
@@ -1303,7 +1592,7 @@
 
                 <!-- Table for Definite Articles (der, die, das) -->
                 <div class="space-y-3">
-                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Definite Articles (The)</span>
+                    <span id="definite-articles-heading" class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Definite Articles (The)</span>
                     <div class="overflow-x-auto rounded-lg border border-slate-100">
                         <table class="w-full text-left text-xs border-collapse">
                             <thead>
@@ -3753,6 +4042,424 @@ Before returning, verify that the explanation itself is English.`;
             }
         }
 
+        // --- Interactive Cheat Sheet Tools ---
+        const verbPresentForms = {
+            "sein": ["bin","bist","ist","sind","seid","sind"],
+            "haben": ["habe","hast","hat","haben","habt","haben"],
+            "werden": ["werde","wirst","wird","werden","werdet","werden"],
+            "können": ["kann","kannst","kann","können","könnt","können"],
+            "müssen": ["muss","musst","muss","müssen","müsst","müssen"],
+            "dürfen": ["darf","darfst","darf","dürfen","dürft","dürfen"],
+            "sollen": ["soll","sollst","soll","sollen","sollt","sollen"],
+            "wollen": ["will","willst","will","wollen","wollt","wollen"],
+            "mögen": ["mag","magst","mag","mögen","mögt","mögen"],
+            "möchten": ["möchte","möchtest","möchte","möchten","möchtet","möchten"],
+            "wissen": ["weiß","weißt","weiß","wissen","wisst","wissen"],
+            "gehen": ["gehe","gehst","geht","gehen","geht","gehen"],
+            "kommen": ["komme","kommst","kommt","kommen","kommt","kommen"],
+            "fahren": ["fahre","fährst","fährt","fahren","fahrt","fahren"],
+            "geben": ["gebe","gibst","gibt","geben","gebt","geben"],
+            "nehmen": ["nehme","nimmst","nimmt","nehmen","nehmt","nehmen"],
+            "sehen": ["sehe","siehst","sieht","sehen","seht","sehen"],
+            "sprechen": ["spreche","sprichst","spricht","sprechen","sprecht","sprechen"],
+            "essen": ["esse","isst","isst","essen","esst","essen"],
+            "lesen": ["lese","liest","liest","lesen","lest","lesen"],
+            "schlafen": ["schlafe","schläfst","schläft","schlafen","schlaft","schlafen"],
+            "laufen": ["laufe","läufst","läuft","laufen","lauft","laufen"],
+            "tragen": ["trage","trägst","trägt","tragen","tragt","tragen"],
+            "helfen": ["helfe","hilfst","hilft","helfen","helft","helfen"],
+            "treffen": ["treffe","triffst","trifft","treffen","trefft","treffen"],
+            "vergessen": ["vergesse","vergisst","vergisst","vergessen","vergesst","vergessen"],
+            "bringen": ["bringe","bringst","bringt","bringen","bringt","bringen"],
+            "denken": ["denke","denkst","denkt","denken","denkt","denken"],
+            "kennen": ["kenne","kennst","kennt","kennen","kennt","kennen"],
+            "tun": ["tue","tust","tut","tun","tut","tun"],
+            "stehen": ["stehe","stehst","steht","stehen","steht","stehen"],
+            "finden": ["finde","findest","findet","finden","findet","finden"],
+            "bleiben": ["bleibe","bleibst","bleibt","bleiben","bleibt","bleiben"],
+            "schreiben": ["schreibe","schreibst","schreibt","schreiben","schreibt","schreiben"],
+            "arbeiten": ["arbeite","arbeitest","arbeitet","arbeiten","arbeitet","arbeiten"],
+            "lernen": ["lerne","lernst","lernt","lernen","lernt","lernen"],
+            "machen": ["mache","machst","macht","machen","macht","machen"],
+            "kaufen": ["kaufe","kaufst","kauft","kaufen","kauft","kaufen"],
+            "fragen": ["frage","fragst","fragt","fragen","fragt","fragen"],
+            "wohnen": ["wohne","wohnst","wohnt","wohnen","wohnt","wohnen"],
+            "sagen": ["sage","sagst","sagt","sagen","sagt","sagen"],
+            "mitbringen": ["bringe mit","bringst mit","bringt mit","bringen mit","bringt mit","bringen mit"],
+            "anrufen": ["rufe an","rufst an","ruft an","rufen an","ruft an","rufen an"],
+            "aufstehen": ["stehe auf","stehst auf","steht auf","stehen auf","steht auf","stehen auf"],
+            "einkaufen": ["kaufe ein","kaufst ein","kauft ein","kaufen ein","kauft ein","kaufen ein"],
+            "anfangen": ["fange an","fängst an","fängt an","fangen an","fangt an","fangen an"],
+            "mitkommen": ["komme mit","kommst mit","kommt mit","kommen mit","kommt mit","kommen mit"],
+            "ausgehen": ["gehe aus","gehst aus","geht aus","gehen aus","geht aus","gehen aus"],
+            "zurückkommen": ["komme zurück","kommst zurück","kommt zurück","kommen zurück","kommt zurück","kommen zurück"]
+        };
+
+        const verbInfo = {
+            "sein": {meaning:"to be", irregular:true},
+            "haben": {meaning:"to have", irregular:true},
+            "werden": {meaning:"to become / will", irregular:true},
+            "fahren": {meaning:"to drive / travel", irregular:true},
+            "geben": {meaning:"to give", irregular:true},
+            "nehmen": {meaning:"to take", irregular:true},
+            "sehen": {meaning:"to see", irregular:true},
+            "sprechen": {meaning:"to speak", irregular:true},
+            "essen": {meaning:"to eat", irregular:true},
+            "lesen": {meaning:"to read", irregular:true},
+            "helfen": {meaning:"to help", irregular:true},
+            "mitbringen": {meaning:"to bring along", separable:true},
+            "anrufen": {meaning:"to call", separable:true},
+            "aufstehen": {meaning:"to get up", separable:true},
+            "einkaufen": {meaning:"to shop", separable:true},
+            "anfangen": {meaning:"to begin", separable:true},
+            "mitkommen": {meaning:"to come along", separable:true},
+            "ausgehen": {meaning:"to go out", separable:true},
+            "zurückkommen": {meaning:"to come back", separable:true}
+        };
+
+        const verbPronouns = ["ich","du","er / sie / es","wir","ihr","sie / Sie"];
+
+        function buildVerbFormLookup() {
+            const lookup = {};
+            Object.entries(verbPresentForms).forEach(([inf, forms]) => {
+                lookup[inf] = inf;
+                forms.forEach(form => {
+                    lookup[String(form).toLowerCase()] = inf;
+                    lookup[String(form).toLowerCase().replace(/\s+/g," ")] = inf;
+                });
+            });
+            return lookup;
+        }
+        const verbFormLookup = buildVerbFormLookup();
+
+        function inferRegularInfinitive(raw) {
+            const w = String(raw || "").toLowerCase().trim();
+            if (!w) return "";
+            if (/^[a-zäöüß]+(en|eln|ern)$/.test(w)) return w;
+            if (w.endsWith("est")) return w.slice(0,-3) + "en";
+            if (w.endsWith("st")) return w.slice(0,-2) + "en";
+            if (w.endsWith("et")) return w.slice(0,-2) + "en";
+            if (w.endsWith("t")) return w.slice(0,-1) + "en";
+            if (w.endsWith("e")) return w.slice(0,-1) + "en";
+            return "";
+        }
+
+        function regularPresentForms(infinitive) {
+            const inf = infinitive.toLowerCase();
+            let stem = inf;
+            let special = "";
+            if (inf.endsWith("eln")) {
+                stem = inf.slice(0,-3);
+                return [stem+"le", stem+"elst", stem+"elt", inf, stem+"elt", inf];
+            }
+            if (inf.endsWith("ern")) stem = inf.slice(0,-3) + "er";
+            else if (inf.endsWith("en")) stem = inf.slice(0,-2);
+
+            const needsE = /(?:d|t|chn|ffn|gn|tm)$/.test(stem);
+            return [
+                stem+"e",
+                stem+(needsE ? "est" : "st"),
+                stem+(needsE ? "et" : "t"),
+                inf,
+                stem+(needsE ? "et" : "t"),
+                inf
+            ];
+        }
+
+        function identifyVerbLocally(raw) {
+            const normalized = String(raw || "").trim().toLowerCase().replace(/\s+/g," ");
+            if (!normalized) return null;
+            if (verbFormLookup[normalized]) {
+                const infinitive = verbFormLookup[normalized];
+                return {infinitive, forms:verbPresentForms[infinitive], confidence:"Known verb", info:verbInfo[infinitive] || {}};
+            }
+            const inferred = inferRegularInfinitive(normalized);
+            if (inferred) {
+                return {infinitive:inferred, forms:regularPresentForms(inferred), confidence:"Locally inferred", info:{}};
+            }
+            return null;
+        }
+
+        function renderVerbConjugation(result, source="Local") {
+            const resultBox = document.getElementById("verb-tool-result");
+            const grid = document.getElementById("verb-conjugation-grid");
+            const inf = document.getElementById("verb-result-infinitive");
+            const sourceEl = document.getElementById("verb-result-source");
+            const note = document.getElementById("verb-result-note");
+            const extra = document.getElementById("verb-extra-info");
+
+            inf.textContent = result.infinitive || "—";
+            sourceEl.textContent = source;
+            note.textContent = result.confidence || "";
+            grid.innerHTML = "";
+
+            (result.forms || []).slice(0,6).forEach((form, i) => {
+                const row = document.createElement("div");
+                row.className = "verb-conjugation-row";
+                const p = document.createElement("span");
+                p.className = "verb-pronoun";
+                p.textContent = verbPronouns[i];
+                const v = document.createElement("span");
+                v.className = "verb-form";
+                v.textContent = form;
+                const speak = document.createElement("button");
+                speak.type = "button";
+                speak.className = "verb-speak-btn";
+                speak.setAttribute("aria-label", "Pronounce " + verbPronouns[i] + " " + form);
+                speak.textContent = "🔊";
+                speak.addEventListener("click", () => speakRawText(verbPronouns[i].split(" / ")[0] + " " + form, "de-DE"));
+                row.append(p,v,speak);
+                grid.appendChild(row);
+            });
+
+            const infoParts = [];
+            if (result.info?.meaning) infoParts.push(result.info.meaning);
+            if (result.info?.separable) infoParts.push("Separable verb");
+            if (result.info?.irregular) infoParts.push("Irregular / stem-changing");
+            if (result.extra) infoParts.push(result.extra);
+
+            if (infoParts.length) {
+                extra.textContent = infoParts.join(" · ");
+                extra.classList.remove("hidden");
+            } else {
+                extra.classList.add("hidden");
+                extra.textContent = "";
+            }
+            resultBox.classList.remove("hidden");
+        }
+
+        function runLocalVerbConjugator() {
+            const input = document.getElementById("verb-tool-input");
+            const status = document.getElementById("verb-tool-status");
+            const result = identifyVerbLocally(input.value);
+            if (!result) {
+                status.textContent = "I could not confidently identify that form locally. Try the AI check.";
+                status.className = "text-[10px] font-semibold text-amber-700";
+                status.classList.remove("hidden");
+                document.getElementById("verb-tool-result").classList.add("hidden");
+                return;
+            }
+            status.classList.add("hidden");
+            renderVerbConjugation(result, "Local");
+        }
+
+        async function runAiVerbConjugator() {
+            const input = document.getElementById("verb-tool-input");
+            const btn = document.getElementById("verb-ai-btn");
+            const status = document.getElementById("verb-tool-status");
+            const raw = input.value.trim();
+            if (!raw) return;
+
+            if (!getActiveAIKey()) {
+                status.textContent = "Add an AI key in Settings to use AI verification.";
+                status.className = "text-[10px] font-semibold text-rose-600";
+                status.classList.remove("hidden");
+                return;
+            }
+
+            const previous = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = "Checking…";
+            try {
+                const prompt = `You are a German verb conjugation tool for an English-speaking learner.
+The user entered this German verb form: "${raw}".
+
+Identify the infinitive and give PRESENT-TENSE forms only.
+Return ONLY valid JSON:
+{
+  "infinitive":"",
+  "meaning":"",
+  "separable":false,
+  "irregular":false,
+  "forms":["ich form","du form","er/sie/es form","wir form","ihr form","sie/Sie form"]
+}
+For separable verbs, include the separated prefix in each conjugated form, e.g. "rufe an".
+Do not include pronouns inside the form strings.`;
+                const data = await callAIJson(prompt);
+                if (!data?.infinitive || !Array.isArray(data?.forms) || data.forms.length < 6) throw new Error("Incomplete conjugation returned.");
+                renderVerbConjugation({
+                    infinitive:String(data.infinitive),
+                    forms:data.forms.map(String),
+                    confidence:"AI verified",
+                    info:{
+                        meaning:String(data.meaning || ""),
+                        separable:Boolean(data.separable),
+                        irregular:Boolean(data.irregular)
+                    }
+                }, "AI");
+                status.classList.add("hidden");
+            } catch (e) {
+                status.textContent = "AI verb check failed: " + ((e && e.message) ? e.message : String(e));
+                status.className = "text-[10px] font-semibold text-rose-600";
+                status.classList.remove("hidden");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = previous;
+            }
+        }
+
+        const prepositionData = {
+            "mit": {meaning:"with", case:"Dative", type:"dative", examples:["mit dem Mann","mit der Frau","mit dem Kind","mit den Kindern"]},
+            "zu": {meaning:"to / toward", case:"Dative", type:"dative", examples:["zu dem Arzt → zum Arzt","zu der Schule → zur Schule"]},
+            "von": {meaning:"from / of", case:"Dative", type:"dative", examples:["von dem Mann → vom Mann","von der Frau"]},
+            "bei": {meaning:"at / with / near", case:"Dative", type:"dative", examples:["bei dem Arzt → beim Arzt","bei meiner Freundin"]},
+            "aus": {meaning:"out of / from", case:"Dative", type:"dative", examples:["aus dem Haus","aus der Stadt"]},
+            "seit": {meaning:"since / for (time)", case:"Dative", type:"dative", examples:["seit einem Jahr","seit der Schule"]},
+            "nach": {meaning:"after / to (cities & countries)", case:"Dative", type:"dative", examples:["nach Berlin","nach der Arbeit"]},
+            "gegenüber": {meaning:"opposite / across from", case:"Dative", type:"dative", examples:["dem Bahnhof gegenüber"]},
+            "für": {meaning:"for", case:"Accusative", type:"accusative", examples:["für den Mann","für die Frau","für das Kind"]},
+            "durch": {meaning:"through", case:"Accusative", type:"accusative", examples:["durch den Park","durch die Stadt"]},
+            "gegen": {meaning:"against / around (time)", case:"Accusative", type:"accusative", examples:["gegen den Wind","gegen acht Uhr"]},
+            "ohne": {meaning:"without", case:"Accusative", type:"accusative", examples:["ohne den Mann","ohne meine Tasche"]},
+            "um": {meaning:"around / at (time)", case:"Accusative", type:"accusative", examples:["um den Tisch","um acht Uhr"]},
+            "an": {meaning:"at / on / to", case:"Accusative or Dative", type:"two-way", examples:["an der Wand (Wo?)","an die Wand (Wohin?)"]},
+            "auf": {meaning:"on / onto", case:"Accusative or Dative", type:"two-way", examples:["auf dem Tisch (Wo?)","auf den Tisch (Wohin?)"]},
+            "in": {meaning:"in / into", case:"Accusative or Dative", type:"two-way", examples:["in der Schule (Wo?)","in die Schule (Wohin?)"]},
+            "über": {meaning:"over / above / about", case:"Accusative or Dative", type:"two-way", examples:["über dem Tisch (Wo?)","über den Tisch (Wohin?)"]},
+            "unter": {meaning:"under / among", case:"Accusative or Dative", type:"two-way", examples:["unter dem Tisch (Wo?)","unter den Tisch (Wohin?)"]},
+            "vor": {meaning:"in front of / before", case:"Accusative or Dative", type:"two-way", examples:["vor dem Haus (Wo?)","vor das Haus (Wohin?)"]},
+            "hinter": {meaning:"behind", case:"Accusative or Dative", type:"two-way", examples:["hinter dem Haus (Wo?)","hinter das Haus (Wohin?)"]},
+            "neben": {meaning:"beside", case:"Accusative or Dative", type:"two-way", examples:["neben dem Mann (Wo?)","neben den Mann (Wohin?)"]},
+            "zwischen": {meaning:"between", case:"Accusative or Dative", type:"two-way", examples:["zwischen den Häusern (Wo?)","zwischen die Häuser (Wohin?)"]},
+            "wegen": {meaning:"because of", case:"Genitive", type:"genitive", examples:["wegen des Wetters","wegen der Arbeit"]},
+            "während": {meaning:"during", case:"Genitive", type:"genitive", examples:["während des Urlaubs","während der Woche"]},
+            "trotz": {meaning:"despite", case:"Genitive", type:"genitive", examples:["trotz des Regens","trotz der Kälte"]}
+        };
+
+        const caseArticles = {
+            definite: {
+                Nominative:{masculine:"der",feminine:"die",neuter:"das",plural:"die"},
+                Accusative:{masculine:"den",feminine:"die",neuter:"das",plural:"die"},
+                Dative:{masculine:"dem",feminine:"der",neuter:"dem",plural:"den"},
+                Genitive:{masculine:"des",feminine:"der",neuter:"des",plural:"der"}
+            },
+            indefinite: {
+                Nominative:{masculine:"ein",feminine:"eine",neuter:"ein",plural:"—"},
+                Accusative:{masculine:"einen",feminine:"eine",neuter:"ein",plural:"—"},
+                Dative:{masculine:"einem",feminine:"einer",neuter:"einem",plural:"—"},
+                Genitive:{masculine:"eines",feminine:"einer",neuter:"eines",plural:"—"}
+            }
+        };
+
+        function initGrammarTools() {
+            const prepSelect = document.getElementById("prep-tool-select");
+            const builderPrep = document.getElementById("builder-prep");
+            if (!prepSelect || !builderPrep) return;
+            const options = Object.keys(prepositionData).map(p => `<option value="${p}">${p} — ${prepositionData[p].case}</option>`).join("");
+            prepSelect.innerHTML = options;
+            builderPrep.innerHTML = options;
+            prepSelect.value = "mit";
+            builderPrep.value = "mit";
+            renderPrepositionExplorer();
+            updateCaseBuilder();
+
+            const verbInput = document.getElementById("verb-tool-input");
+            if (verbInput && !verbInput.dataset.bound) {
+                verbInput.dataset.bound = "1";
+                verbInput.addEventListener("keydown", e => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        runLocalVerbConjugator();
+                    }
+                });
+            }
+        }
+
+        function setCheatTool(name) {
+            document.querySelectorAll(".cheat-tool-panel").forEach(el => el.classList.add("hidden"));
+            document.querySelectorAll(".cheat-tool-tab").forEach(el => el.classList.toggle("active", el.dataset.cheatTool === name));
+            document.getElementById("cheat-tool-"+name)?.classList.remove("hidden");
+            if (name === "prep") renderPrepositionExplorer();
+            if (name === "builder") updateCaseBuilder();
+        }
+
+        function articleSummary(caseName) {
+            const d = caseArticles.definite[caseName];
+            return [
+                ["Masculine",d.masculine],
+                ["Feminine",d.feminine],
+                ["Neuter",d.neuter],
+                ["Plural",d.plural]
+            ];
+        }
+
+        function renderPrepositionExplorer() {
+            const select = document.getElementById("prep-tool-select");
+            const out = document.getElementById("prep-tool-result");
+            if (!select || !out) return;
+            const p = select.value;
+            const data = prepositionData[p];
+            if (!data) return;
+
+            let ruleText = "";
+            let articleCase = data.case;
+            if (data.type === "two-way") {
+                ruleText = "Two-way preposition: location (Wo?) normally uses Dative; destination/change of position (Wohin?) normally uses Accusative.";
+                articleCase = null;
+            } else if (data.type === "dative") ruleText = `${p} always governs the Dative case in standard usage.`;
+            else if (data.type === "accusative") ruleText = `${p} governs the Accusative case.`;
+            else if (data.type === "genitive") ruleText = `${p} commonly governs the Genitive case in standard written German.`;
+
+            const articleHtml = articleCase
+                ? `<div class="prep-article-grid">${articleSummary(articleCase).map(([g,a])=>`<div><span>${g}</span><strong>${a}</strong></div>`).join("")}</div>`
+                : `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div class="rounded-lg bg-amber-50 border border-amber-200 p-3"><div class="font-bold text-amber-800 text-xs">Wo? → Dative</div><div class="text-[11px] mt-1">Location / position</div></div>
+                    <div class="rounded-lg bg-emerald-50 border border-emerald-200 p-3"><div class="font-bold text-emerald-800 text-xs">Wohin? → Accusative</div><div class="text-[11px] mt-1">Destination / change of position</div></div>
+                   </div>`;
+
+            out.innerHTML = `
+                <div class="flex flex-wrap items-baseline justify-between gap-2">
+                    <div><span class="text-xl font-bold text-indigo-700">${p}</span> <span class="text-sm text-slate-500">— ${data.meaning}</span></div>
+                    <span class="text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full bg-slate-100 text-slate-600">${data.case}</span>
+                </div>
+                <p class="text-[11px] leading-relaxed text-slate-600">${ruleText}</p>
+                ${articleHtml}
+                <div>
+                    <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">Examples</div>
+                    <div class="flex flex-wrap gap-2">${data.examples.map(ex=>`<span class="rounded-lg bg-slate-50 border border-slate-200 px-2.5 py-2 text-[11px] font-semibold text-slate-700">${ex}</span>`).join("")}</div>
+                </div>`;
+        }
+
+        function resolveBuilderCase(prep, motion) {
+            const data = prepositionData[prep];
+            if (!data) return "Dative";
+            if (data.type === "dative") return "Dative";
+            if (data.type === "accusative") return "Accusative";
+            if (data.type === "genitive") return "Genitive";
+            return motion === "destination" ? "Accusative" : "Dative";
+        }
+
+        function updateCaseBuilder() {
+            const prepEl = document.getElementById("builder-prep");
+            const genderEl = document.getElementById("builder-gender");
+            const articleTypeEl = document.getElementById("builder-article-type");
+            const motionEl = document.getElementById("builder-motion");
+            const motionField = document.getElementById("builder-motion-field");
+            const nounEl = document.getElementById("builder-noun");
+            const resultEl = document.getElementById("builder-result");
+            const ruleEl = document.getElementById("builder-rule");
+            if (!prepEl || !resultEl) return;
+
+            const prep = prepEl.value;
+            const data = prepositionData[prep];
+            motionField?.classList.toggle("hidden", data?.type !== "two-way");
+
+            const gender = genderEl.value;
+            const articleType = articleTypeEl.value;
+            const motion = motionEl.value;
+            const caseName = resolveBuilderCase(prep, motion);
+            const noun = nounEl.value.trim() || "Noun";
+            const article = caseArticles[articleType][caseName][gender];
+
+            const articleText = article === "—" ? "" : article + " ";
+            resultEl.textContent = `${prep} ${articleText}${noun}`.replace(/\s+/g," ").trim();
+
+            let note = `${prep} → ${caseName}. ${gender.charAt(0).toUpperCase()+gender.slice(1)} ${articleType} article: ${article}.`;
+            if (gender === "plural" && caseName === "Dative") note += " Dative plural nouns often add -n when possible.";
+            if (data?.type === "two-way") note += motion === "destination" ? " You selected Wohin?/destination." : " You selected Wo?/location.";
+            ruleEl.textContent = note;
+        }
+
         // Toggle Grammar Cheat Sheets visibility
         function toggleCheatSheet() {
             const container = document.getElementById("cheat-sheet-container");
@@ -3760,6 +4467,7 @@ Before returning, verify that the explanation itself is English.`;
 
             if (container.classList.contains("hidden")) {
                 container.classList.remove("hidden");
+                initGrammarTools();
                 arrow.innerHTML = `<svg class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5"></path></svg>`;
             } else {
                 container.classList.add("hidden");
@@ -3774,7 +4482,7 @@ Before returning, verify that the explanation itself is English.`;
 
             if (container.classList.contains("hidden")) {
                 container.classList.remove("hidden");
-                btn.innerHTML = `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Hide Legend`;
+                btn.innerHTML = `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><pnejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Hide Legend`;
             } else {
                 container.classList.add("hidden");
                 btn.innerHTML = `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"></path></svg> Show Legend`;
