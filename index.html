@@ -1242,6 +1242,31 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
         .grammar-case-card [data-grammar-gender-text].gender-fem { color:#db2777 !important; }
         .grammar-case-card [data-grammar-gender-text].gender-neut { color:#0d9488 !important; }
         .grammar-case-card [data-grammar-gender-text].gender-plural { color:#7c3aed !important; }
+
+        /* Preposition Explorer: repeat the parser's visual language inside the supporting cards. */
+        .prep-article-cell {
+            border-radius:9px !important;
+            padding:8px !important;
+            text-align:center;
+        }
+        .prep-article-cell.case-nom { background:#dbeafe !important; border-color:#bfdbfe !important; }
+        .prep-article-cell.case-acc { background:#c7f5d8 !important; border-color:#9ee8bb !important; }
+        .prep-article-cell.case-dat { background:#fef9c3 !important; border-color:#fef08a !important; }
+        .prep-article-cell.case-gen { background:#f3e8ff !important; border-color:#e9d5ff !important; }
+
+        .prep-article-cell strong.gender-masc { color:#0284c7 !important; }
+        .prep-article-cell strong.gender-fem { color:#db2777 !important; }
+        .prep-article-cell strong.gender-neut { color:#0d9488 !important; }
+        .prep-article-cell strong.gender-plural { color:#7c3aed !important; }
+
+        .prep-case-badge.case-nom, .prep-example-chip.case-nom { background:#dbeafe !important; border-color:#bfdbfe !important; color:#1e40af !important; }
+        .prep-case-badge.case-acc, .prep-example-chip.case-acc { background:#c7f5d8 !important; border-color:#9ee8bb !important; color:#166534 !important; }
+        .prep-case-badge.case-dat, .prep-example-chip.case-dat { background:#fef9c3 !important; border-color:#fef08a !important; color:#854d0e !important; }
+        .prep-case-badge.case-gen, .prep-example-chip.case-gen { background:#f3e8ff !important; border-color:#e9d5ff !important; color:#6b21a8 !important; }
+        .prep-case-badge.case-multi, .prep-example-chip.case-multi { background:#ffedd5 !important; border-color:#fed7aa !important; color:#9a3412 !important; }
+
+        .prep-two-way-card.case-dat { background:#fef9c3 !important; border-color:#fef08a !important; color:#854d0e !important; }
+        .prep-two-way-card.case-acc { background:#c7f5d8 !important; border-color:#9ee8bb !important; color:#166534 !important; }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
@@ -1958,13 +1983,13 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                     Some German prepositions always trigger a specific case, regardless of how the sentence's action is structured:
                 </p>
                 <div class="grid grid-cols-2 gap-3 text-xs mt-2">
-                    <div class="p-3 bg-emerald-50/40 border border-emerald-100 rounded-lg">
-                        <span class="font-bold text-emerald-800 block">Accusative-Only:</span>
-                        <p class="text-[11px] text-emerald-950 mt-1">durch, für, gegen, ohne, um, bis</p>
+                    <div class="p-3 case-acc border rounded-lg">
+                        <span class="font-bold block">Accusative-Only:</span>
+                        <p class="text-[11px] mt-1">durch, für, gegen, ohne, um, bis</p>
                     </div>
-                    <div class="p-3 bg-amber-50/40 border border-amber-100 rounded-lg">
-                        <span class="font-bold text-amber-800 block">Dative-Only:</span>
-                        <p class="text-[11px] text-amber-950 mt-1">aus, bei, mit, nach, seit, von, zu</p>
+                    <div class="p-3 case-dat border rounded-lg">
+                        <span class="font-bold block">Dative-Only:</span>
+                        <p class="text-[11px] mt-1">aus, bei, mit, nach, seit, von, zu</p>
                     </div>
                 </div>
             </div>
@@ -5077,22 +5102,34 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
             else if (data.type === "genitive") ruleText = `${p} commonly governs the Genitive case in standard written German.`;
 
             const articleHtml = articleCase
-                ? `<div class="prep-article-grid">${articleSummary(articleCase).map(([g,a])=>`<div><span>${g}</span><strong>${a}</strong></div>`).join("")}</div>`
+                ? `<div class="prep-article-grid">${articleSummary(articleCase).map(([g,a])=>{
+                    const genderKey = g.toLowerCase();
+                    return `<div class="prep-article-cell ${grammarCaseClass(articleCase)}">
+                        <span>${g}</span>
+                        <strong class="${grammarGenderClass(genderKey)}">${a}</strong>
+                    </div>`;
+                }).join("")}</div>`
                 : `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div class="rounded-lg bg-amber-50 border border-amber-200 p-3"><div class="font-bold text-amber-800 text-xs">Wo? → Dative</div><div class="text-[11px] mt-1">Location / position</div></div>
-                    <div class="rounded-lg bg-emerald-50 border border-emerald-200 p-3"><div class="font-bold text-emerald-800 text-xs">Wohin? → Accusative</div><div class="text-[11px] mt-1">Destination / change of position</div></div>
+                    <div class="prep-two-way-card case-dat rounded-lg border p-3">
+                        <div class="font-bold text-xs">Wo? → Dative</div>
+                        <div class="text-[11px] mt-1">Location / position</div>
+                    </div>
+                    <div class="prep-two-way-card case-acc rounded-lg border p-3">
+                        <div class="font-bold text-xs">Wohin? → Accusative</div>
+                        <div class="text-[11px] mt-1">Destination / change of position</div>
+                    </div>
                    </div>`;
 
             out.innerHTML = `
                 <div class="flex flex-wrap items-baseline justify-between gap-2">
                     <div><span class="text-xl font-bold text-slate-800">${p}</span> <span class="text-sm text-slate-600">— ${data.meaning}</span></div>
-                    <span class="text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full bg-slate-100 text-slate-600">${data.case}</span>
+                    <span class="prep-case-badge ${data.type === "two-way" ? "case-multi" : grammarCaseClass(data.case)} text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full">${data.case}</span>
                 </div>
                 <p class="text-[11px] leading-relaxed text-slate-600">${ruleText}</p>
                 ${articleHtml}
                 <div>
                     <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">Examples</div>
-                    <div class="flex flex-wrap gap-2">${data.examples.map(ex=>`<span class="rounded-lg bg-slate-50 border border-slate-200 px-2.5 py-2 text-[11px] font-semibold text-slate-700">${ex}</span>`).join("")}</div>
+                    <div class="flex flex-wrap gap-2">${data.examples.map(ex=>`<span class="prep-example-chip ${data.type === "two-way" ? "case-multi" : grammarCaseClass(data.case)} rounded-lg border px-2.5 py-2 text-[11px] font-semibold">${ex}</span>`).join("")}</div>
                 </div>`;
 
             if (data.type === "two-way") {
