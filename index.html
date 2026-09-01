@@ -1202,6 +1202,46 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                 font-size:16px !important;
             }
         }
+
+        /* Grammar Tools output cards use the exact same case palette as Grammar Parser.
+           !important is intentional here so legacy Tailwind bg-* utilities cannot override it. */
+        .grammar-case-card.case-nom {
+            background-color:#dbeafe !important;
+            border-color:#bfdbfe !important;
+        }
+        .grammar-case-card.case-acc {
+            background-color:#c7f5d8 !important;
+            border-color:#9ee8bb !important;
+        }
+        .grammar-case-card.case-dat {
+            background-color:#fef9c3 !important;
+            border-color:#fef08a !important;
+        }
+        .grammar-case-card.case-gen {
+            background-color:#f3e8ff !important;
+            border-color:#e9d5ff !important;
+        }
+        .grammar-case-card.case-multi {
+            background-color:#ffedd5 !important;
+            border-color:#fed7aa !important;
+        }
+        .grammar-case-card.case-none {
+            background-color:#f3f4f6 !important;
+            border-color:#e5e7eb !important;
+        }
+
+        .grammar-case-card.case-nom .grammar-case-card-label { color:#1e40af !important; }
+        .grammar-case-card.case-acc .grammar-case-card-label { color:#166534 !important; }
+        .grammar-case-card.case-dat .grammar-case-card-label { color:#854d0e !important; }
+        .grammar-case-card.case-gen .grammar-case-card-label { color:#6b21a8 !important; }
+        .grammar-case-card.case-multi .grammar-case-card-label { color:#9a3412 !important; }
+        .grammar-case-card.case-none .grammar-case-card-label { color:#374151 !important; }
+
+        /* Preserve gender as the text cue, matching Grammar Parser. */
+        .grammar-case-card [data-grammar-gender-text].gender-masc { color:#0284c7 !important; }
+        .grammar-case-card [data-grammar-gender-text].gender-fem { color:#db2777 !important; }
+        .grammar-case-card [data-grammar-gender-text].gender-neut { color:#0d9488 !important; }
+        .grammar-case-card [data-grammar-gender-text].gender-plural { color:#7c3aed !important; }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
@@ -1875,8 +1915,8 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                             </div>
                         </div>
 
-                        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                            <div class="text-[10px] uppercase tracking-wider font-bold text-amber-700">Built phrase</div>
+                        <div class="grammar-case-card rounded-xl border p-4">
+                            <div class="grammar-case-card-label text-[10px] uppercase tracking-wider font-bold">Built phrase</div>
                             <div id="builder-result" data-grammar-gender-text class="text-xl font-bold mt-1 break-words"></div>
                             <div id="builder-rule" class="text-[11px] text-slate-600 mt-2"></div>
                         </div>
@@ -1906,7 +1946,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                             <select id="prep-tool-select" onchange="renderPrepositionExplorer()" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base sm:text-sm text-slate-800">
                             </select>
                         </div>
-                        <div id="prep-tool-result" class="rounded-xl border border-slate-200 bg-white p-4 space-y-4"></div>
+                        <div id="prep-tool-result" class="grammar-case-card rounded-xl border p-4 space-y-4"></div>
                     </section>
 <!-- Grammatical Prepositions Rule Engine -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-3">
@@ -1985,8 +2025,8 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                             </div>
                         </div>
 
-                        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 mt-3">
-                            <div class="text-[10px] uppercase tracking-wider font-bold text-amber-700">Correct form</div>
+                        <div class="grammar-case-card rounded-xl border p-4 mt-3">
+                            <div class="grammar-case-card-label text-[10px] uppercase tracking-wider font-bold">Correct form</div>
                             <div id="article-tool-result" data-grammar-gender-text class="text-xl font-bold mt-1 break-words">der Mann</div>
                             <div id="article-tool-rule" class="text-[11px] text-slate-600 mt-2"></div>
                         </div>
@@ -5045,7 +5085,7 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
 
             out.innerHTML = `
                 <div class="flex flex-wrap items-baseline justify-between gap-2">
-                    <div><span class="text-xl font-bold text-indigo-700">${p}</span> <span class="text-sm text-slate-500">— ${data.meaning}</span></div>
+                    <div><span class="text-xl font-bold text-slate-800">${p}</span> <span class="text-sm text-slate-600">— ${data.meaning}</span></div>
                     <span class="text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full bg-slate-100 text-slate-600">${data.case}</span>
                 </div>
                 <p class="text-[11px] leading-relaxed text-slate-600">${ruleText}</p>
