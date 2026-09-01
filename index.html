@@ -1329,6 +1329,38 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                 font-size:16px !important;
             }
         }
+
+        #builder-prep {
+            pointer-events:auto !important;
+            touch-action:manipulation !important;
+            position:relative;
+            z-index:2;
+        }
+
+        /* Article Finder order: Case → Article meaning → Noun */
+        .article-finder-input-grid {
+            display:grid !important;
+            grid-template-columns:minmax(0,.9fr) minmax(0,1.35fr) !important;
+            gap:8px !important;
+            align-items:end;
+        }
+        .article-finder-case-wide {
+            grid-column:1 / -1 !important;
+        }
+        @media (max-width:640px) {
+            .article-finder-input-grid {
+                grid-template-columns:minmax(0,.9fr) minmax(0,1.35fr) !important;
+            }
+            .article-finder-case-wide {
+                grid-column:1 / -1 !important;
+            }
+            #article-tool-case,
+            #article-tool-type,
+            #article-tool-noun {
+                min-height:44px !important;
+                font-size:16px !important;
+            }
+        }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
@@ -1962,7 +1994,33 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
 
                             <div class="case-builder-compact-grid">
                                 <label class="case-builder-field case-builder-preposition-wide">Preposition
-                                    <select id="builder-prep" onchange="updateCaseBuilder(); renderPrepositionExplorer();" class="case-builder-input"></select>
+                                    <select id="builder-prep" onchange="updateCaseBuilder(); renderPrepositionExplorer();" class="case-builder-input">
+                                        <option value="mit">mit — Dative — with</option>
+                                        <option value="zu">zu — Dative — to / toward</option>
+                                        <option value="von">von — Dative — from / of</option>
+                                        <option value="bei">bei — Dative — at / with / near</option>
+                                        <option value="aus">aus — Dative — out of / from</option>
+                                        <option value="seit">seit — Dative — since / for (time)</option>
+                                        <option value="nach">nach — Dative — after / to (cities &amp; countries)</option>
+                                        <option value="gegenüber">gegenüber — Dative — opposite / across from</option>
+                                        <option value="für">für — Accusative — for</option>
+                                        <option value="durch">durch — Accusative — through</option>
+                                        <option value="gegen">gegen — Accusative — against / around (time)</option>
+                                        <option value="ohne">ohne — Accusative — without</option>
+                                        <option value="um">um — Accusative — around / at (time)</option>
+                                        <option value="an">an — Accusative or Dative — at / on / to</option>
+                                        <option value="auf">auf — Accusative or Dative — on / onto</option>
+                                        <option value="in">in — Accusative or Dative — in / into</option>
+                                        <option value="über">über — Accusative or Dative — over / above / about</option>
+                                        <option value="unter">unter — Accusative or Dative — under / among</option>
+                                        <option value="vor">vor — Accusative or Dative — in front of / before</option>
+                                        <option value="hinter">hinter — Accusative or Dative — behind</option>
+                                        <option value="neben">neben — Accusative or Dative — beside</option>
+                                        <option value="zwischen">zwischen — Accusative or Dative — between</option>
+                                        <option value="wegen">wegen — Genitive — because of</option>
+                                        <option value="während">während — Genitive — during</option>
+                                        <option value="trotz">trotz — Genitive — despite</option>
+                                    </select>
                                 </label>
 
                                 <label class="case-builder-field">Article meaning
@@ -5099,12 +5157,9 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
             const builderPrep = document.getElementById("builder-prep");
             if (!builderPrep) return;
 
-            const options = Object.keys(prepositionData)
-                .map(p => `<option value="${p}">${p} — ${prepositionData[p].case} — ${prepositionData[p].meaning}</option>`)
-                .join("");
-
-            builderPrep.innerHTML = options;
-            builderPrep.value = "mit";
+            // Options are present directly in the HTML so the selector remains usable
+            // even if another startup feature encounters an error.
+            if (!builderPrep.value) builderPrep.value = "mit";
 
             renderPrepositionExplorer();
             updateCaseBuilder();
