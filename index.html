@@ -1159,6 +1159,45 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                 width:100%;
             }
         }
+
+        .grammar-tools-color-legend {
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+        }
+        .grammar-tools-legend-row {
+            display:flex;
+            flex-wrap:wrap;
+            gap:5px;
+        }
+        .grammar-tools-legend-chip,
+        .grammar-tools-gender-chip {
+            display:inline-flex;
+            align-items:center;
+            min-height:25px;
+            padding:4px 7px;
+            border-radius:7px;
+            font-size:9px;
+            font-weight:800;
+        }
+        .grammar-tools-gender-chip {
+            background:#fff;
+            border:1px solid #e2e8f0;
+        }
+
+        /* Let parser case backgrounds remain visible in Grammar Tools result cards. */
+        #builder-result,
+        #article-tool-result {
+            color:inherit;
+        }
+
+        @media (max-width:640px) {
+            .grammar-tools-legend-chip,
+            .grammar-tools-gender-chip {
+                font-size:10px;
+                min-height:28px;
+            }
+        }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
@@ -1695,6 +1734,20 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                     <div class="p-3 sm:p-4 border-b border-slate-100 bg-slate-50/70">
                         <div class="text-sm font-bold text-slate-800">Grammar Tools</div>
                         <div class="text-[10px] text-slate-500 mt-0.5">Choose the grammar area you want to work with.</div>
+                        <div class="grammar-tools-color-legend mt-3">
+                            <div class="grammar-tools-legend-row">
+                                <span class="case-nom grammar-tools-legend-chip">Nominative</span>
+                                <span class="case-acc grammar-tools-legend-chip">Accusative</span>
+                                <span class="case-dat grammar-tools-legend-chip">Dative</span>
+                                <span class="case-gen grammar-tools-legend-chip">Genitive</span>
+                            </div>
+                            <div class="grammar-tools-legend-row">
+                                <span class="gender-masc grammar-tools-gender-chip">Masculine</span>
+                                <span class="gender-fem grammar-tools-gender-chip">Feminine</span>
+                                <span class="gender-neut grammar-tools-gender-chip">Neuter</span>
+                                <span class="gender-plural grammar-tools-gender-chip">Plural</span>
+                            </div>
+                        </div>
 
                         <div class="grammar-main-tabs grammar-main-tabs-three mt-3" role="tablist" aria-label="Grammar topics">
                             <button type="button" id="grammar-tab-verbs" class="grammar-main-tab active" onclick="setGrammarMainTab('verbs')" role="tab" aria-selected="true">Verbs</button>
@@ -1882,7 +1935,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
 
                         <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
                             <div class="text-[10px] uppercase tracking-wider font-bold text-amber-700">Built phrase</div>
-                            <div id="builder-result" class="text-xl font-bold text-slate-900 mt-1 break-words"></div>
+                            <div id="builder-result" data-grammar-gender-text class="text-xl font-bold mt-1 break-words"></div>
                             <div id="builder-rule" class="text-[11px] text-slate-600 mt-2"></div>
                         </div>
                     </section>
@@ -1945,7 +1998,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
 
                         <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 mt-3">
                             <div class="text-[10px] uppercase tracking-wider font-bold text-amber-700">Correct form</div>
-                            <div id="article-tool-result" class="text-xl font-bold text-slate-900 mt-1 break-words">der Mann</div>
+                            <div id="article-tool-result" data-grammar-gender-text class="text-xl font-bold mt-1 break-words">der Mann</div>
                             <div id="article-tool-rule" class="text-[11px] text-slate-600 mt-2"></div>
                         </div>
 
@@ -4755,7 +4808,7 @@ Do not include pronouns inside the form strings.`;
             if (genderDisplay) {
                 if (gender) {
                     genderDisplay.textContent = labels[gender] + (inferred.confidence === "pattern" ? " (likely)" : "");
-                    genderDisplay.className = "text-sm font-bold text-slate-800";
+                    genderDisplay.className = "text-sm font-bold " + grammarGenderClass(gender);
                 } else {
                     genderDisplay.textContent = "Unknown — choose Change";
                     genderDisplay.className = "text-sm font-bold text-amber-700";
@@ -4764,6 +4817,7 @@ Do not include pronouns inside the form strings.`;
 
             if (!gender) {
                 resultEl.textContent = "— " + noun;
+                applyGrammarColorScheme(resultEl.parentElement, "None", "");
                 ruleEl.textContent = "I do not know this noun's gender locally yet. Tap Change to select it.";
                 return;
             }
@@ -4774,11 +4828,13 @@ Do not include pronouns inside the form strings.`;
 
             if (article === "—") {
                 resultEl.textContent = noun;
+                applyGrammarColorScheme(resultEl.parentElement, caseName, gender);
                 ruleEl.textContent = `${noun} is plural. German has no plural form of "a/an", so no indefinite article is used.`;
                 return;
             }
 
             resultEl.textContent = `${article} ${noun}`;
+            applyGrammarColorScheme(resultEl.parentElement, caseName, gender);
 
             let note = `${noun} → ${labels[gender]}. ${caseName} ${articleType === "definite" ? "definite" : "indefinite"} article → ${article}.`;
             if (gender === "plural" && caseName === "Dative") {
@@ -5009,6 +5065,10 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
                     <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">Examples</div>
                     <div class="flex flex-wrap gap-2">${data.examples.map(ex=>`<span class="rounded-lg bg-slate-50 border border-slate-200 px-2.5 py-2 text-[11px] font-semibold text-slate-700">${ex}</span>`).join("")}</div>
                 </div>`;
+
+            out.classList.remove("case-nom","case-acc","case-dat","case-gen","case-multi","case-none");
+            if (data.type === "two-way") out.classList.add("case-multi");
+            else out.classList.add(grammarCaseClass(data.case));
         }
 
         function resolveBuilderCase(prep, motion) {
@@ -5021,6 +5081,36 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
         }
 
         let builderGenderOverrideActive = false;
+
+        function grammarCaseClass(caseName) {
+            const map = {
+                Nominative: "case-nom",
+                Accusative: "case-acc",
+                Dative: "case-dat",
+                Genitive: "case-gen"
+            };
+            return map[caseName] || "case-none";
+        }
+
+        function grammarGenderClass(gender) {
+            const map = {
+                masculine: "gender-masc",
+                feminine: "gender-fem",
+                neuter: "gender-neut",
+                plural: "gender-plural"
+            };
+            return map[String(gender || "").toLowerCase()] || "gender-none";
+        }
+
+        function applyGrammarColorScheme(element, caseName, gender) {
+            if (!element) return;
+            element.classList.remove("case-nom","case-acc","case-dat","case-gen","case-multi","case-none");
+            element.classList.add(grammarCaseClass(caseName));
+
+            const genderTarget = element.querySelector("[data-grammar-gender-text]") || element;
+            genderTarget.classList.remove("gender-masc","gender-fem","gender-neut","gender-plural","gender-multi","gender-none");
+            genderTarget.classList.add(grammarGenderClass(gender));
+        }
 
         function inferBuilderGender(nounText) {
             const raw = String(nounText || "").trim();
@@ -5097,7 +5187,7 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
             if (detectedEl) {
                 if (gender) {
                     detectedEl.textContent = displayNames[gender] + (inferred.confidence === "pattern" ? " (likely)" : "");
-                    detectedEl.className = "text-sm font-bold text-slate-800";
+                    detectedEl.className = "text-sm font-bold " + grammarGenderClass(gender);
                 } else {
                     detectedEl.textContent = "Unknown — choose Change";
                     detectedEl.className = "text-sm font-bold text-amber-700";
@@ -5106,6 +5196,7 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
 
             if (!gender) {
                 resultEl.textContent = `${prep} … ${noun}`;
+                applyGrammarColorScheme(resultEl.parentElement, "None", "");
                 ruleEl.textContent = "I do not know this noun's gender locally yet. Tap Change to select it, or use Ask AI about this phrase.";
                 return;
             }
@@ -5118,11 +5209,13 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
             // Indefinite plural has no "a/an" equivalent in German.
             if (article === "—") {
                 resultEl.textContent = `${prep} ${noun}`.replace(/\s+/g," ").trim();
+                applyGrammarColorScheme(resultEl.parentElement, caseName, gender);
                 ruleEl.textContent = `${noun} is plural. German has no plural form of "a/an", so no indefinite article is used here. ${prep} requires ${caseName}.`;
                 return;
             }
 
             resultEl.textContent = `${prep} ${article} ${noun}`.replace(/\s+/g," ").trim();
+            applyGrammarColorScheme(resultEl.parentElement, caseName, gender);
 
             let note = `${noun} → ${displayNames[gender]}. ${prep} → ${caseName}. `;
             note += articleType === "definite"
