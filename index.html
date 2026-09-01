@@ -1109,6 +1109,56 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                 padding-left:12px;
             }
         }
+
+        #builder-noun {
+            min-height:48px;
+            font-size:16px !important;
+        }
+        #builder-detected-box {
+            margin-top:2px;
+        }
+        @media (max-width:640px) {
+            #builder-override-btn {
+                min-height:36px;
+                padding:4px 6px;
+            }
+        }
+
+        #article-tool-noun {
+            min-height:48px;
+            font-size:16px !important;
+        }
+        @media (max-width:640px) {
+            #article-tool-case,
+            #article-tool-type,
+            #article-tool-gender {
+                font-size:16px !important;
+            }
+        }
+
+        .verb-tool-input {
+            min-height:60px !important;
+            width:100% !important;
+        }
+        .verb-tool-actions {
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+        }
+        @media (max-width:640px) {
+            .verb-tool-input {
+                min-height:64px !important;
+                font-size:16px !important;
+                padding:16px !important;
+            }
+            .verb-tool-actions {
+                display:grid;
+                grid-template-columns:1fr;
+            }
+            .verb-tool-actions > button {
+                width:100%;
+            }
+        }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
@@ -1676,13 +1726,16 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                                 <div class="text-sm font-bold text-slate-800">Verb Conjugator</div>
                                 <div class="text-[11px] text-slate-500 mt-0.5">Enter an infinitive or a conjugated form such as <em>bringe</em>, <em>möchtest</em>, <em>fährt</em>, <em>mitbringen</em>, or <em>rufe an</em>.</div>
                             </div>
-                            <div class="space-y-2">
-                                <input id="verb-tool-input" type="text" inputmode="text" autocomplete="off"
-                                    class="w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-3 text-base text-slate-800 outline-none focus:border-indigo-500"
-                                    placeholder="Enter a German verb form">
+                            <div class="space-y-3">
+                                <label class="block">
+                                    <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-2">Verb input</div>
+                                    <input id="verb-tool-input" type="text" inputmode="text" autocomplete="off"
+                                        class="verb-tool-input w-full min-w-0 rounded-xl border-2 border-indigo-200 bg-white px-4 py-4 text-lg text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                                        placeholder="Enter a German verb form, e.g. haben, fährt, mitbringen">
+                                </label>
                                 <div class="verb-tool-actions">
-                                    <button type="button" onclick="runLocalVerbConjugator()" class="min-h-[44px] px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs">Conjugate</button>
-                                    <button id="verb-ai-btn" type="button" onclick="runAiVerbConjugator()" class="min-h-[44px] px-4 py-2 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold text-xs">✨ Verify conjugation with AI</button>
+                                    <button type="button" onclick="runLocalVerbConjugator()" class="min-h-[46px] px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm">Conjugate</button>
+                                    <button id="verb-ai-btn" type="button" onclick="runAiVerbConjugator()" class="min-h-[46px] px-4 py-2 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold text-sm">✨ Verify conjugation with AI</button>
                                 </div>
                             </div>
                             <div id="verb-tool-status" class="hidden text-[10px] font-semibold"></div>
@@ -1778,35 +1831,52 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                         <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
                             <div>
                                 <div class="text-sm font-bold text-slate-800">Build a phrase</div>
-                                <div class="text-[11px] text-slate-500 mt-0.5">Build a prepositional phrase and see which article the case requires.</div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">
+                                    Enter the noun first. The app determines its gender when known, then the preposition determines the case and the article changes automatically.
+                                </div>
                             </div>
+
                             <div class="case-builder-grid">
+                                <label class="case-builder-field case-builder-noun">Noun
+                                    <input id="builder-noun" type="text" value="Mann" oninput="updateCaseBuilder()" class="case-builder-input" placeholder="e.g. Mann, Frau, Kind">
+                                </label>
+
                                 <label class="case-builder-field">Preposition
                                     <select id="builder-prep" onchange="updateCaseBuilder()" class="case-builder-input"></select>
                                 </label>
-                                <label class="case-builder-field">Gender / number
-                                    <select id="builder-gender" onchange="updateCaseBuilder()" class="case-builder-input">
-                                        <option value="masculine">Masculine</option>
-                                        <option value="feminine">Feminine</option>
-                                        <option value="neuter">Neuter</option>
-                                        <option value="plural">Plural</option>
-                                    </select>
-                                </label>
-                                <label class="case-builder-field">Article
+
+                                <label class="case-builder-field">Meaning of article
                                     <select id="builder-article-type" onchange="updateCaseBuilder()" class="case-builder-input">
-                                        <option value="definite">Definite (the)</option>
-                                        <option value="indefinite">Indefinite (a/an)</option>
+                                        <option value="definite">the</option>
+                                        <option value="indefinite">a / an</option>
                                     </select>
                                 </label>
+
                                 <label id="builder-motion-field" class="case-builder-field hidden">Two-way use
                                     <select id="builder-motion" onchange="updateCaseBuilder()" class="case-builder-input">
                                         <option value="location">Location — Wo?</option>
                                         <option value="destination">Destination/change — Wohin?</option>
                                     </select>
                                 </label>
-                                <label class="case-builder-field case-builder-noun">Noun
-                                    <input id="builder-noun" type="text" value="Mann" oninput="updateCaseBuilder()" class="case-builder-input" placeholder="e.g. Mann">
-                                </label>
+                            </div>
+
+                            <div id="builder-detected-box" class="rounded-lg border border-slate-200 bg-white px-3 py-2.5">
+                                <div class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Detected noun information</div>
+                                <div class="mt-1 flex flex-wrap items-center gap-2">
+                                    <span id="builder-detected-gender" class="text-sm font-bold text-slate-800">Masculine</span>
+                                    <button type="button" id="builder-override-btn" onclick="toggleBuilderGenderOverride()" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800">Change</button>
+                                </div>
+
+                                <div id="builder-gender-override-wrap" class="hidden mt-2">
+                                    <label class="case-builder-field">Override gender / number
+                                        <select id="builder-gender" onchange="updateCaseBuilder()" class="case-builder-input">
+                                            <option value="masculine">Masculine</option>
+                                            <option value="feminine">Feminine</option>
+                                            <option value="neuter">Neuter</option>
+                                            <option value="plural">Plural</option>
+                                        </select>
+                                    </label>
+                                </div>
                             </div>
                         </div>
 
@@ -1823,11 +1893,74 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                         </section>
 
                         <section id="grammar-main-articles" class="grammar-main-panel hidden" role="tabpanel" aria-labelledby="grammar-tab-articles">
+                        <div class="grammar-topic-intro">
+                            <div class="text-sm font-bold text-slate-800">Article Finder</div>
+                            <p class="text-[11px] text-slate-500 mt-1">
+                                Enter a noun. The app detects its gender/number when known, then you choose the case and article meaning.
+                            </p>
+                        </div>
+
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                            <label class="case-builder-field">Noun
+                                <input id="article-tool-noun" type="text" value="Mann" oninput="updateArticleFinder()" class="case-builder-input" placeholder="e.g. Mann, Frau, Kind">
+                            </label>
+
+                            <div class="case-builder-grid">
+                                <label class="case-builder-field">Case
+                                    <select id="article-tool-case" onchange="updateArticleFinder()" class="case-builder-input">
+                                        <option value="Nominative">Nominative</option>
+                                        <option value="Accusative">Accusative</option>
+                                        <option value="Dative">Dative</option>
+                                        <option value="Genitive">Genitive</option>
+                                    </select>
+                                </label>
+
+                                <label class="case-builder-field">Article meaning
+                                    <select id="article-tool-type" onchange="updateArticleFinder()" class="case-builder-input">
+                                        <option value="definite">the</option>
+                                        <option value="indefinite">a / an</option>
+                                    </select>
+                                </label>
+                            </div>
+
+                            <div class="rounded-lg border border-slate-200 bg-white px-3 py-2.5">
+                                <div class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Detected noun information</div>
+                                <div class="mt-1 flex flex-wrap items-center gap-2">
+                                    <span id="article-tool-gender-display" class="text-sm font-bold text-slate-800">Masculine</span>
+                                    <button type="button" onclick="toggleArticleGenderOverride()" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800">Change</button>
+                                </div>
+
+                                <div id="article-tool-gender-wrap" class="hidden mt-2">
+                                    <label class="case-builder-field">Override gender / number
+                                        <select id="article-tool-gender" onchange="updateArticleFinder()" class="case-builder-input">
+                                            <option value="masculine">Masculine</option>
+                                            <option value="feminine">Feminine</option>
+                                            <option value="neuter">Neuter</option>
+                                            <option value="plural">Plural</option>
+                                        </select>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 mt-3">
+                            <div class="text-[10px] uppercase tracking-wider font-bold text-amber-700">Correct form</div>
+                            <div id="article-tool-result" class="text-xl font-bold text-slate-900 mt-1 break-words">der Mann</div>
+                            <div id="article-tool-rule" class="text-[11px] text-slate-600 mt-2"></div>
+                        </div>
+
+                        <div class="grammar-section-ai">
+                            <button type="button" onclick="askArticleFinderAI(this)" class="grammar-section-ai-btn">✨ Ask AI about this article choice</button>
+                            <div id="article-tool-ai-result" class="grammar-section-ai-result hidden"></div>
+                        </div>
+
+                        <div class="grammar-topic-divider"></div>
+
 
                         <div class="grammar-topic-intro">
                             <div class="text-sm font-bold text-slate-800">Articles & Endings</div>
                             <p class="text-[11px] text-slate-500 mt-1">
-                                Articles show gender and case. Use these tables to see how forms change across Nominative, Accusative, Dative, and Genitive.
+                                Articles show gender and case. Use the Article Finder for a specific noun, then use the tables below to compare the full pattern.
                             </p>
                         </div>
                         
@@ -4583,6 +4716,119 @@ Do not include pronouns inside the form strings.`;
             }
         };
 
+        let articleGenderOverrideActive = false;
+
+        function toggleArticleGenderOverride() {
+            articleGenderOverrideActive = !articleGenderOverrideActive;
+            const wrap = document.getElementById("article-tool-gender-wrap");
+            if (wrap) wrap.classList.toggle("hidden", !articleGenderOverrideActive);
+            updateArticleFinder();
+        }
+
+        function updateArticleFinder() {
+            const nounEl = document.getElementById("article-tool-noun");
+            const caseEl = document.getElementById("article-tool-case");
+            const typeEl = document.getElementById("article-tool-type");
+            const genderEl = document.getElementById("article-tool-gender");
+            const genderDisplay = document.getElementById("article-tool-gender-display");
+            const resultEl = document.getElementById("article-tool-result");
+            const ruleEl = document.getElementById("article-tool-rule");
+            if (!nounEl || !caseEl || !typeEl || !resultEl || !ruleEl) return;
+
+            const noun = nounEl.value.trim() || "Noun";
+            const inferred = inferBuilderGender(noun);
+
+            let gender = inferred.gender;
+            if (articleGenderOverrideActive && genderEl) {
+                gender = genderEl.value;
+            } else if (gender && genderEl) {
+                genderEl.value = gender;
+            }
+
+            const labels = {
+                masculine:"Masculine",
+                feminine:"Feminine",
+                neuter:"Neuter",
+                plural:"Plural"
+            };
+
+            if (genderDisplay) {
+                if (gender) {
+                    genderDisplay.textContent = labels[gender] + (inferred.confidence === "pattern" ? " (likely)" : "");
+                    genderDisplay.className = "text-sm font-bold text-slate-800";
+                } else {
+                    genderDisplay.textContent = "Unknown — choose Change";
+                    genderDisplay.className = "text-sm font-bold text-amber-700";
+                }
+            }
+
+            if (!gender) {
+                resultEl.textContent = "— " + noun;
+                ruleEl.textContent = "I do not know this noun's gender locally yet. Tap Change to select it.";
+                return;
+            }
+
+            const caseName = caseEl.value;
+            const articleType = typeEl.value;
+            const article = caseArticles[articleType][caseName][gender];
+
+            if (article === "—") {
+                resultEl.textContent = noun;
+                ruleEl.textContent = `${noun} is plural. German has no plural form of "a/an", so no indefinite article is used.`;
+                return;
+            }
+
+            resultEl.textContent = `${article} ${noun}`;
+
+            let note = `${noun} → ${labels[gender]}. ${caseName} ${articleType === "definite" ? "definite" : "indefinite"} article → ${article}.`;
+            if (gender === "plural" && caseName === "Dative") {
+                note += " Dative plural nouns usually add -n when possible.";
+            }
+            if ((gender === "masculine" || gender === "neuter") && caseName === "Genitive") {
+                note += " Masculine and neuter singular nouns often add -s or -es in the Genitive.";
+            }
+            ruleEl.textContent = note;
+        }
+
+        async function askArticleFinderAI(button) {
+            const resultEl = document.getElementById("article-tool-ai-result");
+            if (!getActiveAIKey()) {
+                resultEl.textContent = "Add an AI API key in Settings first.";
+                resultEl.classList.remove("hidden");
+                return;
+            }
+
+            const noun = document.getElementById("article-tool-noun")?.value.trim() || "";
+            const form = document.getElementById("article-tool-result")?.textContent.trim() || "";
+            const rule = document.getElementById("article-tool-rule")?.textContent.trim() || "";
+
+            const previous = button.textContent;
+            button.disabled = true;
+            button.textContent = "Asking AI…";
+            resultEl.textContent = "AI Tutor is thinking…";
+            resultEl.classList.remove("hidden");
+
+            try {
+                const prompt = `You are an expert German tutor for an English-speaking learner.
+
+Noun: "${noun}"
+Current article form: "${form}"
+App explanation: "${rule}"
+
+Explain why this article form is correct in this case.
+Also verify the noun's gender/number and point out any noun-ending change required by the case.
+Use no more than 4 short English sentences.
+Plain text only. No Markdown, headings, bullets, or asterisks.`;
+
+                resultEl.textContent = cleanAiExplanation(await callAI(prompt));
+            } catch (e) {
+                resultEl.textContent = "AI question failed: " + ((e && e.message) ? e.message : String(e));
+            } finally {
+                button.disabled = false;
+                button.textContent = previous;
+            }
+        }
+
         function grammarSectionContext(kind) {
             if (kind === "verb") {
                 const entered = document.getElementById("verb-tool-input")?.value.trim() || "";
@@ -4608,9 +4854,11 @@ Do not include pronouns inside the form strings.`;
             if (kind === "builder") {
                 const phrase = document.getElementById("builder-result")?.textContent.trim() || "";
                 const rule = document.getElementById("builder-rule")?.textContent.trim() || "";
+                const noun = document.getElementById("builder-noun")?.value.trim() || "";
+                const detected = document.getElementById("builder-detected-gender")?.textContent.trim() || "";
                 return {
                     title: "German case-builder phrase",
-                    context: `Built phrase: "${phrase}". App rule: "${rule}".`
+                    context: `Noun: "${noun}". Detected gender/number: "${detected}". Built phrase: "${phrase}". App rule: "${rule}".`
                 };
             }
 
@@ -4694,6 +4942,7 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
             builderPrep.value = "mit";
             renderPrepositionExplorer();
             updateCaseBuilder();
+            updateArticleFinder();
 
             const verbInput = document.getElementById("verb-tool-input");
             if (verbInput && !verbInput.dataset.bound) {
@@ -4771,6 +5020,47 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
             return motion === "destination" ? "Accusative" : "Dative";
         }
 
+        let builderGenderOverrideActive = false;
+
+        function inferBuilderGender(nounText) {
+            const raw = String(nounText || "").trim();
+            if (!raw) return {gender:"", confidence:"none"};
+
+            const clean = raw
+                .toLowerCase()
+                .replace(/^[^a-zäöüß]+|[^a-zäöüß]+$/g, "");
+
+            // Reuse the app's existing noun-gender lexicon first.
+            if (germanNounGender[clean]) {
+                return {gender:germanNounGender[clean].toLowerCase(), confidence:"known"};
+            }
+
+            // A few useful plural forms / high-frequency nouns not always present in the parser lexicon.
+            const knownPlural = new Set([
+                "kinder","männer","frauen","freunde","freundinnen","eltern","häuser",
+                "bücher","autos","hunde","katzen","lehrer","lehrerinnen","schüler","schülerinnen"
+            ]);
+            if (knownPlural.has(clean)) return {gender:"plural", confidence:"known"};
+
+            // High-confidence noun-ending hints. These are aids, not guarantees.
+            if (/(ung|heit|keit|schaft|ion|tät|ik|ur|ei)$/.test(clean)) {
+                return {gender:"feminine", confidence:"pattern"};
+            }
+            if (/(chen|lein|ment|um)$/.test(clean)) {
+                return {gender:"neuter", confidence:"pattern"};
+            }
+
+            return {gender:"", confidence:"unknown"};
+        }
+
+        function toggleBuilderGenderOverride() {
+            const wrap = document.getElementById("builder-gender-override-wrap");
+            if (!wrap) return;
+            builderGenderOverrideActive = !builderGenderOverrideActive;
+            wrap.classList.toggle("hidden", !builderGenderOverrideActive);
+            updateCaseBuilder();
+        }
+
         function updateCaseBuilder() {
             const prepEl = document.getElementById("builder-prep");
             const genderEl = document.getElementById("builder-gender");
@@ -4778,27 +5068,75 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
             const motionEl = document.getElementById("builder-motion");
             const motionField = document.getElementById("builder-motion-field");
             const nounEl = document.getElementById("builder-noun");
+            const detectedEl = document.getElementById("builder-detected-gender");
             const resultEl = document.getElementById("builder-result");
             const ruleEl = document.getElementById("builder-rule");
-            if (!prepEl || !resultEl) return;
+            if (!prepEl || !resultEl || !nounEl) return;
 
             const prep = prepEl.value;
             const data = prepositionData[prep];
-            motionField?.classList.toggle("hidden", data?.type !== "two-way");
+            if (motionField) motionField.classList.toggle("hidden", data?.type !== "two-way");
 
-            const gender = genderEl.value;
-            const articleType = articleTypeEl.value;
-            const motion = motionEl.value;
-            const caseName = resolveBuilderCase(prep, motion);
             const noun = nounEl.value.trim() || "Noun";
+            const inferred = inferBuilderGender(noun);
+
+            let gender = inferred.gender;
+            if (builderGenderOverrideActive && genderEl) {
+                gender = genderEl.value;
+            } else if (gender && genderEl) {
+                genderEl.value = gender;
+            }
+
+            const displayNames = {
+                masculine:"Masculine",
+                feminine:"Feminine",
+                neuter:"Neuter",
+                plural:"Plural"
+            };
+
+            if (detectedEl) {
+                if (gender) {
+                    detectedEl.textContent = displayNames[gender] + (inferred.confidence === "pattern" ? " (likely)" : "");
+                    detectedEl.className = "text-sm font-bold text-slate-800";
+                } else {
+                    detectedEl.textContent = "Unknown — choose Change";
+                    detectedEl.className = "text-sm font-bold text-amber-700";
+                }
+            }
+
+            if (!gender) {
+                resultEl.textContent = `${prep} … ${noun}`;
+                ruleEl.textContent = "I do not know this noun's gender locally yet. Tap Change to select it, or use Ask AI about this phrase.";
+                return;
+            }
+
+            const articleType = articleTypeEl.value;
+            const motion = motionEl ? motionEl.value : "location";
+            const caseName = resolveBuilderCase(prep, motion);
             const article = caseArticles[articleType][caseName][gender];
 
-            const articleText = article === "—" ? "" : article + " ";
-            resultEl.textContent = `${prep} ${articleText}${noun}`.replace(/\s+/g," ").trim();
+            // Indefinite plural has no "a/an" equivalent in German.
+            if (article === "—") {
+                resultEl.textContent = `${prep} ${noun}`.replace(/\s+/g," ").trim();
+                ruleEl.textContent = `${noun} is plural. German has no plural form of "a/an", so no indefinite article is used here. ${prep} requires ${caseName}.`;
+                return;
+            }
 
-            let note = `${prep} → ${caseName}. ${gender.charAt(0).toUpperCase()+gender.slice(1)} ${articleType} article: ${article}.`;
-            if (gender === "plural" && caseName === "Dative") note += " Dative plural nouns often add -n when possible.";
-            if (data?.type === "two-way") note += motion === "destination" ? " You selected Wohin?/destination." : " You selected Wo?/location.";
+            resultEl.textContent = `${prep} ${article} ${noun}`.replace(/\s+/g," ").trim();
+
+            let note = `${noun} → ${displayNames[gender]}. ${prep} → ${caseName}. `;
+            note += articleType === "definite"
+                ? `The ${caseName} definite article is ${article}.`
+                : `The ${caseName} indefinite article is ${article}.`;
+
+            if (gender === "plural" && caseName === "Dative") {
+                note += " Dative plural nouns usually add -n when possible.";
+            }
+            if (data?.type === "two-way") {
+                note += motion === "destination"
+                    ? " You selected Wohin?/destination, so Accusative is used."
+                    : " You selected Wo?/location, so Dative is used.";
+            }
             ruleEl.textContent = note;
         }
 
@@ -4821,6 +5159,9 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
             if (name === "cases") {
                 renderPrepositionExplorer();
                 updateCaseBuilder();
+            }
+            if (name === "articles") {
+                updateArticleFinder();
             }
         }
 
