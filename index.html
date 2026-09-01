@@ -1693,10 +1693,6 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                     </div>
                 </div>
 
-                <div id="parse-source-status" class="hidden text-[10px] uppercase tracking-wider font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 w-fit">
-                    AI Parse
-                </div>
-
                 <!-- Generated Tiles Container -->
                 <div id="tiles-container" class="min-h-[100px] border border-dashed border-slate-200 rounded-xl flex flex-wrap gap-3 p-4 items-center justify-center bg-slate-50/50">
                     <span class="text-slate-400 text-sm italic">Tiles will be generated here once you translate or enter a German phrase above...</span>
@@ -3734,17 +3730,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
 
         function renderParsedChunks(chunks, sourceLabel="Local Parse") {
             const box=document.getElementById("tiles-container");
-            const status=document.getElementById("parse-source-status");
             box.innerHTML="";
-
-            if(status){
-                if(sourceLabel==="AI Parse"){
-                    status.textContent="AI Parse";
-                    status.classList.remove("hidden");
-                } else {
-                    status.classList.add("hidden");
-                }
-            }
 
             chunks.forEach(ch=>{
                 const text=ch.words.join(" ");
