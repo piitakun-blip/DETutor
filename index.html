@@ -1267,6 +1267,38 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
 
         .prep-two-way-card.case-dat { background:#fef9c3 !important; border-color:#fef08a !important; color:#854d0e !important; }
         .prep-two-way-card.case-acc { background:#c7f5d8 !important; border-color:#9ee8bb !important; color:#166534 !important; }
+
+        .case-builder-preposition-wide {
+            grid-column:1 / -1 !important;
+        }
+        #builder-prep {
+            width:100% !important;
+            min-height:48px !important;
+            font-size:16px !important;
+        }
+        @media (max-width:640px) {
+            .case-builder-compact-grid {
+                grid-template-columns:minmax(0,1fr) minmax(0,.9fr) !important;
+            }
+            .case-builder-preposition-wide {
+                grid-column:1 / -1 !important;
+            }
+            .case-builder-compact-grid > label:nth-child(2) {
+                grid-column:1 !important;
+            }
+            .case-builder-compact-grid > label:nth-child(3) {
+                grid-column:2 !important;
+            }
+            #builder-motion-field:not(.hidden) {
+                grid-column:1 / -1 !important;
+            }
+        }
+
+        /* Article Reference: article text follows the same gender colors as Grammar Parser. */
+        #grammar-main-articles table .gender-masc { color:#0284c7 !important; }
+        #grammar-main-articles table .gender-fem { color:#db2777 !important; }
+        #grammar-main-articles table .gender-neut { color:#0d9488 !important; }
+        #grammar-main-articles table .gender-plural { color:#7c3aed !important; }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
@@ -1899,12 +1931,12 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                             </div>
 
                             <div class="case-builder-compact-grid">
-                                <label class="case-builder-field">Noun
-                                    <input id="builder-noun" type="text" value="Mann" oninput="updateCaseBuilder()" class="case-builder-input" placeholder="e.g. Mann">
+                                <label class="case-builder-field case-builder-preposition-wide">Preposition
+                                    <select id="builder-prep" onchange="updateCaseBuilder(); renderPrepositionExplorer();" class="case-builder-input"></select>
                                 </label>
 
-                                <label class="case-builder-field">Preposition
-                                    <select id="builder-prep" onchange="updateCaseBuilder()" class="case-builder-input"></select>
+                                <label class="case-builder-field">Noun
+                                    <input id="builder-noun" type="text" value="Mann" oninput="updateCaseBuilder()" class="case-builder-input" placeholder="e.g. Mann">
                                 </label>
 
                                 <label class="case-builder-field">Article meaning
@@ -1915,7 +1947,7 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                                 </label>
 
                                 <label id="builder-motion-field" class="case-builder-field hidden">Two-way use
-                                    <select id="builder-motion" onchange="updateCaseBuilder()" class="case-builder-input">
+                                    <select id="builder-motion" onchange="updateCaseBuilder(); renderPrepositionExplorer();" class="case-builder-input">
                                         <option value="location">Location — Wo?</option>
                                         <option value="destination">Destination/change — Wohin?</option>
                                     </select>
@@ -1963,14 +1995,6 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                         </div>
 
                         <section id="cheat-tool-prep" class="space-y-4">
-                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
-                            <div>
-                                <div class="text-sm font-bold text-slate-800">Choose a preposition</div>
-                                <div class="text-[11px] text-slate-500 mt-0.5">Choose a preposition to see its case rule, article forms, and examples.</div>
-                            </div>
-                            <select id="prep-tool-select" onchange="renderPrepositionExplorer()" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base sm:text-sm text-slate-800">
-                            </select>
-                        </div>
                         <div id="prep-tool-result" class="grammar-case-card rounded-xl border p-4 space-y-4"></div>
                     </section>
 <!-- Grammatical Prepositions Rule Engine -->
@@ -2093,42 +2117,42 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                             <thead>
                                 <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold">
                                     <th class="p-2">Case</th>
-                                    <th class="p-2">Masc (der)</th>
-                                    <th class="p-2">Fem (die)</th>
-                                    <th class="p-2">Neut (das)</th>
-                                    <th class="p-2">Plural (die)</th>
+                                    <th class="p-2 gender-masc">Masc (der)</th>
+                                    <th class="p-2 gender-fem">Fem (die)</th>
+                                    <th class="p-2 gender-neut">Neut (das)</th>
+                                    <th class="p-2 gender-plural">Plural (die)</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr class="border-b border-slate-50 text-slate-700">
                                     <td class="p-2 font-bold text-blue-600 bg-blue-50/20">Nom</td>
-                                    <td class="p-2 font-semibold">der</td>
-                                    <td class="p-2 font-semibold">die</td>
-                                    <td class="p-2 font-semibold">das</td>
-                                    <td class="p-2 font-semibold">die</td>
+                                    <td class="p-2 font-semibold gender-masc">der</td>
+                                    <td class="p-2 font-semibold gender-fem">die</td>
+                                    <td class="p-2 font-semibold gender-neut">das</td>
+                                    <td class="p-2 font-semibold gender-plural">die</td>
                                 </tr>
                                 <tr class="border-b border-slate-50 text-slate-700">
                                     <td class="p-2 font-bold text-emerald-600 bg-emerald-50/20">Acc</td>
-                                    <td class="p-2 font-semibold text-red-600 font-bold">den</td>
-                                    <td class="p-2 font-semibold">die</td>
-                                    <td class="p-2 font-semibold">das</td>
-                                    <td class="p-2 font-semibold">die</td>
+                                    <td class="p-2 font-semibold gender-masc">den</td>
+                                    <td class="p-2 font-semibold gender-fem">die</td>
+                                    <td class="p-2 font-semibold gender-neut">das</td>
+                                    <td class="p-2 font-semibold gender-plural">die</td>
                                 </tr>
                                 <tr class="border-b border-slate-50 text-slate-700">
                                     <td class="p-2 font-bold text-amber-600 bg-amber-50/20">Dat</td>
-                                    <td class="p-2 font-semibold">dem</td>
-                                    <td class="p-2 font-semibold">der</td>
-                                    <td class="p-2 font-semibold">dem</td>
-                                    <td class="p-2 font-semibold">den (+n)</td>
+                                    <td class="p-2 font-semibold gender-masc">dem</td>
+                                    <td class="p-2 font-semibold gender-fem">der</td>
+                                    <td class="p-2 font-semibold gender-neut">dem</td>
+                                    <td class="p-2 font-semibold gender-plural">den (+n)</td>
                                 </tr>
                                 <tr class="text-slate-700">
                                     <td class="p-2 font-bold text-purple-600 bg-purple-50/20">Gen</td>
-                                    <td class="p-2 font-semibold">des (+s)</td>
-                                    <td class="p-2 font-semibold">der</td>
-                                    <td class="p-2 font-semibold">des (+s)</td>
-                                    <td class="p-2 font-semibold">der</td>
+                                    <td class="p-2 font-semibold gender-masc">des (+s)</td>
+                                    <td class="p-2 font-semibold gender-fem">der</td>
+                                    <td class="p-2 font-semibold gender-neut">des (+s)</td>
+                                    <td class="p-2 font-semibold gender-plural">der</td>
                                 </tr>
-                            </tbody>
+</tbody>
                         </table>
                     </div>
                 </div>
@@ -2141,37 +2165,37 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                             <thead>
                                 <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold">
                                     <th class="p-2">Case</th>
-                                    <th class="p-2">Masc</th>
-                                    <th class="p-2">Fem</th>
-                                    <th class="p-2">Neut</th>
+                                    <th class="p-2 gender-masc">Masc</th>
+                                    <th class="p-2 gender-fem">Fem</th>
+                                    <th class="p-2 gender-neut">Neut</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr class="border-b border-slate-50 text-slate-700">
                                     <td class="p-2 font-bold text-blue-600 bg-blue-50/20">Nom</td>
-                                    <td class="p-2 font-semibold">ein</td>
-                                    <td class="p-2 font-semibold">eine</td>
-                                    <td class="p-2 font-semibold">ein</td>
+                                    <td class="p-2 font-semibold gender-masc">ein</td>
+                                    <td class="p-2 font-semibold gender-fem">eine</td>
+                                    <td class="p-2 font-semibold gender-neut">ein</td>
                                 </tr>
                                 <tr class="border-b border-slate-50 text-slate-700">
                                     <td class="p-2 font-bold text-emerald-600 bg-emerald-50/20">Acc</td>
-                                    <td class="p-2 font-semibold text-red-600 font-bold">einen</td>
-                                    <td class="p-2 font-semibold">eine</td>
-                                    <td class="p-2 font-semibold">ein</td>
+                                    <td class="p-2 font-semibold gender-masc">einen</td>
+                                    <td class="p-2 font-semibold gender-fem">eine</td>
+                                    <td class="p-2 font-semibold gender-neut">ein</td>
                                 </tr>
                                 <tr class="border-b border-slate-50 text-slate-700">
                                     <td class="p-2 font-bold text-amber-600 bg-amber-50/20">Dat</td>
-                                    <td class="p-2 font-semibold">einem</td>
-                                    <td class="p-2 font-semibold">einer</td>
-                                    <td class="p-2 font-semibold">einem</td>
+                                    <td class="p-2 font-semibold gender-masc">einem</td>
+                                    <td class="p-2 font-semibold gender-fem">einer</td>
+                                    <td class="p-2 font-semibold gender-neut">einem</td>
                                 </tr>
                                 <tr class="text-slate-700">
                                     <td class="p-2 font-bold text-purple-600 bg-purple-50/20">Gen</td>
-                                    <td class="p-2 font-semibold">eines</td>
-                                    <td class="p-2 font-semibold">einer</td>
-                                    <td class="p-2 font-semibold">eines</td>
+                                    <td class="p-2 font-semibold gender-masc">eines</td>
+                                    <td class="p-2 font-semibold gender-fem">einer</td>
+                                    <td class="p-2 font-semibold gender-neut">eines</td>
                                 </tr>
-                            </tbody>
+</tbody>
                         </table>
                     </div>
                 </div>
@@ -5085,7 +5109,7 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
         }
 
         function renderPrepositionExplorer() {
-            const select = document.getElementById("prep-tool-select");
+            const select = document.getElementById("builder-prep");
             const out = document.getElementById("prep-tool-result");
             if (!select || !out) return;
             const p = select.value;
