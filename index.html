@@ -1974,14 +1974,18 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
                         <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
                             <div>
                                 <div class="text-sm font-bold text-slate-800">Verb Conjugator</div>
-                                <div class="text-[11px] text-slate-500 mt-0.5">Enter an infinitive or a conjugated form such as <em>bringe</em>, <em>möchtest</em>, <em>fährt</em>, <em>mitbringen</em>, or <em>rufe an</em>.</div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">Enter a German infinitive/conjugated form, or check “Verb entered in English” before entering an English verb such as <em>walk</em> or <em>drive</em>.</div>
                             </div>
                             <div class="space-y-3">
                                 <label class="block">
-                                    <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-2">Verb input — German or English</div>
+                                    <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-2">Verb input</div>
                                     <input id="verb-tool-input" type="text" inputmode="text" autocomplete="off"
                                         class="verb-tool-input w-full min-w-0 rounded-xl border-2 border-indigo-200 bg-white px-4 py-4 text-lg text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-                                        placeholder="German or English, e.g. haben, fährt, to drive">
+                                        placeholder="e.g. haben, fährt, walk">
+                                </label>
+                                <label class="case-builder-language-check">
+                                    <input id="verb-tool-english" type="checkbox">
+                                    <span>Verb entered in English</span>
                                 </label>
                                 <div class="verb-tool-actions">
                                     <button type="button" onclick="runLocalVerbConjugator()" class="min-h-[46px] px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm">Conjugate</button>
@@ -4979,6 +4983,38 @@ Before returning, verify that the explanation itself is English.`;
             resultBox.classList.remove("hidden");
         }
 
+        const VERB_TRANSLATION_CACHE_KEY = "deutschlerner_verb_translation_cache_v1";
+        const verbTranslationCache = new Map();
+
+        function loadVerbTranslationCache() {
+            try {
+                const raw = safeStorageGet(VERB_TRANSLATION_CACHE_KEY);
+                if (!raw) return;
+                const saved = JSON.parse(raw);
+                if (!saved || typeof saved !== "object") return;
+                Object.entries(saved).forEach(([key, value]) => {
+                    if (typeof value === "string" && value.trim()) {
+                        verbTranslationCache.set(key, value.trim());
+                    }
+                });
+            } catch (e) {
+                console.warn("Could not load verb translation cache:", e);
+            }
+        }
+
+        function saveVerbTranslationCache() {
+            try {
+                safeStorageSet(
+                    VERB_TRANSLATION_CACHE_KEY,
+                    JSON.stringify(Object.fromEntries(Array.from(verbTranslationCache.entries()).slice(-300)))
+                );
+            } catch (e) {
+                console.warn("Could not save verb translation cache:", e);
+            }
+        }
+
+        loadVerbTranslationCache();
+
         async function runLocalVerbConjugator() {
             const input = document.getElementById("verb-tool-input");
             const status = document.getElementById("verb-tool-status");
@@ -4987,20 +5023,49 @@ Before returning, verify that the explanation itself is English.`;
 
             let lookup = raw;
             let translatedFromEnglish = false;
+            const englishChecked = Boolean(document.getElementById("verb-tool-english")?.checked);
 
-            if (looksLikeEnglishEntry(raw)) {
-                status.textContent = "Translating to German…";
+            if (englishChecked) {
+                status.textContent = "Translating verb…";
+                status.className = "text-[10px] font-semibold text-slate-500";
+                status.classList.remove("hidden");
+
+                const cacheKey = raw.toLowerCase().replace(/^to\s+/i, "").trim();
+                let translated = verbTranslationCache.get(cacheKey) || "";
+
+                if (!translated) {
+                    try {
+                        translated = await googleTranslateApiCall(cacheKey, "en", "de");
+                        translated = String(translated || "").trim().toLowerCase();
+                        if (translated) {
+                            verbTranslationCache.set(cacheKey, translated);
+                            saveVerbTranslationCache();
+                        }
+                    } catch (e) {
+                        console.warn("English verb translation failed:", e);
+                    }
+                }
+
+                if (!translated) {
+                    status.textContent = "I could not translate that English verb. Try Verify conjugation with AI.";
+                    status.className = "text-[10px] font-semibold text-amber-700";
+                    return;
+                }
+
+                lookup = translated;
+                translatedFromEnglish = true;
+            } else if (looksLikeEnglishEntry(raw)) {
+                // Preserve the previous automatic behavior when the checkbox is not used.
+                // The checkbox is simply the faster explicit route.
+                status.textContent = "Checking language…";
                 status.className = "text-[10px] font-semibold text-slate-500";
                 status.classList.remove("hidden");
 
                 const translated = await translateSingleWordToGerman(raw);
-                if (!translated) {
-                    status.textContent = "I could not translate that English verb. Try the AI check.";
-                    status.className = "text-[10px] font-semibold text-amber-700";
-                    return;
+                if (translated && translated.toLowerCase() !== raw.toLowerCase()) {
+                    lookup = translated;
+                    translatedFromEnglish = true;
                 }
-                lookup = translated;
-                translatedFromEnglish = true;
             }
 
             const result = identifyVerbLocally(lookup);
