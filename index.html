@@ -939,23 +939,106 @@
                 font-size:16px !important; /* prevents iPhone Safari zoom */
             }
         }
-
-        @media (max-width:640px) {
-            #mobile-grammar-tools-card {
-                display:block !important;
-                width:100% !important;
-                min-width:0 !important;
-                margin-top:12px !important;
-                padding:14px !important;
-            }
-
-            body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
+body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
             body[data-mobile-tab="study"] #mobile-grammar-tools-card {
                 display:none !important;
             }
 
             body[data-mobile-tab="tutor"] #mobile-grammar-tools-card {
                 display:block !important;
+            }
+        }
+
+        .grammar-accordion-toggle {
+            width:100%;
+            min-height:58px;
+            padding:12px 14px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            background:#fff;
+            color:#334155;
+            text-align:left;
+        }
+        .grammar-accordion-toggle:hover {
+            background:#f8fafc;
+        }
+        .grammar-accordion-body {
+            padding:0 14px 14px;
+            border-top:1px solid #f1f5f9;
+        }
+        .grammar-accordion-body > section {
+            padding-top:14px;
+        }
+        .grammar-accordion-body > .bg-white {
+            box-shadow:none !important;
+            border-left:0 !important;
+            border-right:0 !important;
+            border-bottom:0 !important;
+            border-radius:0 !important;
+            padding-left:0 !important;
+            padding-right:0 !important;
+        }
+
+        @media (max-width:640px) {
+            #cheat-sheet-container {
+                min-width:0;
+                overflow-x:hidden;
+            }
+            .grammar-accordion-toggle {
+                min-height:64px;
+                padding:11px 12px;
+            }
+            .grammar-accordion-body {
+                padding:0 10px 12px;
+            }
+            .grammar-accordion-body .grid-cols-2 {
+                grid-template-columns:1fr !important;
+            }
+            .grammar-accordion-body table {
+                min-width:520px;
+            }
+            .grammar-accordion-body .overflow-x-auto {
+                -webkit-overflow-scrolling:touch;
+            }
+        }
+
+        .grammar-section-ai {
+            padding:12px 0 2px;
+        }
+        .grammar-section-ai-btn {
+            min-height:42px;
+            padding:9px 12px;
+            border-radius:9px;
+            border:1px solid #fcd34d;
+            background:#fef3c7;
+            color:#78350f;
+            font-size:11px;
+            font-weight:800;
+        }
+        .grammar-section-ai-btn:hover {
+            background:#fde68a;
+        }
+        .grammar-section-ai-result {
+            margin-top:9px;
+            padding:11px 12px;
+            border-radius:10px;
+            border:1px solid #fde68a;
+            background:#fffbeb;
+            color:#78350f;
+            font-size:12px;
+            line-height:1.55;
+        }
+        @media (max-width:640px) {
+            .grammar-section-ai-btn {
+                width:100%;
+                min-height:44px;
+                font-size:12px;
+            }
+            .grammar-section-ai-result {
+                font-size:13px;
+                line-height:1.5;
             }
         }
 </style>
@@ -1475,23 +1558,40 @@
 
             <!-- Always-visible interactive grammar tools -->
                 <!-- Interactive Grammar Tools -->
-                <div id="mobile-grammar-tools-card" class="mobile-section mobile-tutor bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-5 space-y-4">
-                    <div class="flex items-start justify-between gap-3">
-                        <div>
-                            <h3 class="text-base font-bold text-slate-800">Grammar Tools</h3>
-                            <p class="text-[11px] text-slate-500 mt-1">Verb Conjugator · Preposition Explorer · Case Builder</p>
+                
+
+            <!-- Toggle Button for Cheat Sheet -->
+            <button onclick="toggleCheatSheet()" class="w-full py-3.5 px-5 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl shadow-sm flex items-center justify-between font-bold text-slate-700 text-sm transition duration-150 group">
+                <span class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-indigo-600 transition group-hover:scale-110 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84a50.58 50.57 0 00-2.657.814m-15.482 0A50.697 50.57 0 0112 13.489a50.702 50.57 0 017.74-2.528M12 15.75v5.25"></path></svg>
+                    Grammar Cheat Sheets & Tables
+                </span>
+                <span id="cheat-sheet-arrow" class="text-slate-400"><svg class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"></path></svg></span>
+            </button>
+
+            <!-- Collapsible Cheat Sheet Content Container -->
+            
+<div id="cheat-sheet-container" class="hidden space-y-4 animate-fadeIn">
+
+                <div class="grammar-accordion bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <button type="button" class="grammar-accordion-toggle" onclick="toggleGrammarAccordion('grammar-verb-section', this)" aria-expanded="true">
+                        <span class="flex items-center gap-2 min-w-0">
+                            <span class="text-lg shrink-0">🔤</span>
+                            <span class="min-w-0 text-left">
+                                <span class="block text-sm font-bold text-slate-800">Verb Conjugator</span>
+                                <span class="block text-[10px] text-slate-500 font-medium mt-0.5">Enter any common conjugated form and generate pronoun forms.</span>
+                            </span>
+                        </span>
+                        <span class="grammar-accordion-arrow text-slate-400 text-lg shrink-0">⌃</span>
+                    </button>
+                    <div id="grammar-verb-section" class="grammar-accordion-body">
+
+                        <div class="grammar-section-ai">
+                            <button type="button" onclick="askGrammarSectionAI('verb', this)" class="grammar-section-ai-btn">✨ Ask AI about this verb</button>
+                            <div id="grammar-ai-verb" class="grammar-section-ai-result hidden"></div>
                         </div>
-                    </div>
 
-                    <div class="cheat-tool-tabs" role="tablist" aria-label="Grammar tools">
-                        <button type="button" class="cheat-tool-tab active" data-cheat-tool="verb" onclick="setCheatTool('verb')">Verb Conjugator</button>
-                        <button type="button" class="cheat-tool-tab" data-cheat-tool="prep" onclick="setCheatTool('prep')">Prepositions</button>
-                        <button type="button" class="cheat-tool-tab" data-cheat-tool="builder" onclick="setCheatTool('builder')">Case Builder</button>
-                        <button type="button" class="cheat-tool-tab" data-cheat-tool="reference" onclick="setCheatTool('reference')">Article Tables</button>
-                    </div>
-
-                    <!-- Verb Conjugator -->
-                    <section id="cheat-tool-verb" class="cheat-tool-panel space-y-4">
+                        <section id="cheat-tool-verb" class="space-y-4">
                         <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
                             <div>
                                 <div class="text-sm font-bold text-slate-800">Verb Conjugator</div>
@@ -1502,7 +1602,7 @@
                                     class="flex-1 min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base sm:text-sm text-slate-800 outline-none focus:border-indigo-500"
                                     placeholder="Enter a German verb form">
                                 <button type="button" onclick="runLocalVerbConjugator()" class="min-h-[44px] px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs">Conjugate</button>
-                                <button id="verb-ai-btn" type="button" onclick="runAiVerbConjugator()" class="min-h-[44px] px-4 py-2 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold text-xs">✨ Check with AI</button>
+                                <button id="verb-ai-btn" type="button" onclick="runAiVerbConjugator()" class="min-h-[44px] px-4 py-2 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold text-xs">✨ Verify conjugation with AI</button>
                             </div>
                             <div id="verb-tool-status" class="hidden text-[10px] font-semibold"></div>
                         </div>
@@ -1522,9 +1622,29 @@
                             <div id="verb-extra-info" class="hidden px-4 py-3 border-t border-slate-100 bg-white text-[11px] text-slate-600"></div>
                         </div>
                     </section>
+                    </div>
+                </div>
 
-                    <!-- Preposition Explorer -->
-                    <section id="cheat-tool-prep" class="cheat-tool-panel hidden space-y-4">
+
+                <div class="grammar-accordion bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <button type="button" class="grammar-accordion-toggle" onclick="toggleGrammarAccordion('grammar-prep-section', this)" aria-expanded="false">
+                        <span class="flex items-center gap-2 min-w-0">
+                            <span class="text-lg shrink-0">🧭</span>
+                            <span class="min-w-0 text-left">
+                                <span class="block text-sm font-bold text-slate-800">Prepositions</span>
+                                <span class="block text-[10px] text-slate-500 font-medium mt-0.5">Case rules, two-way prepositions, article patterns, and examples.</span>
+                            </span>
+                        </span>
+                        <span class="grammar-accordion-arrow text-slate-400 text-lg shrink-0">⌄</span>
+                    </button>
+                    <div id="grammar-prep-section" class="grammar-accordion-body hidden">
+
+                        <div class="grammar-section-ai">
+                            <button type="button" onclick="askGrammarSectionAI('prep', this)" class="grammar-section-ai-btn">✨ Ask AI about this preposition</button>
+                            <div id="grammar-ai-prep" class="grammar-section-ai-result hidden"></div>
+                        </div>
+
+                        <section id="cheat-tool-prep" class="space-y-4">
                         <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
                             <div>
                                 <div class="text-sm font-bold text-slate-800">Preposition Explorer</div>
@@ -1535,9 +1655,49 @@
                         </div>
                         <div id="prep-tool-result" class="rounded-xl border border-slate-200 bg-white p-4 space-y-4"></div>
                     </section>
+<!-- Grammatical Prepositions Rule Engine -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-3">
+                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.474 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.03 0 1.9.693 2.166 1.638m-7.377 0A48.536 48.536 0 0112 3m0 0c-2.906 0-5.742.194-8.5.571m8.5-.571V6.75c0 .414-.336.75-.75.75h-1.5a.75.75 0 01-.75-.75V3c0 .231-.035.454-.1.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5M16.5 12h.008v.008H16.5V12zm0 3h.008v.008H16.5V15z"></path></svg>
+                    Prepositions Drive Noun Cases!
+                </h3>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    Some German prepositions always trigger a specific case, regardless of how the sentence's action is structured:
+                </p>
+                <div class="grid grid-cols-2 gap-3 text-xs mt-2">
+                    <div class="p-3 bg-emerald-50/40 border border-emerald-100 rounded-lg">
+                        <span class="font-bold text-emerald-800 block">Accusative-Only:</span>
+                        <p class="text-[11px] text-emerald-950 mt-1">durch, für, gegen, ohne, um, bis</p>
+                    </div>
+                    <div class="p-3 bg-amber-50/40 border border-amber-100 rounded-lg">
+                        <span class="font-bold text-amber-800 block">Dative-Only:</span>
+                        <p class="text-[11px] text-amber-950 mt-1">aus, bei, mit, nach, seit, von, zu</p>
+                    </div>
+                </div>
+            </div>
+                    </div>
+                </div>
 
-                    <!-- Case Builder -->
-                    <section id="cheat-tool-builder" class="cheat-tool-panel hidden space-y-4">
+
+                <div class="grammar-accordion bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <button type="button" class="grammar-accordion-toggle" onclick="toggleGrammarAccordion('grammar-case-builder-section', this)" aria-expanded="false">
+                        <span class="flex items-center gap-2 min-w-0">
+                            <span class="text-lg shrink-0">🧩</span>
+                            <span class="min-w-0 text-left">
+                                <span class="block text-sm font-bold text-slate-800">Case Builder</span>
+                                <span class="block text-[10px] text-slate-500 font-medium mt-0.5">Build prepositional phrases from case, gender, article, and noun.</span>
+                            </span>
+                        </span>
+                        <span class="grammar-accordion-arrow text-slate-400 text-lg shrink-0">⌄</span>
+                    </button>
+                    <div id="grammar-case-builder-section" class="grammar-accordion-body hidden">
+
+                        <div class="grammar-section-ai">
+                            <button type="button" onclick="askGrammarSectionAI('builder', this)" class="grammar-section-ai-btn">✨ Ask AI about this phrase</button>
+                            <div id="grammar-ai-builder" class="grammar-section-ai-result hidden"></div>
+                        </div>
+
+                        <section id="cheat-tool-builder" class="space-y-4">
                         <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
                             <div>
                                 <div class="text-sm font-bold text-slate-800">Case Builder</div>
@@ -1579,33 +1739,29 @@
                             <div id="builder-rule" class="text-[11px] text-slate-600 mt-2"></div>
                         </div>
                     </section>
-
-                    <!-- Article reference entry point -->
-                    <section id="cheat-tool-reference" class="cheat-tool-panel hidden">
-                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-                            The full definite and indefinite article tables are directly below these tools.
-                            <button type="button" onclick="document.getElementById('definite-articles-heading')?.scrollIntoView({behavior:'smooth',block:'start'})" class="mt-3 w-full sm:w-auto min-h-[44px] px-4 py-2 rounded-lg bg-white border border-slate-300 font-bold text-xs text-indigo-700">Jump to article tables</button>
-                        </div>
-                    </section>
+                    </div>
                 </div>
 
-            <!-- Toggle Button for Cheat Sheet -->
-            <button onclick="toggleCheatSheet()" class="w-full py-3.5 px-5 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl shadow-sm flex items-center justify-between font-bold text-slate-700 text-sm transition duration-150 group">
-                <span class="flex items-center gap-2">
-                    <svg class="w-5 h-5 text-indigo-600 transition group-hover:scale-110 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84a50.58 50.57 0 00-2.657.814m-15.482 0A50.697 50.57 0 0112 13.489a50.702 50.57 0 017.74-2.528M12 15.75v5.25"></path></svg>
-                    Grammar Cheat Sheets & Tables
-                </span>
-                <span id="cheat-sheet-arrow" class="text-slate-400"><svg class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"></path></svg></span>
-            </button>
 
-            <!-- Collapsible Cheat Sheet Content Container -->
-            
-<div id="cheat-sheet-container" class="hidden space-y-6 animate-fadeIn">
+                <div class="grammar-accordion bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <button type="button" class="grammar-accordion-toggle" onclick="toggleGrammarAccordion('grammar-article-section', this)" aria-expanded="false">
+                        <span class="flex items-center gap-2 min-w-0">
+                            <span class="text-lg shrink-0">📋</span>
+                            <span class="min-w-0 text-left">
+                                <span class="block text-sm font-bold text-slate-800">Article Tables</span>
+                                <span class="block text-[10px] text-slate-500 font-medium mt-0.5">Definite and indefinite article reference by case and gender.</span>
+                            </span>
+                        </span>
+                        <span class="grammar-accordion-arrow text-slate-400 text-lg shrink-0">⌄</span>
+                    </button>
+                    <div id="grammar-article-section" class="grammar-accordion-body hidden">
 
+                        <div class="grammar-section-ai">
+                            <button type="button" onclick="askGrammarSectionAI('articles', this)" class="grammar-section-ai-btn">✨ Ask AI about the article tables</button>
+                            <div id="grammar-ai-articles" class="grammar-section-ai-result hidden"></div>
+                        </div>
 
-
-
-                <!-- Quick Reference Table: Definite & Indefinite Articles -->
+                        <!-- Quick Reference Table: Definite & Indefinite Articles -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-4">
                 <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
                     <svg class="w-5 h-5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84a50.58 50.57 0 00-2.657.814m-15.482 0A50.697 50.57 0 0112 13.489a50.702 50.57 0 017.74-2.528M12 15.75v5.25"></path></svg>
@@ -1709,27 +1865,8 @@
                     <p>In German, all nouns have genders (masculine 🔵, feminine 🔴, or neuter 🟢). When nouns become plural, they all use **the same articles and pronouns as feminine nouns** in the Nominative and Accusative (e.g., *die* Kinder), but require specific plural-ending changes in the Dative (*den* Kindern).</p>
                 </div>
             </div>
-
-            <!-- Grammatical Prepositions Rule Engine -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-3">
-                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.474 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.03 0 1.9.693 2.166 1.638m-7.377 0A48.536 48.536 0 0112 3m0 0c-2.906 0-5.742.194-8.5.571m8.5-.571V6.75c0 .414-.336.75-.75.75h-1.5a.75.75 0 01-.75-.75V3c0 .231-.035.454-.1.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5M16.5 12h.008v.008H16.5V12zm0 3h.008v.008H16.5V15z"></path></svg>
-                    Prepositions Drive Noun Cases!
-                </h3>
-                <p class="text-xs text-slate-500 leading-relaxed">
-                    Some German prepositions always trigger a specific case, regardless of how the sentence's action is structured:
-                </p>
-                <div class="grid grid-cols-2 gap-3 text-xs mt-2">
-                    <div class="p-3 bg-emerald-50/40 border border-emerald-100 rounded-lg">
-                        <span class="font-bold text-emerald-800 block">Accusative-Only:</span>
-                        <p class="text-[11px] text-emerald-950 mt-1">durch, für, gegen, ohne, um, bis</p>
-                    </div>
-                    <div class="p-3 bg-amber-50/40 border border-amber-100 rounded-lg">
-                        <span class="font-bold text-amber-800 block">Dative-Only:</span>
-                        <p class="text-[11px] text-amber-950 mt-1">aus, bei, mit, nach, seit, von, zu</p>
                     </div>
                 </div>
-            </div>
 
             </div> <!-- End of Collapsible Container -->
 
@@ -4365,6 +4502,106 @@ Do not include pronouns inside the form strings.`;
                 Genitive:{masculine:"eines",feminine:"einer",neuter:"eines",plural:"—"}
             }
         };
+
+        function grammarSectionContext(kind) {
+            if (kind === "verb") {
+                const entered = document.getElementById("verb-tool-input")?.value.trim() || "";
+                const infinitive = document.getElementById("verb-result-infinitive")?.textContent.trim() || "";
+                const forms = Array.from(document.querySelectorAll("#verb-conjugation-grid .verb-conjugation-row"))
+                    .map(row => row.textContent.replace("🔊","").replace(/\s+/g," ").trim())
+                    .filter(Boolean);
+                return {
+                    title: "German verb",
+                    context: `Entered form: "${entered}". Identified infinitive: "${infinitive}". Current conjugation display: ${forms.join("; ") || "not generated yet"}.`
+                };
+            }
+
+            if (kind === "prep") {
+                const prep = document.getElementById("prep-tool-select")?.value || "";
+                const data = prepositionData[prep] || {};
+                return {
+                    title: "German preposition",
+                    context: `Preposition: "${prep}". Meaning: "${data.meaning || ""}". Governing case shown by the app: "${data.case || ""}". Examples: ${(data.examples || []).join("; ")}.`
+                };
+            }
+
+            if (kind === "builder") {
+                const phrase = document.getElementById("builder-result")?.textContent.trim() || "";
+                const rule = document.getElementById("builder-rule")?.textContent.trim() || "";
+                return {
+                    title: "German case-builder phrase",
+                    context: `Built phrase: "${phrase}". App rule: "${rule}".`
+                };
+            }
+
+            return {
+                title: "German article system",
+                context: "The learner is viewing the definite and indefinite article tables for Nominative, Accusative, Dative, and Genitive across masculine, feminine, neuter, and plural."
+            };
+        }
+
+        async function askGrammarSectionAI(kind, button) {
+            const resultEl = document.getElementById("grammar-ai-" + kind);
+            if (!getActiveAIKey()) {
+                if (resultEl) {
+                    resultEl.textContent = "Add an AI API key in Settings first.";
+                    resultEl.classList.remove("hidden");
+                }
+                return;
+            }
+
+            const ctx = grammarSectionContext(kind);
+            const previous = button ? button.textContent : "";
+
+            if (button) {
+                button.disabled = true;
+                button.textContent = "Asking AI…";
+            }
+            if (resultEl) {
+                resultEl.textContent = "AI Tutor is thinking…";
+                resultEl.classList.remove("hidden");
+            }
+
+            try {
+                const prompt = `You are an expert German tutor for an English-speaking learner.
+
+Topic: ${ctx.title}
+Current app context:
+${ctx.context}
+
+Give a concise, practical explanation in ENGLISH.
+Focus on what will help the learner understand or use this specific item correctly.
+If something shown by the app is inaccurate, say so clearly and give the correction.
+Use no more than 4 short sentences.
+Plain text only. No Markdown, headings, bullets, or asterisks.`;
+
+                const response = cleanAiExplanation(await callAI(prompt));
+                if (resultEl) resultEl.textContent = response;
+            } catch (e) {
+                if (resultEl) resultEl.textContent = "AI question failed: " + ((e && e.message) ? e.message : String(e));
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = previous;
+                }
+            }
+        }
+
+        function toggleGrammarAccordion(id, button) {
+            const body = document.getElementById(id);
+            if (!body) return;
+            const opening = body.classList.contains("hidden");
+            body.classList.toggle("hidden", !opening);
+            if (button) {
+                button.setAttribute("aria-expanded", opening ? "true" : "false");
+                const arrow = button.querySelector(".grammar-accordion-arrow");
+                if (arrow) arrow.textContent = opening ? "⌃" : "⌄";
+            }
+            if (opening) {
+                if (id === "grammar-prep-section") renderPrepositionExplorer();
+                if (id === "grammar-case-builder-section") updateCaseBuilder();
+            }
+        }
 
         function initGrammarTools() {
             const prepSelect = document.getElementById("prep-tool-select");
