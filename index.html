@@ -991,8 +991,8 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
             padding:12px 0 2px;
         }
         .grammar-section-ai-btn {
-            min-height:40px;
-            padding:8px 11px;
+            min-height:42px;
+            padding:9px 12px;
             border-radius:9px;
             border:1px solid #fcd34d;
             background:#fef3c7;
@@ -1546,8 +1546,8 @@ body[data-mobile-tab="translate"] #mobile-grammar-tools-card,
         color:white;
     }
     .ml-ai-action {
-        min-height:40px;
-        padding:8px 11px;
+        min-height:42px;
+        padding:9px 12px;
         border-radius:9px;
         border:1px solid #fcd34d;
         background:#fef3c7;
@@ -3620,61 +3620,6 @@ body.conversation-first-layout #mobile-right-column{
 }
 </style>
 
-<style id="safe-conversation-analysis-v1-styles">
-/* SAFE ADDITIVE REVISION v1
-   Extends the existing movable transcript without replacing conversation,
-   recognition, parser, storage, provider, or study-board logic. */
-.transcript-utterance-actions{
-    justify-content:flex-start !important;
-    flex-wrap:wrap;
-    gap:6px;
-}
-.transcript-secondary-action,
-.transcript-ai-action{
-    min-height:30px;
-    padding:5px 9px;
-    border-radius:8px;
-    font-size:10px;
-    font-weight:800;
-    cursor:pointer;
-}
-.transcript-secondary-action{
-    border:1px solid #cbd5e1;
-    background:#f8fafc;
-    color:#475569;
-}
-.transcript-secondary-action:hover{background:#f1f5f9}
-.transcript-ai-action{
-    border:1px solid #fcd34d;
-    background:#fffbeb;
-    color:#92400e;
-}
-.transcript-ai-action:hover{background:#fef3c7}
-.transcript-ai-action:disabled{opacity:.65;cursor:wait}
-.transcript-inline-ai-result{
-    margin-top:8px;
-    padding:10px 11px;
-    border:1px solid #fde68a;
-    border-radius:10px;
-    background:#fffbeb;
-    color:#78350f;
-    font-size:12px;
-    line-height:1.55;
-    user-select:text;
-}
-@media(max-width:640px){
-    .transcript-utterance-actions{
-        display:grid;
-        grid-template-columns:repeat(2,minmax(0,1fr));
-    }
-    .transcript-utterance-actions > button{
-        width:100%;
-        min-height:40px;
-    }
-}
-</style>
-
-
 <style id="transcript-first-coach-v2-styles">
 /* ============================================================
    Transcript-first Conversation Workspace + Private Coach v2
@@ -5615,73 +5560,6 @@ body.conversation-first-layout #mobile-right-column{
 }
 </style>
 
-<style id="workspace-v103-top-scrollbars-css">
-/* v10.3 — accessible horizontal scrolling without traveling to section bottoms. */
-.workspace-top-scrollbar{
-    width:100%;
-    height:15px;
-    overflow-x:auto;
-    overflow-y:hidden;
-    margin:5px 0 8px;
-    scrollbar-width:auto;
-    scrollbar-gutter:stable;
-    overscroll-behavior-x:contain;
-}
-.workspace-top-scrollbar-spacer{
-    height:1px;
-    min-width:100%;
-    pointer-events:none;
-}
-.workspace-top-scrollbar.workspace-top-scrollbar-inactive{
-    height:0;
-    margin:0;
-    overflow:hidden;
-}
-#conversation-primary-section,
-#conversation-language-tools-section{
-    min-width:0;
-}
-@media(max-width:640px){
-    .workspace-top-scrollbar{height:14px;margin:4px 0 6px}
-}
-</style>
-
-<style id="workspace-v104-reliable-top-scrollbars-css">
-/* v10.4: top scroll controls are intentionally always visible while their
-   major section is visible. No overflow-detection hiding. */
-.workspace-v104-scrollbar{
-    display:block!important;
-    visibility:visible!important;
-    opacity:1!important;
-    width:100%!important;
-    height:18px!important;
-    min-height:18px!important;
-    overflow-x:scroll!important;
-    overflow-y:hidden!important;
-    margin:6px 0 9px!important;
-    padding:0!important;
-    border:0!important;
-    background:transparent!important;
-    scrollbar-width:auto!important;
-    scrollbar-gutter:stable!important;
-}
-.workspace-v104-scrollbar.workspace-top-scrollbar-inactive{
-    height:18px!important;
-    min-height:18px!important;
-    margin:6px 0 9px!important;
-    overflow-x:scroll!important;
-    opacity:1!important;
-}
-.workspace-v104-scrollbar>.workspace-top-scrollbar-spacer{
-    display:block!important;
-    height:1px!important;
-    min-width:calc(100% + 120px)!important;
-}
-#conversation-language-tools-section:not([open])>.workspace-v104-scrollbar{
-    display:none!important;
-}
-</style>
-
 <style id="workspace-v105-mirrored-top-page-scrollbar-css">
 /* Retire the old per-section proxy scrollbars. */
 #conversation-top-horizontal-scroll,
@@ -5823,18 +5701,6 @@ body.conversation-first-layout #mobile-right-column{
 }
 </style>
 
-
-<style id="workspace-v1010-conversation-quick-access-styles">
-@media (max-width:640px){
-  .conversation-quick-access{
-    width:100%;
-    margin-left:0!important;
-    display:grid!important;
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
-  .conversation-quick-access button{width:100%;}
-}
-</style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
 
@@ -6530,14 +6396,6 @@ body.conversation-first-layout #mobile-right-column{
                         <button type="button" onclick="newVoiceConversation()" class="min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition">
                             New conversation
                         </button>
-                        <div class="conversation-quick-access ml-auto flex flex-wrap items-center gap-2">
-                            <button type="button" onclick="openSavedTutorTranscripts()" class="min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold hover:bg-slate-50 transition" title="Open saved Tutor transcripts">
-                                🗂 Saved transcripts
-                            </button>
-                            <button type="button" onclick="openLanguageCoach()" class="min-h-[44px] px-3 py-2 rounded-xl border border-violet-200 bg-violet-50 text-violet-700 text-xs font-bold hover:bg-violet-100 transition" title="Open Tutor Coach">
-                                🧭 Tutor Coach
-                            </button>
-                        </div>
                     </div>
 
                     <div class="shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-2">
@@ -6586,7 +6444,9 @@ body.conversation-first-layout #mobile-right-column{
                             class="min-h-[36px] px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 text-[10px] font-bold hover:bg-slate-50 transition"
                             title="Move the live transcript into a movable window">↗ Float transcript</button>
                         <button type="button" onclick="saveCurrentTutorTranscript('voice',this)"
-                            class="min-h-[36px] px-3 py-2 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 text-[10px] font-bold hover:bg-indigo-100 transition">💾 Save current transcript</button>
+                            class="min-h-[36px] px-3 py-2 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 text-[10px] font-bold hover:bg-indigo-100 transition">💾 Save</button>
+                        <button type="button" onclick="openSavedTutorTranscripts()"
+                            class="min-h-[36px] px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 text-[10px] font-bold hover:bg-slate-50 transition">🗂 Saved</button>
                     </div>
 
                     <div id="voice-chat-messages-log" class="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1 pb-2 overscroll-contain" aria-live="polite">
@@ -6647,16 +6507,23 @@ body.conversation-first-layout #mobile-right-column{
                         <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
                             <div>
                                 <div class="text-sm font-bold text-slate-800">Verb Conjugator</div>
-                                <div class="text-[11px] text-slate-500 mt-0.5">Enter a German infinitive, a conjugated German form, an English verb, or even a likely misspelling. Press Enter and Tutor will interpret the entry, normalize it, and conjugate it.</div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">German is assumed by default for immediate conjugation. If you enter an English verb such as <em>walk</em> or <em>drive</em>, check “Verb entered in English” first.</div>
                             </div>
                             <div class="space-y-3">
                                 <label class="block">
                                     <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-2">Verb input</div>
-                                    <input id="verb-tool-input" type="text" inputmode="text" autocomplete="off" enterkeyhint="go"
+                                    <input id="verb-tool-input" type="text" inputmode="text" autocomplete="off"
                                         class="verb-tool-input w-full min-w-0 rounded-xl border-2 border-indigo-200 bg-white px-4 py-4 text-lg text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-                                        placeholder="e.g. haben, fährt, walk, habne">
+                                        placeholder="e.g. haben, fährt, walk">
                                 </label>
-                                <div class="text-[10px] text-slate-500">Press Enter to conjugate with Tutor.</div>
+                                <label class="case-builder-language-check">
+                                    <input id="verb-tool-english" type="checkbox">
+                                    <span>Verb entered in English</span>
+                                </label>
+                                <div class="verb-tool-actions">
+                                    <button type="button" onclick="runLocalVerbConjugator()" class="min-h-[46px] px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm">Conjugate</button>
+                                    <button id="verb-ai-btn" type="button" onclick="runAiVerbConjugator()" class="min-h-[46px] px-4 py-2 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold text-sm">✨ Verify conjugation with AI</button>
+                                </div>
                             </div>
                             <div id="verb-tool-status" class="hidden text-[10px] font-semibold"></div>
                         </div>
@@ -6679,7 +6546,7 @@ body.conversation-first-layout #mobile-right-column{
 
 </section>
 <div class="grammar-section-ai">
-                            <button type="button" onclick="askGrammarSectionAI('verb', this)" class="grammar-section-ai-btn">🧭 Ask Tutor about this verb</button>
+                            <button type="button" onclick="askGrammarSectionAI('verb', this)" class="grammar-section-ai-btn">✨ Ask AI about this verb</button>
                             <div id="grammar-ai-verb" class="grammar-section-ai-result hidden"></div>
                         </div>
 
@@ -6792,7 +6659,7 @@ body.conversation-first-layout #mobile-right-column{
                         </div>
 
 <div class="grammar-section-ai">
-                            <button type="button" onclick="askGrammarSectionAI('builder', this)" class="grammar-section-ai-btn">🧭 Ask Tutor about this phrase</button>
+                            <button type="button" onclick="askGrammarSectionAI('builder', this)" class="grammar-section-ai-btn">✨ Ask AI about this phrase</button>
                             <div id="grammar-ai-builder" class="grammar-section-ai-result hidden"></div>
                         </div>
 </section>
@@ -6815,7 +6682,7 @@ body.conversation-first-layout #mobile-right-column{
 
 </section>
 <div class="grammar-section-ai">
-                            <button type="button" onclick="askGrammarSectionAI('prep', this)" class="grammar-section-ai-btn">🧭 Ask Tutor about this preposition</button>
+                            <button type="button" onclick="askGrammarSectionAI('prep', this)" class="grammar-section-ai-btn">✨ Ask AI about this preposition</button>
                             <div id="grammar-ai-prep" class="grammar-section-ai-result hidden"></div>
                         </div>
 
@@ -6907,7 +6774,7 @@ body.conversation-first-layout #mobile-right-column{
                         </div>
 
                         <div class="grammar-section-ai">
-                            <button type="button" onclick="askArticleFinderAI(this)" class="grammar-section-ai-btn">🧭 Ask Tutor about this article choice</button>
+                            <button type="button" onclick="askArticleFinderAI(this)" class="grammar-section-ai-btn">✨ Ask AI about this article choice</button>
                             <div id="article-tool-ai-result" class="grammar-section-ai-result hidden"></div>
                         </div>
 
@@ -7120,7 +6987,7 @@ body.conversation-first-layout #mobile-right-column{
                             <div id="adjective-tool-warning" class="hidden mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800"></div>
 
                             <div class="grammar-section-ai">
-                                <button type="button" onclick="askGrammarSectionAI('adjective', this)" class="grammar-section-ai-btn">🧭 Ask Tutor about this adjective ending</button>
+                                <button type="button" onclick="askGrammarSectionAI('adjective', this)" class="grammar-section-ai-btn">✨ Ask AI about this adjective ending</button>
                                 <div id="grammar-ai-adjective" class="grammar-section-ai-result hidden"></div>
                             </div>
 
@@ -8841,7 +8708,7 @@ Rules:
                 const aiButton = document.createElement("button");
                 aiButton.type = "button";
                 aiButton.className = "phrase-ai-explain-btn mt-2 w-full sm:w-auto px-3 py-2.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-xs font-bold transition";
-                aiButton.textContent = "🧭 Ask Tutor about this phrase";
+                aiButton.textContent = "✨ Ask AI about this phrase";
 
                 aiButton.addEventListener("click", async (event) => {
                     event.preventDefault();
@@ -8898,7 +8765,7 @@ Before returning, verify that the explanation itself is English.`;
                             aiText.className = "bg-amber-50 text-amber-950 border border-amber-100 p-3 rounded-lg font-medium leading-relaxed";
                             const cleanedExplanation = cleanAiExplanation(aiExplanation);
                             aiText.textContent = looksMostlyGerman(cleanedExplanation)
-                                ? "Tutor returned the explanation in German instead of English. Tap Ask Tutor again to retry."
+                                ? "The AI returned the explanation in German instead of English. Tap Ask AI again to retry."
                                 : cleanedExplanation;
 
                             aiResult.append(aiLabel, aiText);
@@ -8942,7 +8809,7 @@ Before returning, verify that the explanation itself is English.`;
                         dExplanation.appendChild(errorNote);
                     } finally {
                         aiButton.disabled = false;
-                        aiButton.textContent = "🧭 Ask Tutor again";
+                        aiButton.textContent = "✨ Ask AI again";
                     }
                 });
 
@@ -11500,7 +11367,7 @@ Plain text only.`;
                 }
 
                 if (!translated) {
-                    status.textContent = "I could not translate that English verb. Try Ask Tutor about this verb.";
+                    status.textContent = "I could not translate that English verb. Try Verify conjugation with AI.";
                     status.className = "text-[10px] font-semibold text-amber-700";
                     return;
                 }
@@ -11515,7 +11382,7 @@ Plain text only.`;
             if (!result) {
                 status.textContent = translatedFromEnglish
                     ? `Translated as "${lookup}", but I could not confidently conjugate it locally. Try the AI check.`
-                    : "I could not confidently identify that German form. Tutor conjugation accepts either German or English input; press Enter in the verb field.";
+                    : "I could not confidently identify that German form. If you entered English, check “Verb entered in English”; otherwise try Verify conjugation with AI.";
                 status.className = "text-[10px] font-semibold text-amber-700";
                 status.classList.remove("hidden");
                 document.getElementById("verb-tool-result").classList.add("hidden");
@@ -11532,52 +11399,36 @@ Plain text only.`;
             renderVerbConjugation(result, translatedFromEnglish ? "Translated" : "Local");
         }
 
-        let verbTutorBusy = false;
         async function runAiVerbConjugator() {
             const input = document.getElementById("verb-tool-input");
+            const btn = document.getElementById("verb-ai-btn");
             const status = document.getElementById("verb-tool-status");
-            const raw = String(input?.value || "").trim();
-            if (!raw || verbTutorBusy) return;
+            const raw = input.value.trim();
+            if (!raw) return;
 
             if (!getActiveAIKey()) {
-                status.textContent = "Add an AI key in Settings to use Tutor conjugation.";
+                status.textContent = "Add an AI key in Settings to use AI verification.";
                 status.className = "text-[10px] font-semibold text-rose-600";
                 status.classList.remove("hidden");
                 return;
             }
 
-            verbTutorBusy = true;
-            if (input) input.setAttribute("aria-busy", "true");
-            status.textContent = "Tutor is checking the verb…";
-            status.className = "text-[10px] font-semibold text-slate-500";
-            status.classList.remove("hidden");
+            const previous = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = "Checking…";
             try {
-                const prompt = `You are the Tutor inside LanguageTutor, helping an English-speaking learner with German verbs.
-The learner entered: "${raw}"
+                const prompt = `You are a German verb conjugation tool for an English-speaking learner.
+The user entered this verb in German or English: "${raw}". If it is English, translate it to the natural German infinitive first.
 
-The entry may be:
-- a correctly spelled German infinitive,
-- a conjugated German form such as "fährt",
-- an English verb such as "walk" or "drive",
-- or a likely misspelling such as "habne".
-
-Interpret the entry conservatively. Correct an obvious spelling mistake when the intended common verb is clear. If the learner entered a conjugated German form, identify its infinitive. If the learner entered English, choose the natural German infinitive that best matches the basic meaning.
-
-Give PRESENT-TENSE German forms only.
+Identify the infinitive and give PRESENT-TENSE forms only.
 Return ONLY valid JSON:
 {
   "infinitive":"",
   "meaning":"",
   "separable":false,
   "irregular":false,
-  "forms":["ich form","du form","er/sie/es form","wir form","ihr form","sie/Sie form"],
-  "input_note":""
+  "forms":["ich form","du form","er/sie/es form","wir form","ihr form","sie/Sie form"]
 }
-Use input_note only when it helps explain how you interpreted the entry, for example:
-- Likely typo: "habne" → "haben".
-- "fährt" is a present-tense form of "fahren".
-- English "walk" → German "gehen".
-Leave input_note empty when the learner already entered the correct German infinitive.
 For separable verbs, include the separated prefix in each conjugated form, e.g. "rufe an".
 Do not include pronouns inside the form strings.`;
                 const data = await callAIJson(prompt);
@@ -11585,22 +11436,21 @@ Do not include pronouns inside the form strings.`;
                 renderVerbConjugation({
                     infinitive:String(data.infinitive),
                     forms:data.forms.map(String),
-                    confidence:"Tutor checked",
+                    confidence:"AI verified",
                     info:{
                         meaning:String(data.meaning || ""),
                         separable:Boolean(data.separable),
                         irregular:Boolean(data.irregular)
-                    },
-                    extra:String(data.input_note || "").trim()
-                }, "Tutor");
+                    }
+                }, "AI");
                 status.classList.add("hidden");
             } catch (e) {
-                status.textContent = "Tutor verb check failed: " + ((e && e.message) ? e.message : String(e));
+                status.textContent = "AI verb check failed: " + ((e && e.message) ? e.message : String(e));
                 status.className = "text-[10px] font-semibold text-rose-600";
                 status.classList.remove("hidden");
             } finally {
-                verbTutorBusy = false;
-                if (input) input.removeAttribute("aria-busy");
+                btn.disabled = false;
+                btn.textContent = previous;
             }
         }
 
@@ -12046,7 +11896,7 @@ Rules:
             if (!gender) {
                 resultEl.textContent = "— " + noun;
                 applyGrammarColorScheme(resultEl.parentElement, "None", "");
-                ruleEl.textContent = "The translation service could not determine this noun’s article automatically. Tap Change to select gender/number manually, or use Ask Tutor about this article choice.";
+                ruleEl.textContent = "The translation service could not determine this noun’s article automatically. Tap Change to select gender/number manually, or use Ask AI about this article choice.";
                 return;
             }
 
@@ -12088,8 +11938,8 @@ Rules:
 
             const previous = button.textContent;
             button.disabled = true;
-            button.textContent = "Asking Tutor…";
-            resultEl.textContent = "Tutor is thinking…";
+            button.textContent = "Asking AI…";
+            resultEl.textContent = "AI Tutor is thinking…";
             resultEl.classList.remove("hidden");
 
             try {
@@ -12106,7 +11956,7 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
 
                 resultEl.textContent = cleanAiExplanation(await callAI(prompt));
             } catch (e) {
-                resultEl.textContent = "Tutor request failed: " + ((e && e.message) ? e.message : String(e));
+                resultEl.textContent = "AI question failed: " + ((e && e.message) ? e.message : String(e));
             } finally {
                 button.disabled = false;
                 button.textContent = previous;
@@ -12184,10 +12034,10 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
 
             if (button) {
                 button.disabled = true;
-                button.textContent = "Asking Tutor…";
+                button.textContent = "Asking AI…";
             }
             if (resultEl) {
-                resultEl.textContent = "Tutor is thinking…";
+                resultEl.textContent = "AI Tutor is thinking…";
                 resultEl.classList.remove("hidden");
             }
 
@@ -12207,7 +12057,7 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
                 const response = cleanAiExplanation(await callAI(prompt));
                 if (resultEl) resultEl.textContent = response;
             } catch (e) {
-                if (resultEl) resultEl.textContent = "Tutor request failed: " + ((e && e.message) ? e.message : String(e));
+                if (resultEl) resultEl.textContent = "AI question failed: " + ((e && e.message) ? e.message : String(e));
             } finally {
                 if (button) {
                     button.disabled = false;
@@ -12251,7 +12101,7 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
                 verbInput.addEventListener("keydown", e => {
                     if (e.key === "Enter") {
                         e.preventDefault();
-                        runAiVerbConjugator();
+                        runLocalVerbConjugator();
                     }
                 });
             }
@@ -12558,7 +12408,7 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
             if (!gender) {
                 resultEl.textContent = `${prep} … ${noun}`;
                 applyGrammarColorScheme(resultEl.parentElement, "None", "");
-                ruleEl.textContent = "The translation service could not determine this noun’s article automatically. Tap Change to select gender/number manually, or use Ask Tutor about this phrase.";
+                ruleEl.textContent = "The translation service could not determine this noun’s article automatically. Tap Change to select gender/number manually, or use Ask AI about this phrase.";
                 return;
             }
 
@@ -12700,7 +12550,7 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
             const loadingBubble = document.createElement("div");
             loadingBubble.id = "chat-loading-bubble";
             loadingBubble.className = "bg-indigo-50/70 border border-indigo-100 text-indigo-900 rounded-xl p-3 leading-relaxed max-w-[95%] self-start flex items-center gap-1.5 font-semibold text-[11px] animate-pulse";
-            loadingBubble.innerHTML = `<svg class="animate-spin h-3.5 w-3.5 text-blue-600 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Tutor is thinking...`;
+            loadingBubble.innerHTML = `<svg class="animate-spin h-3.5 w-3.5 text-blue-600 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> AI Tutor is thinking...`;
             logEl.appendChild(loadingBubble);
             logEl.scrollTop = logEl.scrollHeight;
 
@@ -14791,7 +14641,7 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
                     <div id="es-verb-status" class="text-[11px] text-slate-500"></div>
                   </div>
                   <div id="es-verb-result" class="hidden ml-helper-result"></div>
-                  <button class="ml-ai-action" onclick="askLanguageHelperAI('Spanish verb tense and mood','es-verb-result',this)">🧭 Ask Tutor about this verb</button>
+                  <button class="ml-ai-action" onclick="askLanguageHelperAI('Spanish verb tense and mood','es-verb-result',this)">✨ Ask AI about this verb</button>
                   <div id="ai-es-verb-result" class="grammar-section-ai-result hidden"></div>
                 </div>`,
                 pronouns:`
@@ -14835,7 +14685,7 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
                     </label>
                   </div>
                   <div id="es-reflexive-result" class="ml-helper-result"></div>
-                  <button class="ml-ai-action" onclick="askLanguageHelperAI('Spanish object and reflexive pronouns','es-pronoun-result',this)">🧭 Ask Tutor about pronouns</button>
+                  <button class="ml-ai-action" onclick="askLanguageHelperAI('Spanish object and reflexive pronouns','es-pronoun-result',this)">✨ Ask AI about pronouns</button>
                   <div id="ai-es-pronoun-result" class="grammar-section-ai-result hidden"></div>
                 </div>`,
                 agreement:`
@@ -14869,7 +14719,7 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
                     </div>
                   </div>
                   <div id="es-article-result" class="ml-helper-result"></div>
-                  <button class="ml-ai-action" onclick="askLanguageHelperAI('Spanish agreement','es-adj-result',this)">🧭 Ask Tutor about agreement</button>
+                  <button class="ml-ai-action" onclick="askLanguageHelperAI('Spanish agreement','es-adj-result',this)">✨ Ask AI about agreement</button>
                   <div id="ai-es-adj-result" class="grammar-section-ai-result hidden"></div>
                 </div>`,
                 contrasts:`
@@ -14901,10 +14751,10 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
                     <button type="button" class="px-3 py-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 font-bold text-xs" onclick="translateGrammarOutput('es-contrast-builder-result','es',this)">Translate built phrase to English</button>
                   </div>
                   <div id="es-contrast-builder-result-translation" class="hidden grammar-section-ai-result"></div>
-                  <button class="ml-ai-action" onclick="askLanguageHelperAI('Spanish contrast phrase builder','es-contrast-builder-result',this)">🧭 Ask Tutor about my phrase</button>
+                  <button class="ml-ai-action" onclick="askLanguageHelperAI('Spanish contrast phrase builder','es-contrast-builder-result',this)">✨ Ask AI about my phrase</button>
                   <div id="ai-es-contrast-builder-result" class="grammar-section-ai-result hidden"></div>
 
-                  <button class="ml-ai-action" onclick="askLanguageHelperAI('Spanish usage contrast','es-contrast-result',this)">🧭 Ask Tutor about this contrast</button>
+                  <button class="ml-ai-action" onclick="askLanguageHelperAI('Spanish usage contrast','es-contrast-result',this)">✨ Ask AI about this contrast</button>
                   <div id="ai-es-contrast-result" class="grammar-section-ai-result hidden"></div>
                 </div>`
             }
@@ -14965,7 +14815,7 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
                     </div>
                   </details>
 
-                  <button class="ml-ai-action" onclick="askLanguageHelperAI('Japanese verb and adjective forms','ja-verb-result',this)">🧭 Ask Tutor about these forms</button>
+                  <button class="ml-ai-action" onclick="askLanguageHelperAI('Japanese verb and adjective forms','ja-verb-result',this)">✨ Ask AI about these forms</button>
                   <div id="ai-ja-verb-result" class="grammar-section-ai-result hidden"></div>
                 </div>`,
                 particles:`
@@ -15085,7 +14935,7 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
 
                   <div class="flex flex-wrap gap-2">
                     <button type="button" class="px-3 py-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 font-bold text-xs" onclick="translateGrammarOutput('ja-particle-swap-result','ja',this)">Translate selected example</button>
-                    <button type="button" class="ml-ai-action !mt-0" onclick="askLanguageHelperAI('Japanese particle choice in context','ja-particle-swap-result',this)">🧭 Ask Tutor about this choice</button>
+                    <button type="button" class="ml-ai-action !mt-0" onclick="askLanguageHelperAI('Japanese particle choice in context','ja-particle-swap-result',this)">✨ Ask AI about this choice</button>
                   </div>
                   <div id="ja-particle-swap-result-translation" class="hidden grammar-section-ai-result"></div>
                   <div id="ai-ja-particle-swap-result" class="grammar-section-ai-result hidden"></div>
@@ -15106,7 +14956,7 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
                     </select>
                   </div>
                   <div id="ja-particle-contrast-result" class="ml-helper-result"></div>
-                  <button class="ml-ai-action" onclick="askLanguageHelperAI('Japanese particles and particle contrasts','ja-particle-result',this)">🧭 Ask Tutor about particles</button>
+                  <button class="ml-ai-action" onclick="askLanguageHelperAI('Japanese particles and particle contrasts','ja-particle-result',this)">✨ Ask AI about particles</button>
                   <div id="ai-ja-particle-result" class="grammar-section-ai-result hidden"></div>
                 </div>`,
                 builder:`
@@ -15290,7 +15140,7 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
                     <div class="text-sm font-bold text-slate-800">Counter pronunciation</div>
                     <p class="text-[11px] text-slate-600 mt-2">Counter readings often change sound through contraction or consonant doubling, so the helper shows kanji, hiragana, and romaji together.</p>
                   </div>
-                  <button class="ml-ai-action" onclick="askLanguageHelperAI('Japanese counters and readings','ja-counter-result',this)">🧭 Ask Tutor about this counter</button>
+                  <button class="ml-ai-action" onclick="askLanguageHelperAI('Japanese counters and readings','ja-counter-result',this)">✨ Ask AI about this counter</button>
                   <div id="ai-ja-counter-result" class="grammar-section-ai-result hidden"></div>
   </div>
 </details>
@@ -15322,7 +15172,7 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
                     </div>
                     <p class="text-[11px] text-slate-500 mt-3">Plain speech is not automatically rude; appropriateness depends on relationship and setting.</p>
                   </div>
-                  <button class="ml-ai-action" onclick="askLanguageHelperAI('Japanese politeness and register','ja-register-result',this)">🧭 Ask Tutor about register</button>
+                  <button class="ml-ai-action" onclick="askLanguageHelperAI('Japanese politeness and register','ja-register-result',this)">✨ Ask AI about register</button>
                   <div id="ai-ja-register-result" class="grammar-section-ai-result hidden"></div>
   </div>
 </details>
@@ -15606,7 +15456,7 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
             const loading=document.createElement("div");
             loading.id=`chat-loading-bubble-${currentStudyLanguage}`;
             loading.className="bg-indigo-50/70 border border-indigo-100 text-indigo-900 rounded-xl p-3 leading-relaxed max-w-[95%] self-start font-semibold text-[11px] animate-pulse";
-            loading.textContent="Tutor is thinking...";
+            loading.textContent="AI Tutor is thinking...";
             log.appendChild(loading);
         }
 
@@ -17728,7 +17578,7 @@ Requirements:
             const v=resolved.text.replace(/[。.!?]$/,"").split(/[、,]/)[0].trim();
             const f=japaneseVerbForms(v);
             if(!f){
-                if(status)status.textContent=`I interpreted “${raw}” as “${v}”, but could not classify that verb locally. Try Ask Tutor for an irregular or ambiguous verb.`;
+                if(status)status.textContent=`I interpreted “${raw}” as “${v}”, but could not classify that verb locally. Try Ask AI for an irregular or ambiguous verb.`;
                 out.classList.add("hidden");
                 return;
             }
@@ -18084,7 +17934,7 @@ Requirements:
             const v=resolved.text.replace(/[。.!?]$/,"").trim();
             const f=japaneseVerbForms(v);
             if(!f){
-                out.innerHTML=`<p class="text-[11px] text-rose-600 font-semibold">I interpreted “${escapeML(raw)}” as “${escapeML(v)}”, but could not classify this verb locally. Use Ask Tutor for irregular or ambiguous forms.</p>`;
+                out.innerHTML=`<p class="text-[11px] text-rose-600 font-semibold">I interpreted “${escapeML(raw)}” as “${escapeML(v)}”, but could not classify this verb locally. Use Ask AI for irregular or ambiguous forms.</p>`;
                 return;
             }
 
@@ -18767,8 +18617,8 @@ Use the sentence context to resolve ambiguous kanji readings. Do not guess from 
         }
         const text=resultEl?.innerText.trim()||"No result has been generated yet.";
         const old=button?.textContent||"";
-        if(button){button.disabled=true;button.textContent="Asking Tutor…";}
-        if(aiEl){aiEl.textContent="Tutor is thinking…";aiEl.classList.remove("hidden");}
+        if(button){button.disabled=true;button.textContent="Asking AI…";}
+        if(aiEl){aiEl.textContent="AI Tutor is thinking…";aiEl.classList.remove("hidden");}
         try{
             const cfg=langConfig();
             const prompt=`You are an expert ${cfg.name} tutor for an English-speaking learner.
@@ -18780,7 +18630,7 @@ Use English, no more than 4 short sentences, plain text only.`;
             const response=cleanAiExplanation(await callAI(prompt));
             if(aiEl) aiEl.textContent=response;
         }catch(e){
-            if(aiEl) aiEl.textContent="Tutor request failed: "+((e&&e.message)?e.message:String(e));
+            if(aiEl) aiEl.textContent="AI question failed: "+((e&&e.message)?e.message:String(e));
         }finally{
             if(button){button.disabled=false;button.textContent=old;}
         }
@@ -19661,7 +19511,7 @@ Current work: ${context||"No sentence has been entered yet."}`;
         <div class="special-character-window-actions">
             <button type="button" class="special-character-window-btn" onclick="resetSpecialCharacterPalettePosition()" title="Reset position">↺</button>
             <button type="button" id="special-character-collapse-btn" class="special-character-window-btn" onclick="toggleSpecialCharacterCollapse()" title="Minimize">−</button>
-            <button type="button" class="special-character-window-btn special-character-close" onclick="closeSpecialCharacterPalette()" title="Close" aria-label="Close keyboard">×</button>
+            <button type="button" class="special-character-window-btn" onclick="closeSpecialCharacterPalette()" title="Close">×</button>
         </div>
     </div>
     <div class="special-character-body">
@@ -20980,7 +20830,7 @@ Diagram rules:
         const ai=resolveWorkbenchAIConfig();
         if(button){
             button.disabled=true;
-            button.textContent=ai.available ? "🧭 Asking Tutor…" : "Building locally…";
+            button.textContent=ai.available ? "✨ Asking AI…" : "Building locally…";
         }
         status(ai.available
             ? `✨ ${ai.providerName} is refining the analysis for the diagram…`
@@ -21118,7 +20968,7 @@ Do not continue the conversation.`;
 <div id="language-coach-window" hidden aria-label="Private language coach window">
     <div id="language-coach-drag-handle" class="language-coach-titlebar">
         <div class="language-coach-titlecopy">
-            <div id="language-coach-title" class="language-coach-title">🧭 Tutor Coach</div>
+            <div id="language-coach-title" class="language-coach-title">🧭 Tutor — Coach</div>
             <div id="language-coach-subtitle" class="language-coach-subtitle"></div>
         </div>
         <button type="button" class="language-coach-close" onclick="closeLanguageCoach()" title="Return to conversation">×</button>
@@ -21317,7 +21167,7 @@ Do not continue the conversation.`;
                 if(typeof destroyVoiceRecognition==="function")destroyVoiceRecognition();
                 if(typeof setVoiceMicIndicator==="function")setVoiceMicIndicator(false);
                 voiceTutorState.phase="idle";
-                if(typeof voiceTutorStatus==="function")voiceTutorStatus("Conversation paused while you use Tutor Coach.");
+                if(typeof voiceTutorStatus==="function")voiceTutorStatus("Conversation paused while you use the private Coach.");
             }catch(e){}
         }
 
@@ -21379,7 +21229,7 @@ Do not continue the conversation.`;
             input.setSelectionRange?.(input.value.length,input.value.length);
         },80);
         if(typeof voiceTutorStatus==="function"){
-            voiceTutorStatus("Tutor Coach suggestion placed in your reply box. Review it, then send when you are ready.");
+            voiceTutorStatus("Coach suggestion placed in your reply box. Review it, then send when you are ready.");
         }
     };
 
@@ -21569,7 +21419,7 @@ Requirements:
 
             const coach=document.createElement("button");
             coach.type="button";
-            coach.textContent="🧭 Tutor Coach";
+            coach.textContent="🧭 Private Coach";
             coach.title="Take a private sidebar to figure out how you want to respond";
             coach.addEventListener("click",()=>window.openLanguageCoach());
 
@@ -23291,160 +23141,6 @@ Do not continue the Tutor conversation. Keep output concise.`;
 </script>
 
 
-<script id="workspace-v99-selectable-transcript-tools-disabled" type="text/plain">
-(()=>{
-    "use strict";
-    const state={card:null,text:"",language:"",entry:null,translation:""};
-
-    function toolbar(){
-        let bar=document.getElementById("transcript-selection-toolbar");
-        if(bar)return bar;
-        bar=document.createElement("div");
-        bar.id="transcript-selection-toolbar";
-        bar.className="transcript-selection-toolbar";
-        bar.innerHTML=`
-          <div class="transcript-selection-summary">
-            <span class="transcript-selection-label">Selected line</span>
-            <strong id="transcript-selected-preview">Select a transcript line</strong>
-          </div>
-          <div class="transcript-selection-actions">
-            <button type="button" id="transcript-selected-listen" disabled>🔊 Listen</button>
-            <button type="button" id="transcript-selected-translate" disabled>🌐 Translate</button>
-            <button type="button" id="transcript-selected-analysis" disabled>🔎 Analysis</button>
-          </div>
-          <div id="transcript-selected-translation" class="transcript-selected-translation" hidden></div>`;
-        bindToolbar(bar);
-        return bar;
-    }
-
-    function mountToolbar(){
-        const log=document.getElementById("voice-chat-messages-log");
-        if(!log||!log.parentElement)return;
-        const bar=toolbar();
-        if(bar.parentElement!==log.parentElement || bar.nextElementSibling!==log){
-            log.parentElement.insertBefore(bar,log);
-        }
-    }
-
-    function clearSelection(){
-        state.card?.classList.remove("transcript-turn-selected");
-        state.card=null; state.text=""; state.language=""; state.entry=null; state.translation="";
-        document.querySelectorAll(".transcript-turn-selected").forEach(el=>el.classList.remove("transcript-turn-selected"));
-        const preview=document.getElementById("transcript-selected-preview");
-        if(preview)preview.textContent="Select a transcript line";
-        ["transcript-selected-listen","transcript-selected-translate","transcript-selected-analysis"].forEach(id=>{
-            const btn=document.getElementById(id); if(btn)btn.disabled=true;
-        });
-        const translation=document.getElementById("transcript-selected-translation");
-        if(translation){translation.hidden=true;translation.textContent="";}
-    }
-
-    function selectCard(card){
-        if(!card?.dataset?.transcriptSelectable)return;
-        const language=String(card.dataset.transcriptLanguage||currentStudyLanguage||"de");
-        if(language!==String(currentStudyLanguage||"de"))return;
-        state.card?.classList.remove("transcript-turn-selected");
-        state.card=card;
-        state.text=String(card.dataset.transcriptText||"").trim();
-        state.language=language;
-        state.entry=card.__transcriptEntry||{text:state.text};
-        state.translation="";
-        card.classList.add("transcript-turn-selected");
-
-        mountToolbar();
-        const preview=document.getElementById("transcript-selected-preview");
-        if(preview)preview.textContent=state.text;
-        ["transcript-selected-listen","transcript-selected-translate","transcript-selected-analysis"].forEach(id=>{
-            const btn=document.getElementById(id); if(btn)btn.disabled=!state.text;
-        });
-        const translation=document.getElementById("transcript-selected-translation");
-        if(translation){translation.hidden=true;translation.textContent="";}
-    }
-
-    async function translateSelected(button){
-        if(!state.text)return;
-        const output=document.getElementById("transcript-selected-translation");
-        const old=button.textContent;
-        button.disabled=true; button.textContent="Translating…";
-        try{
-            let translated="";
-            const cfg=(typeof resolveWorkbenchAIConfig==="function") ? resolveWorkbenchAIConfig() : {available:false};
-            if(cfg.available && typeof callAIJson==="function"){
-                const languageName=(typeof LANGUAGE_CONFIG!=="undefined" && LANGUAGE_CONFIG[state.language]?.name) || state.language;
-                const data=await Promise.race([
-                    callAIJson(`Translate this ${languageName} transcript line into concise natural English. Preserve meaning and tone. Return JSON only: {"translation":"..."}\nText: "${state.text}"`),
-                    new Promise((_,reject)=>setTimeout(()=>reject(new Error("Translation timed out")),15000))
-                ]);
-                translated=String(data?.translation||"").trim();
-            }else if(typeof googleTranslateApiCall==="function"){
-                translated=String(await googleTranslateApiCall(state.text,state.language,"en")).trim();
-            }
-            if(!translated)throw new Error("No translation returned");
-            state.translation=translated;
-            if(output){output.textContent=translated;output.hidden=false;}
-        }catch(e){
-            if(output){output.textContent="Translation unavailable. Try again.";output.hidden=false;}
-        }finally{
-            button.disabled=false; button.textContent=old;
-        }
-    }
-
-    function bindToolbar(bar){
-        bar.querySelector("#transcript-selected-listen")?.addEventListener("click",()=>{
-            if(!state.text)return;
-            const locale=(typeof LANGUAGE_CONFIG!=="undefined" && LANGUAGE_CONFIG[state.language]?.locale) || state.language;
-            if(typeof speakRawText==="function")speakRawText(state.text,locale);
-        });
-        bar.querySelector("#transcript-selected-translate")?.addEventListener("click",function(){translateSelected(this);});
-        bar.querySelector("#transcript-selected-analysis")?.addEventListener("click",()=>{
-            if(!state.text)return;
-            if(typeof window.openAnalysisWorkbench==="function"){
-                window.openAnalysisWorkbench(state.text,state.language,state.entry||{text:state.text});
-                window.workspaceOpenTool?.("analysis");
-            }
-        });
-    }
-
-    document.addEventListener("click",event=>{
-        const card=event.target.closest?.('[data-transcript-selectable="1"]');
-        if(card && !event.target.closest("button,a,input,textarea,select,summary"))selectCard(card);
-    });
-    document.addEventListener("keydown",event=>{
-        if((event.key==="Enter"||event.key===" ") && event.target?.matches?.('[data-transcript-selectable="1"]')){
-            event.preventDefault(); selectCard(event.target);
-        }
-    });
-
-    // Keep the toolbar immediately above the single transcript DOM wherever it lives.
-    const originalOpen=window.openVoiceTranscriptWindow;
-    if(typeof originalOpen==="function")window.openVoiceTranscriptWindow=function(...args){
-        const result=originalOpen.apply(this,args);
-        mountToolbar();
-        return result;
-    };
-    const originalDock=window.dockVoiceTranscript;
-    if(typeof originalDock==="function")window.dockVoiceTranscript=function(...args){
-        const result=originalDock.apply(this,args);
-        mountToolbar();
-        return result;
-    };
-
-    // Language changes must never carry a selected German/Spanish/Japanese line across.
-    const originalSet=window.setStudyLanguage;
-    if(typeof originalSet==="function")window.setStudyLanguage=function(...args){
-        clearSelection();
-        const result=originalSet.apply(this,args);
-        setTimeout(mountToolbar,0);
-        return result;
-    };
-
-    window.clearTranscriptLineSelection=clearSelection;
-    if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",mountToolbar,{once:true});
-    else mountToolbar();
-})();
-</script>
-
-
 <script id="workspace-v101-streamlined-live-transcription">
 (()=>{
     "use strict";
@@ -23478,273 +23174,6 @@ Do not continue the Tutor conversation. Keep output concise.`;
     }else{
         streamlineLiveTranscript();
     }
-})();
-</script>
-
-
-<script id="workspace-v103-top-scrollbars-disabled" type="text/plain">
-(()=>{
-    "use strict";
-
-    const pairs=new Map();
-
-    function findHorizontalScroller(section){
-        if(!section)return null;
-        const candidates=[
-            section.querySelector("#voice-chat-messages-log"),
-            section.querySelector(".conversation-fold-body"),
-            section.querySelector(".combined-language-tools-body"),
-            section
-        ].filter(Boolean);
-
-        for(const el of candidates){
-            if(el.scrollWidth>el.clientWidth+2)return el;
-        }
-
-        // Prefer a stable inner content container even before it overflows.
-        return section.querySelector(".conversation-fold-body") ||
-               section.querySelector(".combined-language-tools-body") ||
-               section;
-    }
-
-    function syncWidth(pair){
-        if(!pair?.bar || !pair?.spacer || !pair?.target)return;
-        pair.spacer.style.width=Math.max(pair.target.scrollWidth,pair.target.clientWidth)+"px";
-        const hasOverflow=pair.target.scrollWidth>pair.target.clientWidth+2;
-        pair.bar.classList.toggle("workspace-top-scrollbar-inactive",!hasOverflow);
-        pair.bar.setAttribute("aria-hidden",hasOverflow ? "false" : "true");
-        if(!pair.syncing){
-            pair.syncing=true;
-            pair.bar.scrollLeft=pair.target.scrollLeft;
-            pair.syncing=false;
-        }
-    }
-
-    function makeBar(section,id,label){
-        if(!section)return;
-        let bar=document.getElementById(id);
-        if(!bar){
-            bar=document.createElement("div");
-            bar.id=id;
-            bar.className="workspace-top-scrollbar";
-            bar.setAttribute("role","scrollbar");
-            bar.setAttribute("aria-label",label);
-
-            const spacer=document.createElement("div");
-            spacer.className="workspace-top-scrollbar-spacer";
-            bar.appendChild(spacer);
-
-            // Put the control immediately beneath the major section heading.
-            const summary=section.querySelector(":scope > summary, :scope > .conversation-fold-heading, :scope > .conversation-fold-toggle");
-            if(summary && summary.nextSibling) section.insertBefore(bar,summary.nextSibling);
-            else if(summary) section.appendChild(bar);
-            else section.prepend(bar);
-        }
-
-        const target=findHorizontalScroller(section);
-        if(!target)return;
-
-        const pair={bar,spacer:bar.firstElementChild,target,syncing:false};
-        pairs.set(id,pair);
-
-        if(!bar.__v103Bound){
-            bar.__v103Bound=true;
-            bar.addEventListener("scroll",()=>{
-                const p=pairs.get(id);
-                if(!p || p.syncing)return;
-                p.syncing=true;
-                p.target.scrollLeft=p.bar.scrollLeft;
-                p.syncing=false;
-            },{passive:true});
-        }
-
-        if(!target.__v103TopScrollBound){
-            target.__v103TopScrollBound=true;
-            target.addEventListener("scroll",()=>{
-                const p=pairs.get(id);
-                if(!p || p.syncing)return;
-                p.syncing=true;
-                p.bar.scrollLeft=p.target.scrollLeft;
-                p.syncing=false;
-            },{passive:true});
-        }
-
-        syncWidth(pair);
-    }
-
-    function install(){
-        makeBar(
-            document.getElementById("conversation-primary-section"),
-            "conversation-top-horizontal-scroll",
-            "Conversation horizontal scroll"
-        );
-        makeBar(
-            document.getElementById("conversation-language-tools-section"),
-            "language-tools-top-horizontal-scroll",
-            "Language Tools horizontal scroll"
-        );
-        for(const pair of pairs.values())syncWidth(pair);
-    }
-
-    let resizeTimer=0;
-    window.addEventListener("resize",()=>{
-        clearTimeout(resizeTimer);
-        resizeTimer=setTimeout(install,80);
-    });
-
-    // Re-evaluate when collapsible sections open/close or their contents change.
-    document.addEventListener("toggle",e=>{
-        if(e.target?.matches?.("details"))setTimeout(install,0);
-    },true);
-
-    if(document.readyState==="loading"){
-        document.addEventListener("DOMContentLoaded",()=>{
-            install();
-            requestAnimationFrame(install);
-            setTimeout(install,250);
-        },{once:true});
-    }else{
-        install();
-        requestAnimationFrame(install);
-        setTimeout(install,250);
-    }
-})();
-</script>
-
-
-<script id="workspace-v104-reliable-top-scrollbars-disabled" type="text/plain">
-(()=>{
-    "use strict";
-
-    const registry=new Map();
-
-    function overflowXStyle(el){
-        if(!el || el.nodeType!==1)return "";
-        const s=getComputedStyle(el);
-        return String(s.overflowX||"");
-    }
-
-    function scoreScroller(el){
-        if(!el || el.nodeType!==1)return -1;
-        const overflow=Math.max(0,el.scrollWidth-el.clientWidth);
-        const ox=overflowXStyle(el);
-        let score=overflow;
-        if(/auto|scroll/.test(ox))score+=10000;
-        if(el.scrollWidth>el.clientWidth+1)score+=20000;
-        return score;
-    }
-
-    function realScroller(section){
-        if(!section)return null;
-        const nodes=[section,...section.querySelectorAll("*")];
-        let best=null,bestScore=-1;
-        for(const el of nodes){
-            if(el.classList?.contains("workspace-top-scrollbar"))continue;
-            const score=scoreScroller(el);
-            if(score>bestScore){
-                best=el;
-                bestScore=score;
-            }
-        }
-        return best || section;
-    }
-
-    function ensureBar(section,id,label){
-        if(!section)return null;
-        let bar=document.getElementById(id);
-        if(!bar){
-            bar=document.createElement("div");
-            bar.id=id;
-            bar.className="workspace-top-scrollbar workspace-v104-scrollbar";
-            bar.setAttribute("role","scrollbar");
-            bar.setAttribute("aria-label",label);
-
-            const spacer=document.createElement("div");
-            spacer.className="workspace-top-scrollbar-spacer";
-            bar.appendChild(spacer);
-
-            // Conversation primary has no master summary; place bar first.
-            // Language Tools has a summary; place it immediately after summary.
-            const summary=section.matches("details") ? section.querySelector(":scope > summary") : null;
-            if(summary)summary.insertAdjacentElement("afterend",bar);
-            else section.insertAdjacentElement("afterbegin",bar);
-        }
-        return bar;
-    }
-
-    function connect(section,id,label){
-        const bar=ensureBar(section,id,label);
-        if(!bar)return;
-        const target=realScroller(section);
-        if(!target)return;
-
-        let rec=registry.get(id);
-        if(!rec){
-            rec={bar,target:null,syncing:false};
-            registry.set(id,rec);
-            bar.addEventListener("scroll",()=>{
-                const r=registry.get(id);
-                if(!r?.target || r.syncing)return;
-                r.syncing=true;
-                r.target.scrollLeft=bar.scrollLeft;
-                r.syncing=false;
-            },{passive:true});
-        }
-
-        if(rec.target!==target){
-            if(rec.target && rec.target.__v104Handlers?.[id]){
-                rec.target.removeEventListener("scroll",rec.target.__v104Handlers[id]);
-            }
-            rec.target=target;
-            const handler=()=>{
-                const r=registry.get(id);
-                if(!r || r.syncing)return;
-                r.syncing=true;
-                r.bar.scrollLeft=r.target.scrollLeft;
-                r.syncing=false;
-            };
-            target.__v104Handlers=target.__v104Handlers||{};
-            target.__v104Handlers[id]=handler;
-            target.addEventListener("scroll",handler,{passive:true});
-        }
-
-        const spacer=bar.firstElementChild;
-        // Force a usable track even when layout settles a frame later.
-        const contentWidth=Math.max(target.scrollWidth,section.scrollWidth,bar.clientWidth+120);
-        spacer.style.width=contentWidth+"px";
-        bar.scrollLeft=target.scrollLeft;
-        bar.dataset.scrollTarget=target.id || target.className || target.tagName;
-    }
-
-    function install(){
-        connect(
-            document.getElementById("conversation-primary-section"),
-            "conversation-top-horizontal-scroll",
-            "Conversation horizontal scroll"
-        );
-        connect(
-            document.getElementById("conversation-language-tools-section"),
-            "language-tools-top-horizontal-scroll",
-            "Language Tools horizontal scroll"
-        );
-    }
-
-    function stagedInstall(){
-        install();
-        requestAnimationFrame(install);
-        setTimeout(install,100);
-        setTimeout(install,400);
-        setTimeout(install,1000);
-    }
-
-    window.addEventListener("resize",stagedInstall);
-    document.addEventListener("toggle",e=>{
-        if(e.target?.matches?.("details"))stagedInstall();
-    },true);
-
-    if(document.readyState==="loading"){
-        document.addEventListener("DOMContentLoaded",stagedInstall,{once:true});
-    }else stagedInstall();
 })();
 </script>
 
@@ -24206,844 +23635,13 @@ window.addEventListener("load",mountToolbar,{once:true});
 })();
 </script>
 
-<script id="workspace-v109-ai-first-grammar-tutor-wording-marker">
-window.__languageTutorWorkspaceVersion="10.11";
+<script id="workspace-v108-unified-saved-transcript-format-marker">
+window.__languageTutorWorkspaceVersion="10.8";
 </script>
 
 
-<script id="workspace-v1011-keyboard-close-fix">
-(()=>{
-    "use strict";
-    // The standard titlebar reconciler looks for .special-character-close.
-    // v10.10's German/Spanish keyboard close button lacked that class, so the
-    // reconciler discarded the native action wrapper and left only Minimize.
-    // The markup now carries the expected class; this wrapper also keeps the
-    // mobile workspace tab in sync when the keyboard is closed.
-    const originalClose=window.closeSpecialCharacterPalette;
-    if(typeof originalClose==="function"){
-        window.closeSpecialCharacterPalette=function(){
-            const result=originalClose.apply(this,arguments);
-            if(window.innerWidth<=640 && typeof window.workspaceSetMobileTab==="function"){
-                window.workspaceSetMobileTab("conversation");
-            }
-            return result;
-        };
-    }
-
-    const kanaClose=document.getElementById("floating-kana-close");
-    if(kanaClose && !kanaClose.dataset.v1011MobileSync){
-        kanaClose.dataset.v1011MobileSync="1";
-        kanaClose.addEventListener("click",()=>{
-            if(window.innerWidth<=640 && typeof window.workspaceSetMobileTab==="function"){
-                window.workspaceSetMobileTab("conversation");
-            }
-        });
-    }
-})();
-</script>
-
-<script id="workspace-v1010-conversation-quick-access-marker">
-window.__languageTutorWorkspaceVersion="10.11";
-</script>
-
-<style id="workspace-v1012-conversational-coach-keyboard-cleanup-styles">
-/* v10.12 — Tutor Coach conversation + cleaner keyboard */
-.special-character-subtitle,
-.special-character-target,
-.floating-kana-target{
-    display:none!important;
-}
-#special-character-palette .special-character-body{
-    padding-top:12px;
-}
-#language-coach-window .language-coach-title{
-    white-space:nowrap;
-}
-#language-coach-context-card{
-    display:none;
-    margin:0 0 10px;
-    padding:10px 11px;
-    border:1px solid #c7d2fe;
-    border-radius:11px;
-    background:#eef2ff;
-    color:#312e81;
-}
-#language-coach-context-card.active{display:block}
-.language-coach-context-head{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:8px;
-}
-.language-coach-context-label{
-    font-size:9px;
-    font-weight:900;
-    letter-spacing:.07em;
-    text-transform:uppercase;
-    color:#6366f1;
-}
-#language-coach-context-clear{
-    min-height:28px;
-    padding:4px 8px;
-    border:1px solid #c7d2fe;
-    border-radius:8px;
-    background:#fff;
-    color:#4f46e5;
-    font-size:9px;
-    font-weight:800;
-}
-.language-coach-context-phrase{
-    margin-top:5px;
-    font-size:15px;
-    font-weight:900;
-    color:#1e293b;
-    overflow-wrap:anywhere;
-}
-.language-coach-context-sentence{
-    margin-top:4px;
-    font-size:10px;
-    line-height:1.4;
-    color:#64748b;
-    overflow-wrap:anywhere;
-}
-#language-coach-thread{
-    display:none;
-    margin:0 0 10px;
-    padding:8px;
-    max-height:220px;
-    overflow:auto;
-    border:1px solid #e2e8f0;
-    border-radius:11px;
-    background:#f8fafc;
-}
-#language-coach-thread.active{
-    display:flex;
-    flex-direction:column;
-    gap:7px;
-}
-.language-coach-chat-bubble{
-    max-width:92%;
-    padding:8px 10px;
-    border-radius:10px;
-    font-size:11px;
-    line-height:1.45;
-    white-space:pre-wrap;
-    overflow-wrap:anywhere;
-}
-.language-coach-chat-bubble.user{
-    align-self:flex-end;
-    background:#eef2ff;
-    border:1px solid #c7d2fe;
-    color:#312e81;
-}
-.language-coach-chat-bubble.coach{
-    align-self:flex-start;
-    background:#fff;
-    border:1px solid #dbeafe;
-    color:#1e293b;
-}
-.language-coach-chat-bubble.thinking{
-    color:#64748b;
-    font-style:italic;
-}
-#language-coach-window .language-coach-input-tools.v1012{
-    display:flex;
-    flex-wrap:wrap;
-    gap:7px;
-    margin-top:8px;
-}
-#language-coach-window .language-coach-input-tools.v1012 > button{
-    min-height:38px;
-    padding:7px 10px;
-    border-radius:9px;
-    font-size:10px;
-    font-weight:800;
-}
-#language-coach-dictate-english{
-    border:1px solid #bfdbfe;
-    background:#eff6ff;
-    color:#1d4ed8;
-}
-#language-coach-dictate-target{
-    border:1px solid #c7d2fe;
-    background:#eef2ff;
-    color:#4338ca;
-}
-#language-coach-ask-btn{
-    border:1px solid #a5b4fc!important;
-    background:#4f46e5!important;
-    color:#fff!important;
-}
-#language-coach-window textarea#language-coach-input{
-    min-height:88px;
-}
-@media(max-width:640px){
-    #language-coach-thread{max-height:180px}
-    #language-coach-window .language-coach-input-tools.v1012{
-        display:grid;
-        grid-template-columns:1fr 1fr;
-    }
-    #language-coach-window .language-coach-input-tools.v1012 #language-coach-keyboard-compact{
-        grid-column:1 / -1;
-    }
-}
-</style>
-
-<script id="workspace-v1012-conversational-tutor-coach">
-(()=>{
-"use strict";
-
-const state={
-    context:{phrase:"",sentence:""},
-    history:[],
-    dictationMode:""
-};
-
-function cfg(){
-    const c=(typeof langConfig==="function") ? langConfig() : null;
-    if(c && c.name && c.code)return c;
-    const code=(typeof currentStudyLanguage!=="undefined" && currentStudyLanguage) ? currentStudyLanguage : "de";
-    const fallback={
-        de:{code:"de",name:"German",locale:"de-DE"},
-        es:{code:"es",name:"Spanish",locale:"es-ES"},
-        ja:{code:"ja",name:"Japanese",locale:"ja-JP"}
-    };
-    return fallback[code]||fallback.de;
-}
-
-function mainConversationContext(){
-    try{
-        if(typeof voiceTutorHistory!=="function")return "";
-        return voiceTutorHistory().slice(-6).map(entry=>{
-            const who=entry?.role==="user" ? "Learner" : "Conversation Tutor";
-            const raw=String(entry?.text||"").replace(/\s+/g," ").trim();
-            return raw ? `${who}: ${raw}` : "";
-        }).filter(Boolean).join("\n");
-    }catch(_){return ""}
-}
-
-function contextKey(ctx){
-    return `${String(ctx?.phrase||"").trim()}||${String(ctx?.sentence||"").trim()}`;
-}
-
-function ensureUi(){
-    const body=document.querySelector("#language-coach-window .language-coach-body");
-    const input=document.getElementById("language-coach-input");
-    if(!body||!input)return;
-
-    let contextCard=document.getElementById("language-coach-context-card");
-    if(!contextCard){
-        contextCard=document.createElement("div");
-        contextCard.id="language-coach-context-card";
-        contextCard.innerHTML=`
-            <div class="language-coach-context-head">
-                <div class="language-coach-context-label">Selected language context</div>
-                <button type="button" id="language-coach-context-clear">Clear</button>
-            </div>
-            <div id="language-coach-context-phrase" class="language-coach-context-phrase"></div>
-            <div id="language-coach-context-sentence" class="language-coach-context-sentence"></div>`;
-        body.insertBefore(contextCard,input);
-        contextCard.querySelector("#language-coach-context-clear")?.addEventListener("click",()=>{
-            setContext({phrase:"",sentence:""},true);
-        });
-    }
-
-    let thread=document.getElementById("language-coach-thread");
-    if(!thread){
-        thread=document.createElement("div");
-        thread.id="language-coach-thread";
-        thread.setAttribute("aria-live","polite");
-        body.insertBefore(thread,input);
-    }
-
-    const tools=document.querySelector("#language-coach-window .language-coach-input-tools");
-    const legacySelect=document.getElementById("language-coach-dictation-language");
-    const legacyDictate=document.getElementById("language-coach-dictate-btn");
-    if(tools && !tools.dataset.v1012){
-        tools.dataset.v1012="1";
-        tools.classList.add("v1012");
-        if(legacySelect)legacySelect.hidden=true;
-        if(legacyDictate)legacyDictate.hidden=true;
-
-        const english=document.createElement("button");
-        english.type="button";
-        english.id="language-coach-dictate-english";
-        english.textContent="🎙 Dictate English";
-
-        const target=document.createElement("button");
-        target.type="button";
-        target.id="language-coach-dictate-target";
-        target.textContent=`🎙 Attempt ${cfg().name}`;
-
-        const keyboard=document.createElement("button");
-        keyboard.type="button";
-        keyboard.id="language-coach-keyboard-compact";
-        keyboard.textContent="⌨ Keyboard";
-        keyboard.addEventListener("click",()=>window.focusCoachAndOpenKeyboard?.());
-
-        // Hide the old Keyboard button so there is only one compact control row.
-        [...tools.querySelectorAll("button")].forEach(btn=>{
-            if(btn!==legacyDictate && btn!==english && btn!==target && btn!==keyboard)btn.hidden=true;
-        });
-
-        english.addEventListener("click",()=>startDictationMode("en"));
-        target.addEventListener("click",()=>startDictationMode("target"));
-        tools.prepend(english,target);
-        tools.appendChild(keyboard);
-
-        if(legacyDictate){
-            const observer=new MutationObserver(syncDictationButtons);
-            observer.observe(legacyDictate,{childList:true,subtree:true,characterData:true});
-        }
-    }
-
-    const actions=document.querySelector("#language-coach-window .language-coach-actions");
-    if(actions && !document.getElementById("language-coach-ask-btn")){
-        const ask=document.createElement("button");
-        ask.type="button";
-        ask.id="language-coach-ask-btn";
-        ask.textContent="💬 Ask Tutor";
-        ask.addEventListener("click",()=>sendQuestion());
-        actions.prepend(ask);
-    }
-
-    if(!input.dataset.v1012Keybound){
-        input.dataset.v1012Keybound="1";
-        input.addEventListener("keydown",event=>{
-            if(event.key==="Enter" && !event.shiftKey){
-                event.preventDefault();
-                sendQuestion();
-            }
-        });
-    }
-
-    refreshUi();
-}
-
-function refreshUi(){
-    const c=cfg();
-    const title=document.getElementById("language-coach-title");
-    if(title)title.textContent=`🧭 ${c.name} Tutor Coach`;
-
-    const targetBtn=document.getElementById("language-coach-dictate-target");
-    if(targetBtn && !targetBtn.textContent.includes("Stop"))targetBtn.textContent=`🎙 Attempt ${c.name}`;
-
-    const input=document.getElementById("language-coach-input");
-    if(input)input.placeholder=state.context.phrase||state.context.sentence
-        ? "Ask about the selected phrase, or describe what you want to say…"
-        : `Ask Tutor Coach a question, or describe what you want to say in ${c.name}…`;
-
-    renderContext();
-    renderThread();
-    syncDictationButtons();
-}
-
-function renderContext(){
-    const card=document.getElementById("language-coach-context-card");
-    if(!card)return;
-    const phrase=String(state.context.phrase||"").trim();
-    const sentence=String(state.context.sentence||"").trim();
-    card.classList.toggle("active",Boolean(phrase||sentence));
-    const p=document.getElementById("language-coach-context-phrase");
-    const s=document.getElementById("language-coach-context-sentence");
-    if(p)p.textContent=phrase || sentence || "";
-    if(s){
-        s.textContent=phrase && sentence && sentence!==phrase ? `In: ${sentence}` : "";
-        s.hidden=!s.textContent;
-    }
-}
-
-function renderThread(){
-    const thread=document.getElementById("language-coach-thread");
-    if(!thread)return;
-    thread.replaceChildren();
-    state.history.forEach(item=>{
-        const bubble=document.createElement("div");
-        bubble.className=`language-coach-chat-bubble ${item.role==="user"?"user":"coach"}`;
-        bubble.textContent=item.text;
-        thread.appendChild(bubble);
-    });
-    thread.classList.toggle("active",state.history.length>0);
-    if(state.history.length)thread.scrollTop=thread.scrollHeight;
-}
-
-function setContext(next,resetOnChange=true){
-    const clean={
-        phrase:String(next?.phrase||"").trim(),
-        sentence:String(next?.sentence||"").trim()
-    };
-    const changed=contextKey(clean)!==contextKey(state.context);
-    state.context=clean;
-    if(changed && resetOnChange)state.history=[];
-    refreshUi();
-}
-
-async function sendQuestion(explicitText="",options={}){
-    ensureUi();
-    const input=document.getElementById("language-coach-input");
-    const text=String(explicitText || input?.value || "").trim();
-    if(!text)return;
-
-    if(typeof getActiveAIKey==="function" && !getActiveAIKey()){
-        const status=document.getElementById("language-coach-status");
-        if(status){
-            status.hidden=false;
-            status.textContent="Add an AI key in Settings to use Tutor Coach.";
-            status.style.color="#be123c";
-        }
-        return;
-    }
-
-    if(input && !explicitText)input.value="";
-    state.history.push({role:"user",text});
-    renderThread();
-
-    const thread=document.getElementById("language-coach-thread");
-    const thinking=document.createElement("div");
-    thinking.className="language-coach-chat-bubble coach thinking";
-    thinking.textContent="Tutor is thinking…";
-    thread?.appendChild(thinking);
-    if(thread){thread.classList.add("active");thread.scrollTop=thread.scrollHeight;}
-
-    const c=cfg();
-    const prior=state.history.slice(0,-1).slice(-8).map(item=>
-        `${item.role==="user"?"Learner":"Tutor Coach"}: ${item.text}`
-    ).join("\n");
-    const selectedPhrase=state.context.phrase||"(none)";
-    const selectedSentence=state.context.sentence||"(none)";
-    const prompt=`You are Tutor Coach inside LanguageTutor, a private language-learning coach.
-Target language: ${c.name}.
-
-Your job is broader than suggesting a reply. Help the learner understand selected words, phrases, grammar, nuance, and usage, and also help formulate a natural response when they ask.
-Be conversational and allow follow-up questions.
-Reply primarily in concise English unless the learner clearly asks for ${c.name}; keep any example wording in ${c.name}.
-Do not role-play as the conversation partner unless the learner explicitly asks you to.
-Do not invent pronunciation details from speech-to-text.
-
-Selected phrase: ${selectedPhrase}
-Selected sentence/context: ${selectedSentence}
-
-Recent main conversation:
-${mainConversationContext() || "(none)"}
-
-Private Tutor Coach conversation so far:
-${prior || "(none)"}
-
-Learner's new question/request:
-"${text}"
-
-Answer helpfully and directly.`;
-
-    try{
-        const reply=String(await callAI(prompt)).trim();
-        if(!reply)throw new Error("Tutor Coach returned no response.");
-        state.history.push({role:"coach",text:reply});
-        renderThread();
-        const status=document.getElementById("language-coach-status");
-        if(status){status.hidden=true;status.textContent="";}
-    }catch(e){
-        thinking.remove();
-        const status=document.getElementById("language-coach-status");
-        if(status){
-            status.hidden=false;
-            status.textContent="Tutor Coach could not respond: "+((e&&e.message)?e.message:String(e));
-            status.style.color="#be123c";
-        }
-        renderThread();
-    }
-}
-
-function syncDictationButtons(){
-    const legacy=document.getElementById("language-coach-dictate-btn");
-    const english=document.getElementById("language-coach-dictate-english");
-    const target=document.getElementById("language-coach-dictate-target");
-    if(!english||!target)return;
-    const running=Boolean(legacy && /stop/i.test(legacy.textContent||""));
-    if(running){
-        if(state.dictationMode==="target"){
-            target.textContent="■ Stop";
-            english.textContent="🎙 Dictate English";
-            english.disabled=true;
-            target.disabled=false;
-        }else{
-            english.textContent="■ Stop";
-            target.textContent=`🎙 Attempt ${cfg().name}`;
-            target.disabled=true;
-            english.disabled=false;
-        }
-    }else{
-        english.textContent="🎙 Dictate English";
-        target.textContent=`🎙 Attempt ${cfg().name}`;
-        english.disabled=false;
-        target.disabled=false;
-        state.dictationMode="";
-    }
-}
-
-function startDictationMode(mode){
-    const legacySelect=document.getElementById("language-coach-dictation-language");
-    const legacy=document.getElementById("language-coach-dictate-btn");
-    const running=Boolean(legacy && /stop/i.test(legacy.textContent||""));
-    if(running){
-        window.toggleLanguageCoachDictation?.();
-        setTimeout(syncDictationButtons,20);
-        return;
-    }
-    state.dictationMode=mode;
-    if(legacySelect)legacySelect.value=mode;
-    window.toggleLanguageCoachDictation?.();
-    setTimeout(syncDictationButtons,20);
-}
-
-const originalOpen=window.openLanguageCoach;
-if(typeof originalOpen==="function"){
-    window.openLanguageCoach=function(seed=""){
-        ensureUi();
-        let passthrough=String(seed||"");
-        const phraseMatch=passthrough.match(/Phrase:\s*([^\n]+)/i);
-        const sentenceMatch=passthrough.match(/Sentence:\s*([^\n]+)/i);
-        if(phraseMatch || sentenceMatch){
-            setContext({
-                phrase:phraseMatch?.[1]||"",
-                sentence:sentenceMatch?.[1]||""
-            },true);
-            passthrough="";
-        }
-        const result=originalOpen.call(this,passthrough);
-        ensureUi();
-        const status=document.getElementById("language-coach-status");
-        if(status && /^Tutor Coach:\s*formulate/i.test(status.textContent||"")){
-            status.hidden=true;
-            status.textContent="";
-        }
-        refreshUi();
-        return result;
-    };
-}
-
-window.openTutorCoachForPhrase=function(phrase,sentence){
-    ensureUi();
-    const next={phrase:String(phrase||"").trim(),sentence:String(sentence||"").trim()};
-    const changed=contextKey(next)!==contextKey(state.context);
-    setContext(next,true);
-    window.openLanguageCoach?.("");
-    window.workspaceOpenTool?.("coach");
-    if(changed || !state.history.length){
-        setTimeout(()=>sendQuestion("Help me understand this phrase in context."),80);
-    }
-};
-
-window.analysisWorkbenchCoach=function(){
-    ensureUi();
-    const sentence=String(document.getElementById("analysis-workbench-sentence")?.textContent||"").trim();
-    if(sentence)setContext({phrase:"",sentence},true);
-    window.openLanguageCoach?.("");
-    window.workspaceOpenTool?.("coach");
-};
-
-window.languageTutorCoachAsk=sendQuestion;
-window.languageTutorCoachSetContext=setContext;
-
-function boot(){
-    ensureUi();
-    // Keep the hidden legacy controls in place because the existing speech-
-    // recognition implementation uses them internally.
-    const legacySelect=document.getElementById("language-coach-dictation-language");
-    const legacyDictate=document.getElementById("language-coach-dictate-btn");
-    if(legacySelect)legacySelect.hidden=true;
-    if(legacyDictate)legacyDictate.hidden=true;
-}
-if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});
-else boot();
-window.addEventListener("load",boot,{once:true});
-})();
-</script>
-
-<script id="workspace-v1012-version-marker">
-window.__languageTutorWorkspaceVersion="10.12";
-</script>
-
-
-<style id="workspace-v1013-consistent-selection-actions-styles">
-/* Keep selected-line action rows compact and visually consistent. */
-.transcript-selection-actions,
-.saved-transcript-selection-actions{
-    display:flex;
-    flex-wrap:wrap;
-    align-items:center;
-    gap:7px;
-}
-.transcript-selection-actions button,
-.saved-transcript-selection-actions button{
-    min-height:38px;
-    padding:7px 10px;
-    border-radius:9px;
-    font-size:10px;
-    font-weight:800;
-}
-@media(max-width:640px){
-    .transcript-selection-actions,
-    .saved-transcript-selection-actions{
-        display:grid;
-        grid-template-columns:repeat(2,minmax(0,1fr));
-    }
-    .transcript-selection-actions button,
-    .saved-transcript-selection-actions button{
-        width:100%;
-        min-height:42px;
-    }
-}
-</style>
-
-<script id="workspace-v1013-consistent-selection-actions">
-(()=>{
-"use strict";
-
-/*
-Canonical order for reusable text actions:
-Listen → Copy → Translate (when useful) → Analyze → Save → Tutor Coach → Keyboard (when useful)
-
-Context-only actions such as "Use in reply" stay first on Coach suggestion cards.
-Analysis Workbench already follows the same relative utility order for the actions it exposes.
-*/
-
-function currentLang(){
-    return String(
-        document.body?.dataset?.studyLanguage ||
-        (typeof currentStudyLanguage!=="undefined" ? currentStudyLanguage : "") ||
-        "de"
-    ).trim() || "de";
-}
-
-function selectedCurrentCard(){
-    return document.querySelector("#voice-chat-messages-log .transcript-turn-selected");
-}
-
-function selectedSavedCard(){
-    return document.querySelector("#saved-transcript-body .saved-transcript-turn-selected");
-}
-
-function selectedInfo(kind){
-    const card = kind==="saved" ? selectedSavedCard() : selectedCurrentCard();
-    if(!card)return {card:null,text:"",language:currentLang(),entry:null};
-
-    const text = String(
-        kind==="saved"
-            ? (card.dataset.savedTranscriptText || "")
-            : (card.dataset.transcriptText || "")
-    ).trim();
-
-    const language = String(
-        kind==="saved"
-            ? (card.dataset.savedTranscriptLanguage || "")
-            : (card.dataset.transcriptLanguage || "")
-    ).trim() || currentLang();
-
-    const entry = kind==="saved"
-        ? (card.__savedTranscriptEntry || {text})
-        : (card.__transcriptEntry || {text});
-
-    return {card,text,language,entry};
-}
-
-async function copyText(text,button){
-    const value=String(text||"").trim();
-    if(!value)return;
-
-    let copied=false;
-    try{
-        if(navigator.clipboard?.writeText){
-            await navigator.clipboard.writeText(value);
-            copied=true;
-        }
-    }catch(_){}
-
-    if(!copied){
-        try{
-            const ta=document.createElement("textarea");
-            ta.value=value;
-            ta.setAttribute("readonly","");
-            ta.style.position="fixed";
-            ta.style.opacity="0";
-            ta.style.pointerEvents="none";
-            document.body.appendChild(ta);
-            ta.select();
-            copied=document.execCommand("copy");
-            ta.remove();
-        }catch(_){}
-    }
-
-    if(button){
-        const old=button.textContent;
-        button.textContent=copied ? "✓ Copied" : "Copy failed";
-        setTimeout(()=>{ if(button.isConnected)button.textContent=old; },900);
-    }
-}
-
-function saveSelection(kind,button){
-    const info=selectedInfo(kind);
-    if(!info.text)return;
-    if(typeof window.saveVoiceTutorPhrase==="function"){
-        window.saveVoiceTutorPhrase(info.text,info.language,button);
-        return;
-    }
-    // Fallback: use the Analysis Workbench save route if available.
-    if(typeof window.openAnalysisWorkbench==="function"){
-        window.openAnalysisWorkbench(info.text,info.language,info.entry||{text:info.text});
-        setTimeout(()=>window.analysisWorkbenchSave?.(button),50);
-    }
-}
-
-function coachSelection(kind){
-    const info=selectedInfo(kind);
-    if(!info.text)return;
-
-    if(typeof window.openTutorCoachForPhrase==="function"){
-        window.openTutorCoachForPhrase(info.text,info.text);
-        return;
-    }
-    if(typeof window.openLanguageCoach==="function"){
-        window.openLanguageCoach(`Phrase: ${info.text}\nSentence: ${info.text}\n\nHelp me understand this phrase in context.`);
-        window.workspaceOpenTool?.("coach");
-    }
-}
-
-function makeButton(id,label,handler){
-    const b=document.createElement("button");
-    b.type="button";
-    b.id=id;
-    b.textContent=label;
-    b.disabled=true;
-    b.addEventListener("click",event=>{
-        event.preventDefault();
-        event.stopPropagation();
-        handler(b);
-    });
-    return b;
-}
-
-function ensureCurrentToolbar(){
-    const bar=document.getElementById("transcript-selection-toolbar");
-    const actions=bar?.querySelector(".transcript-selection-actions");
-    if(!actions)return;
-
-    const listen=document.getElementById("transcript-selected-listen");
-    const translate=document.getElementById("transcript-selected-translate");
-    const analyze=document.getElementById("transcript-selected-analysis");
-
-    if(analyze)analyze.textContent="🔎 Analyze";
-
-    let copy=document.getElementById("transcript-selected-copy");
-    if(!copy){
-        copy=makeButton("transcript-selected-copy","⧉ Copy",btn=>{
-            copyText(selectedInfo("current").text,btn);
-        });
-    }
-
-    let save=document.getElementById("transcript-selected-save");
-    if(!save){
-        save=makeButton("transcript-selected-save","☆ Save",btn=>saveSelection("current",btn));
-    }
-
-    let coach=document.getElementById("transcript-selected-coach");
-    if(!coach){
-        coach=makeButton("transcript-selected-coach","🧭 Tutor Coach",()=>coachSelection("current"));
-    }
-
-    // Appending existing nodes is also our canonical reordering operation.
-    [listen,copy,translate,analyze,save,coach].filter(Boolean).forEach(node=>actions.appendChild(node));
-    syncEnabled();
-}
-
-function ensureSavedToolbar(){
-    const bar=document.getElementById("saved-transcript-selection-toolbar");
-    const actions=bar?.querySelector(".saved-transcript-selection-actions");
-    if(!actions)return;
-
-    const listen=document.getElementById("saved-transcript-listen");
-    const translate=document.getElementById("saved-transcript-translate");
-    const analyze=document.getElementById("saved-transcript-analysis");
-
-    if(analyze)analyze.textContent="🔎 Analyze";
-
-    let copy=document.getElementById("saved-transcript-copy");
-    if(!copy){
-        copy=makeButton("saved-transcript-copy","⧉ Copy",btn=>{
-            copyText(selectedInfo("saved").text,btn);
-        });
-    }
-
-    let save=document.getElementById("saved-transcript-save");
-    if(!save){
-        save=makeButton("saved-transcript-save","☆ Save",btn=>saveSelection("saved",btn));
-    }
-
-    let coach=document.getElementById("saved-transcript-coach");
-    if(!coach){
-        coach=makeButton("saved-transcript-coach","🧭 Tutor Coach",()=>coachSelection("saved"));
-    }
-
-    [listen,copy,translate,analyze,save,coach].filter(Boolean).forEach(node=>actions.appendChild(node));
-    syncEnabled();
-}
-
-function syncEnabled(){
-    const current=Boolean(selectedInfo("current").text);
-    ["transcript-selected-copy","transcript-selected-save","transcript-selected-coach"]
-        .forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=!current;});
-
-    const saved=Boolean(selectedInfo("saved").text);
-    ["saved-transcript-copy","saved-transcript-save","saved-transcript-coach"]
-        .forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=!saved;});
-}
-
-let queued=false;
-function reconcile(){
-    if(queued)return;
-    queued=true;
-    queueMicrotask(()=>{
-        queued=false;
-        ensureCurrentToolbar();
-        ensureSavedToolbar();
-        syncEnabled();
-    });
-}
-
-function boot(){
-    reconcile();
-
-    if(!document.body.__v1013ActionObserver){
-        const observer=new MutationObserver(reconcile);
-        observer.observe(document.body,{
-            childList:true,
-            subtree:true,
-            attributes:true,
-            attributeFilter:["class","disabled"]
-        });
-        document.body.__v1013ActionObserver=observer;
-    }
-
-    // Existing transcript controllers select cards in their own click handlers.
-    // Reconcile after those handlers have finished.
-    document.addEventListener("click",()=>setTimeout(reconcile,0));
-    document.addEventListener("keydown",event=>{
-        if(event.key==="Enter" || event.key===" ")setTimeout(reconcile,0);
-    });
-}
-
-if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});
-else boot();
-window.addEventListener("load",reconcile,{once:true});
-})();
-</script>
-
-<script id="workspace-v1013-version-marker">
-window.__languageTutorWorkspaceVersion="10.13";
-</script>
-
-
-<script id="workspace-v10141-render-hotfix-marker">
-window.__languageTutorWorkspaceVersion="10.14.1";
+<script id="workspace-v110-test-phase1-cleanup-marker">
+window.__languageTutorWorkspaceVersion="11.0-test-phase1";
 </script>
 
 </body>
