@@ -4111,35 +4111,6 @@ body.conversation-first-layout #mobile-right-column{
 </style>
 
 
-<style id="compact-transcript-analysis-v3">
-/* Transcript analysis should scan like annotations, not read like an essay. */
-.transcript-inline-study-panel[data-transcript-inline="analysis"]{
-    padding:8px 9px !important;
-}
-.transcript-inline-study-panel[data-transcript-inline="analysis"] .transcript-inline-panel-head{
-    margin-bottom:6px !important;
-}
-.transcript-inline-study-panel[data-transcript-inline="analysis"] .transcript-local-chips{
-    gap:5px !important;
-}
-.transcript-inline-study-panel[data-transcript-inline="analysis"] .transcript-local-chip{
-    min-width:0 !important;
-    padding:5px 7px !important;
-    border-radius:8px !important;
-}
-.transcript-inline-study-panel[data-transcript-inline="analysis"] .transcript-local-chip-word{
-    font-size:11px !important;
-}
-.transcript-inline-study-panel[data-transcript-inline="analysis"] .transcript-local-chip-meta{
-    font-size:8px !important;
-}
-.transcript-inline-study-panel[data-transcript-inline="explanation"]{
-    font-size:11px !important;
-    line-height:1.45 !important;
-}
-</style>
-
-
 <style id="analysis-workbench-v4-styles">
 #analysis-workbench-window[hidden]{display:none!important}
 #analysis-workbench-window{
@@ -13444,214 +13415,6 @@ Do not add quotation marks or labels.`;
         return "";
     }
 
-    function transcriptInlinePanel(wrap,key,className=""){
-        if(!wrap)return null;
-        let panel=wrap.querySelector(`[data-transcript-inline="${key}"]`);
-        if(panel)return panel;
-        panel=document.createElement("div");
-        panel.className=`transcript-inline-study-panel ${className}`.trim();
-        panel.dataset.transcriptInline=key;
-        panel.hidden=true;
-        wrap.appendChild(panel);
-        return panel;
-    }
-
-    function transcriptPanelHeader(title,source=""){
-        const head=document.createElement("div");
-        head.className="transcript-inline-panel-head";
-        const name=document.createElement("div");
-        name.className="transcript-inline-panel-title";
-        name.textContent=title;
-        const src=document.createElement("div");
-        src.className="transcript-inline-panel-source";
-        src.textContent=source;
-        head.append(name,src);
-        return head;
-    }
-
-    function transcriptCaseClass(label){
-        const v=String(label||"").toLowerCase();
-        if(v==="nominative")return "case-nom";
-        if(v==="accusative")return "case-acc";
-        if(v==="dative")return "case-dat";
-        if(v==="genitive")return "case-gen";
-        if(v.includes("nominative") && v.includes("accusative"))return "case-multi";
-        if(v.includes("dative") && v.includes("genitive"))return "case-multi";
-        return "";
-    }
-
-    function transcriptLocalParseItems(sentence,languageCode=currentStudyLanguage){
-        const lang=LANGUAGE_MODES[languageCode] ? languageCode : currentStudyLanguage;
-
-        if(lang==="de" && typeof parseGermanPhrases==="function"){
-            return parseGermanPhrases(sentence).map(item=>({
-                text:Array.isArray(item.words) ? item.words.join(" ") : String(item.text||""),
-                label:String(item.label||item.type||"Word"),
-                detail:[item.gender, (item.type && String(item.type)!==String(item.label) ? item.type : "")].filter(Boolean).join(" • "),
-                caseClass:transcriptCaseClass(item.label)
-            })).filter(item=>item.text);
-        }
-
-        if(typeof localParseForLanguage==="function"){
-            return localParseForLanguage(lang,sentence).map(item=>({
-                text:String(item.text||item.words?.join(" ")||""),
-                label:String(item.label||item.role||item.type||"Word"),
-                detail:[
-                    item.reading ? `Reading: ${item.reading}` : "",
-                    item.romaji ? `Romaji: ${item.romaji}` : "",
-                    item.grammar ? String(item.grammar) : "",
-                    item.meaning ? String(item.meaning) : ""
-                ].filter(Boolean).join(" • "),
-                caseClass:""
-            })).filter(item=>item.text);
-        }
-        return [];
-    }
-
-    function toggleTranscriptLocalAnalysis(entry,wrap,button,languageCode=currentStudyLanguage){
-        const sentence=transcriptTurnTargetText(entry);
-        if(!sentence || !wrap)return;
-
-        const cfg=LANGUAGE_MODES[languageCode] || langConfig();
-        const panel=transcriptInlinePanel(wrap,"analysis");
-        const opening=panel.hidden;
-        panel.hidden=!opening;
-        if(button)button.textContent=opening ? "▾ Hide analysis" : "🔎 Analyze";
-        if(!opening)return;
-
-        panel.replaceChildren();
-        panel.appendChild(transcriptPanelHeader(`${cfg.name} structure`,"Local • no API key"));
-
-        const items=transcriptLocalParseItems(sentence,languageCode);
-        if(!items.length){
-            const empty=document.createElement("div");
-            empty.textContent="The local parser could not confidently break down this turn.";
-            panel.appendChild(empty);
-        }else{
-            const chips=document.createElement("div");
-            chips.className="transcript-local-chips";
-            items.forEach(item=>{
-                const chip=document.createElement("div");
-                chip.className=`transcript-local-chip ${item.caseClass}`.trim();
-
-                const word=document.createElement("span");
-                word.className="transcript-local-chip-word";
-                word.textContent=item.text;
-
-                const meta=document.createElement("span");
-                meta.className="transcript-local-chip-meta";
-                meta.textContent=[item.label,item.detail].filter(Boolean).join(" • ");
-
-                chip.append(word,meta);
-                chips.appendChild(chip);
-            });
-            panel.appendChild(chips);
-        }
-
-
-    }
-
-    async function toggleTranscriptTranslation(entry,wrap,button,languageCode=currentStudyLanguage){
-        const sentence=transcriptTurnTargetText(entry);
-        if(!sentence || !wrap)return;
-
-        const panel=transcriptInlinePanel(wrap,"translation");
-        if(panel.dataset.ready==="1"){
-            const opening=panel.hidden;
-            panel.hidden=!opening;
-            if(button)button.textContent=opening ? "▾ Hide translation" : "🌐 Translate";
-            return;
-        }
-
-        panel.hidden=false;
-        panel.replaceChildren();
-        panel.appendChild(transcriptPanelHeader("English meaning",getTranslationKey() ? "Translation API" : "Free/public fallback"));
-
-        const output=document.createElement("div");
-        output.className="transcript-inline-translation-text";
-        output.textContent="Translating…";
-        panel.appendChild(output);
-
-        const old=button?.textContent||"🌐 Translate";
-        if(button){button.disabled=true;button.textContent="Translating…";}
-
-        try{
-            const translated=String(await googleTranslateApiCall(sentence,languageCode,"en")).trim();
-            output.textContent=translated || "Translation unavailable.";
-            panel.dataset.ready=translated ? "1" : "0";
-            if(button)button.textContent="▾ Hide translation";
-        }catch(e){
-            output.textContent="Translation is temporarily unavailable. Local analysis, replay, copy, and saving still work.";
-            panel.dataset.ready="0";
-            if(button)button.textContent=old;
-        }finally{
-            if(button)button.disabled=false;
-        }
-    }
-
-    async function toggleTranscriptExplanation(entry,wrap,button,languageCode=currentStudyLanguage){
-        const sentence=transcriptTurnTargetText(entry);
-        if(!sentence || !wrap)return;
-
-        const cfg=LANGUAGE_MODES[languageCode] || langConfig();
-        const panel=transcriptInlinePanel(wrap,"explanation","transcript-panel-ai");
-
-        if(panel.dataset.ready==="1"){
-            const opening=panel.hidden;
-            panel.hidden=!opening;
-            if(button)button.textContent=opening ? "▾ Hide why" : "💡 Why?";
-            return;
-        }
-
-        panel.hidden=false;
-        panel.replaceChildren();
-        panel.appendChild(transcriptPanelHeader("Why this form?",getActiveAIKey() ? "AI • concise" : "API key optional"));
-
-        if(!getActiveAIKey()){
-            const msg=document.createElement("div");
-            msg.textContent="Deep explanation uses your selected AI provider. Translation, local analysis, replay, copy, and saving remain available without an AI key.";
-            panel.appendChild(msg);
-            if(button)button.textContent="▾ Hide why";
-            return;
-        }
-
-        const output=document.createElement("div");
-        output.textContent="Explaining this turn…";
-        panel.appendChild(output);
-
-        const old=button?.textContent||"💡 Why?";
-        if(button){button.disabled=true;button.textContent="Explaining…";}
-
-        try{
-            const prompt=`You are the private grammar coach inside LanguageTutor.
-Target language: ${cfg.name}.
-
-Transcript turn:
-"${sentence}"
-
-Give ONLY a compact learner note, maximum 3 short bullets:
-- English meaning, only if it is not obvious.
-- The single most useful grammar/form feature in this sentence.
-- A brief "why?" explanation for that feature.
-
-Prefer concrete wording such as "dir = dative of du because es geht jemandem takes dative."
-Do not give a full clause-by-clause lesson.
-Do not compare with Spanish, Japanese, or other languages unless the learner explicitly asked.
-Do not role-play or continue the conversation.
-Keep the entire answer under about 70 words.`;
-            const answer=String(await callAI(prompt)).trim();
-            output.replaceChildren();
-            renderTutorMarkdown(output,answer||"No explanation returned.");
-            panel.dataset.ready=answer ? "1" : "0";
-            if(button)button.textContent="▾ Hide why";
-        }catch(e){
-            output.textContent="AI explanation failed: "+((e&&e.message)?e.message:String(e));
-            if(button)button.textContent=old;
-        }finally{
-            if(button)button.disabled=false;
-        }
-    }
-
     function appendTranscriptTurnActions(actions,entry,wrap,languageCode=currentStudyLanguage){
         if(!entry || !wrap)return;
         const target=transcriptTurnTargetText(entry);
@@ -13906,6 +13669,75 @@ Return JSON only:
 Set reply_language to "en" only when the spoken reply is primarily English; otherwise use "target".`;
     }
 
+    function parseVoiceTutorFallback(rawText,inputMode="target"){
+        const raw=String(rawText||"").trim();
+        if(!raw)return null;
+
+        // The normal Tutor path is structured JSON, but a provider can occasionally
+        // return JSON-looking text through the plain-text fallback. Never show that
+        // transport format to the learner as a conversation turn.
+        const candidates=[];
+        const unfenced=raw
+            .replace(/^```(?:json)?\s*/i,"")
+            .replace(/\s*```$/,"")
+            .trim();
+        if(unfenced)candidates.push(unfenced);
+
+        const firstBrace=unfenced.indexOf("{");
+        const lastBrace=unfenced.lastIndexOf("}");
+        if(firstBrace>=0 && lastBrace>firstBrace){
+            const objectSlice=unfenced.slice(firstBrace,lastBrace+1);
+            if(!candidates.includes(objectSlice))candidates.push(objectSlice);
+        }
+
+        for(const candidate of candidates){
+            try{
+                const data=JSON.parse(candidate);
+                if(!data || typeof data!=="object" || Array.isArray(data))continue;
+
+                const reply=String(
+                    data.reply ??
+                    data.response ??
+                    data.text ??
+                    data.message ??
+                    ""
+                ).trim();
+                if(!reply)continue;
+
+                const note=String(
+                    data.tutor_note ??
+                    data.tutornote ??
+                    data.teacher_note ??
+                    data.teachernote ??
+                    ""
+                ).trim();
+
+                const correctionAudio=String(
+                    data.correction_audio ??
+                    data.correctionaudio ??
+                    data.correctionAudio ??
+                    ""
+                ).trim();
+
+                const languageValue=String(
+                    data.reply_language ??
+                    data.replylanguage ??
+                    data.replyLanguage ??
+                    ""
+                ).toLowerCase().trim();
+
+                const replyLanguage=languageValue==="en"
+                    ? "en"
+                    : languageValue==="target"
+                        ? "target"
+                        : (inputMode==="english-question" && voiceTutorSettings().englishHelp!=="target" ? "en" : "target");
+
+                return {reply,note,correctionAudio,replyLanguage};
+            }catch(e){}
+        }
+        return null;
+    }
+
     async function getVoiceTutorReply(userText,inputMode="target"){
         const prompt=voiceTutorPrompt(userText,inputMode);
         try{
@@ -13920,10 +13752,19 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
             console.warn("Tutor JSON response failed; using text fallback.",jsonError);
             const fallback=String(await callAI(
                 prompt + (inputMode==="english-question" && voiceTutorSettings().englishHelp!=="target"
-                    ? `\nIf structured JSON cannot be produced, answer the learner's teaching question briefly in English, keeping target-language examples in ${langConfig().name}.`
-                    : `\nIf structured JSON cannot be produced, reply with only a short natural ${langConfig().name} conversational response.`)
+                    ? `\nFALLBACK MODE: Ignore the earlier JSON-format instruction. Return only the brief natural-language teaching answer, with no JSON, code fence, labels, or metadata.`
+                    : `\nFALLBACK MODE: Ignore the earlier JSON-format instruction. Return only the short natural ${langConfig().name} conversational reply, with no JSON, code fence, labels, or metadata.`)
             )).trim();
-            return {reply:fallback,note:"",replyLanguage:inputMode==="english-question" && voiceTutorSettings().englishHelp!=="target" ? "en" : "target"};
+
+            const recovered=parseVoiceTutorFallback(fallback,inputMode);
+            if(recovered)return recovered;
+
+            return {
+                reply:fallback,
+                note:"",
+                correctionAudio:"",
+                replyLanguage:inputMode==="english-question" && voiceTutorSettings().englishHelp!=="target" ? "en" : "target"
+            };
         }
     }
 
@@ -19803,45 +19644,6 @@ Current work: ${context||"No sentence has been entered yet."}`;
         }
     };
 
-    window.analysisWorkbenchStructure=function(){
-        if(!state.sentence)return;
-        clearResults();
-        const card=section(`${cfg().name} local structure`);
-        const items=state.localItems || (
-            typeof transcriptLocalParseItems==="function"
-                ? transcriptLocalParseItems(state.sentence,state.languageCode)
-                : []
-        );
-        state.localItems=items;
-
-        if(!items.length){
-            const empty=document.createElement("div");
-            empty.className="analysis-workbench-hint";
-            empty.textContent="The local parser could not confidently break down this turn. Try Parse for AI-enhanced analysis.";
-            card?.appendChild(empty);
-            status("No confident local structure found.");
-            return;
-        }
-
-        const chips=document.createElement("div");
-        chips.className="analysis-workbench-chips";
-        items.forEach(item=>{
-            const chip=document.createElement("div");
-            chip.className=`analysis-workbench-chip ${item.caseClass||""}`.trim();
-
-            const word=document.createElement("strong");
-            word.textContent=item.text||"";
-
-            const meta=document.createElement("span");
-            meta.textContent=[item.label,item.detail].filter(Boolean).join(" • ");
-
-            chip.append(word,meta);
-            chips.appendChild(chip);
-        });
-        card?.appendChild(chips);
-        status("Local structure shown — no AI key used.","success");
-    };
-
     function workbenchCaseClass(label){
         const c=String(label||"").toLowerCase();
         if(c==="nominative")return "case-nom";
@@ -23640,8 +23442,8 @@ window.__languageTutorWorkspaceVersion="10.8";
 </script>
 
 
-<script id="workspace-v110-test-phase1-cleanup-marker">
-window.__languageTutorWorkspaceVersion="11.0-test-phase1";
+<script id="workspace-v111-dead-transcript-analysis-cleanup-marker">
+window.__languageTutorWorkspaceVersion="11.1-test-dead-transcript-analysis-cleanup";
 </script>
 
 </body>
