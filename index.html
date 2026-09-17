@@ -5846,6 +5846,52 @@ body.conversation-first-layout #mobile-right-column{
     }
     #conversation-controls-slot .v12-voice-controls button{flex:0 0 auto}
 }
+
+.ask-tutor-thread{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:260px;
+    overflow-y:auto;
+    padding:2px 2px 4px;
+}
+.ask-tutor-thread[hidden]{display:none!important}
+.ask-tutor-turn{
+    width:min(92%,720px);
+    padding:9px 11px;
+    border:1px solid #dbe3ee;
+    border-radius:12px;
+    line-height:1.5;
+}
+.ask-tutor-turn.user{
+    align-self:flex-end;
+    background:#f1f5f9;
+    color:#334155;
+}
+.ask-tutor-turn.tutor{
+    align-self:flex-start;
+    background:#eef2ff;
+    border-color:#c7d2fe;
+    color:#312e81;
+}
+.ask-tutor-turn-label{
+    margin-bottom:4px;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:.07em;
+    text-transform:uppercase;
+    color:#64748b;
+}
+.ask-tutor-turn.tutor .ask-tutor-turn-label{color:#6366f1}
+.ask-tutor-turn-body{
+    font-size:11px;
+    overflow-wrap:anywhere;
+}
+.ask-tutor-dictation-tools button.dictating{
+    border-color:#fb7185!important;
+    background:#fff1f2!important;
+    color:#be123c!important;
+}
 </style>
 
 </head>
@@ -13080,7 +13126,7 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
         const englishBtn=document.getElementById("voice-text-english-btn");
 
         if(input) input.placeholder=`Type your ${cfg.name} reply…`;
-        if(hint) hint.textContent=`Type in ${cfg.name}. Need help formulating it? Open Coach privately, or use English → ${cfg.name} & send.`;
+        if(hint) hint.textContent=`Type in ${cfg.name}. Need help? Open Ask Tutor privately, or use English → ${cfg.name} & send.`;
         if(englishBtn){
             englishBtn.textContent=`English → ${cfg.name} & send`;
             englishBtn.title=`Translate this English reply into ${cfg.name} and continue the conversation`;
@@ -20949,7 +20995,7 @@ Do not continue the conversation.`;
 })();
 </script>
 
-<div id="language-coach-window" hidden aria-label="Private language coach window">
+<div id="language-coach-window" hidden aria-label="Ask Tutor window">
     <div id="language-coach-drag-handle" class="language-coach-titlebar">
         <div class="language-coach-titlecopy">
             <div id="language-coach-title" class="language-coach-title">❓ Ask Tutor</div>
@@ -20965,6 +21011,8 @@ Do not continue the conversation.`;
             </div>
             <div id="ask-tutor-context-text" class="ask-tutor-context-text"></div>
         </div>
+
+        <div id="ask-tutor-thread" class="ask-tutor-thread" hidden aria-live="polite"></div>
 
         <textarea id="language-coach-input"
             placeholder="Ask about the selected phrase, grammar, meaning, or how you could reply…"></textarea>
@@ -21378,7 +21426,7 @@ Requirements:
             revealCoachResults();
             setCoachStatus("");
         }catch(e){
-            setCoachStatus("Coach could not generate options: "+((e&&e.message)?e.message:String(e)),"error");
+            setCoachStatus("Tutor could not generate options: "+((e&&e.message)?e.message:String(e)),"error");
         }finally{
             if(btn){btn.disabled=false;btn.textContent=old;}
         }
@@ -21410,7 +21458,7 @@ Requirements:
 
             const coach=document.createElement("button");
             coach.type="button";
-            coach.textContent="🧭 Private Coach";
+            coach.textContent="❓ Ask Tutor";
             coach.title="Take a private sidebar to figure out how you want to respond";
             coach.addEventListener("click",()=>window.openLanguageCoach());
 
@@ -21433,7 +21481,7 @@ Requirements:
             coach.type="button";
             coach.id="language-coach-open-btn";
             coach.className="min-h-[36px] px-3 py-1.5 rounded-lg border text-[10px] font-bold transition";
-            coach.textContent="🧭 Coach";
+            coach.textContent="❓ Ask Tutor";
             coach.title="Privately ask how to formulate your response without sending anything to the Tutor";
             coach.addEventListener("click",()=>window.openLanguageCoach());
             tools.insertBefore(coach,english);
@@ -21747,13 +21795,31 @@ Requirements:
         return window.SpeechRecognition || window.webkitSpeechRecognition || null;
     }
 
+    function resetCoachDictationButtons(){
+        const cfg=typeof langConfig==="function" ? langConfig() : {name:"German"};
+        const english=document.getElementById("ask-tutor-dictate-english");
+        const target=document.getElementById("ask-tutor-dictate-target");
+        if(english){
+            english.textContent="🎙 Dictate English";
+            english.classList.remove("dictating");
+            english.setAttribute("aria-pressed","false");
+        }
+        if(target){
+            target.textContent=`🎙 Attempt ${cfg.name}`;
+            target.classList.remove("dictating");
+            target.setAttribute("aria-pressed","false");
+        }
+    }
+
     function stopCoachDictation(){
         if(coachDictationRecognition){
-            try{coachDictationRecognition.onend=null;coachDictationRecognition.abort()}catch(e){}
+            try{
+                coachDictationRecognition.onend=null;
+                coachDictationRecognition.abort();
+            }catch(e){}
             coachDictationRecognition=null;
         }
-        const btn=document.getElementById("language-coach-dictate-btn");
-        if(btn)btn.textContent="🎙 Dictate";
+        resetCoachDictationButtons();
     }
 
     function pauseConversationMicForCoach(){
@@ -21794,7 +21860,7 @@ Requirements:
         }catch(e){}
     }
 
-    window.toggleLanguageCoachDictation=function(){
+    window.toggleLanguageCoachDictation=function(modeOverride){
         if(coachDictationRecognition){
             stopCoachDictation();
             return;
@@ -21803,17 +21869,29 @@ Requirements:
         const Ctor=coachRecognitionCtor();
         if(!Ctor){
             const status=document.getElementById("language-coach-status");
-            if(status)status.textContent="Speech recognition is not available in this browser/device.";
+            if(status){
+                status.hidden=false;
+                status.textContent="Speech recognition is not available in this browser/device.";
+            }
             return;
         }
 
-        // Coach dictation and live Conversation recognition must never compete
-        // for the microphone.
+        const select=document.getElementById("language-coach-dictation-language");
+        if(modeOverride==="en" || modeOverride==="target"){
+            if(select)select.value=modeOverride;
+        }
+        const mode=modeOverride==="target" || modeOverride==="en"
+            ? modeOverride
+            : (select?.value||"en");
+
+        // Ask Tutor dictation and live Conversation recognition must never
+        // compete for the microphone.
         pauseConversationMicForCoach();
 
         const input=document.getElementById("language-coach-input");
-        const mode=document.getElementById("language-coach-dictation-language")?.value||"en";
-        const cfg=typeof langConfig==="function" ? langConfig() : {locale:"de-DE",name:"German"};
+        const cfg=typeof langConfig==="function"
+            ? langConfig()
+            : {locale:"de-DE",name:"German"};
         const rec=new Ctor();
         coachDictationRecognition=rec;
         rec.lang=mode==="target" ? cfg.locale : "en-US";
@@ -21823,8 +21901,15 @@ Requirements:
 
         const existing=String(input?.value||"").trim();
         const prefix=existing ? existing+" " : "";
-        const btn=document.getElementById("language-coach-dictate-btn");
-        if(btn)btn.textContent="■ Stop";
+        const activeButton=document.getElementById(
+            mode==="target" ? "ask-tutor-dictate-target" : "ask-tutor-dictate-english"
+        );
+        resetCoachDictationButtons();
+        if(activeButton){
+            activeButton.textContent=mode==="target" ? `■ Stop ${cfg.name}` : "■ Stop English";
+            activeButton.classList.add("dictating");
+            activeButton.setAttribute("aria-pressed","true");
+        }
 
         rec.onresult=event=>{
             let finalText="",interim="";
@@ -21833,19 +21918,35 @@ Requirements:
                 if(event.results[i].isFinal)finalText+=piece;
                 else interim+=piece;
             }
-            if(input)input.value=prefix+String(finalText||interim||"").trim();
+            const heard=String(finalText||interim||"").trim();
+            if(input){
+                input.value=prefix+heard;
+                input.focus();
+            }
         };
         rec.onerror=event=>{
             const status=document.getElementById("language-coach-status");
-            if(status)status.textContent=`Dictation error: ${event?.error||"unknown error"}`;
+            if(status){
+                status.hidden=false;
+                status.textContent=`Dictation error: ${event?.error||"unknown error"}`;
+            }
         };
         rec.onend=()=>{
             coachDictationRecognition=null;
-            if(btn)btn.textContent="🎙 Dictate";
+            resetCoachDictationButtons();
             keepConversationMicPausedWhileCoachOpen();
         };
 
-        try{rec.start()}catch(e){stopCoachDictation()}
+        try{
+            rec.start();
+        }catch(e){
+            stopCoachDictation();
+            const status=document.getElementById("language-coach-status");
+            if(status){
+                status.hidden=false;
+                status.textContent="Could not start dictation. "+(e?.message||String(e));
+            }
+        }
     };
 
     window.focusCoachAndOpenKeyboard=function(){
@@ -21930,7 +22031,7 @@ Requirements:
     }
 
     function labelFor(name){
-        return {transcript:"Transcript",analysis:"Analysis",coach:"Coach",keyboard:"Keyboard"}[name]||name;
+        return {transcript:"Conversation",analysis:"Analysis",coach:"Ask Tutor",keyboard:"Keyboard"}[name]||name;
     }
 
     function stateFor(name){
@@ -22164,7 +22265,7 @@ Requirements:
             ["conversation","💬","Chat"],
             ["transcript","☰","Transcript"],
             ["analysis","🔎","Analysis"],
-            ["coach","🧭","Coach"],
+            ["coach","❓","Ask Tutor"],
             ["keyboard","⌨","Keyboard"]
         ];
         defs.forEach(([name,icon,label])=>{
@@ -22717,9 +22818,9 @@ Requirements:
 
     const addCard=(phrase,note="",label="Suggested phrase",primary=true)=>{
         phrase=String(phrase||"").trim();
-        if(!phrase)throw new Error("Coach returned an empty phrase.");
+        if(!phrase)throw new Error("Tutor returned an empty phrase.");
         const box=results();
-        if(!box)throw new Error("Coach results area is unavailable.");
+        if(!box)throw new Error("Ask Tutor results area is unavailable.");
         const cfg=config();
 
         const card=document.createElement("div");
@@ -22863,8 +22964,10 @@ Do not continue a conversation. Do not add explanations unless useful.`;
 
     window.languageCoachNaturalOptions=async function(){
         const input=document.getElementById("language-coach-input");
-        const request=String(input?.value||"").trim();
-        if(!request){status("Write what you want to say or ask first.","error");return;}
+        const typed=String(input?.value||"").trim();
+        const selected=String(window.getAskTutorContext?.()||"").trim();
+        const request=typed||selected;
+        if(!request){status("Type an idea or select a conversation line first.","error");return;}
 
         const cfg=config();
         const ai=aiConfig();
@@ -22897,7 +23000,7 @@ Do not continue the Tutor conversation. Keep output concise.`;
         try{
             const data=await timeout(callAIJson(prompt),20000);
             const primary=String(data?.primary||data?.text||data?.translation||"").trim();
-            if(!primary)throw new Error("Coach returned no primary suggestion.");
+            if(!primary)throw new Error("Tutor returned no primary suggestion.");
 
             addCard(primary,String(data?.primary_note||data?.note||"").trim(),"Natural choice",true);
             const alternatives=Array.isArray(data?.alternatives)?data.alternatives:[];
@@ -23700,8 +23803,8 @@ window.__languageTutorWorkspaceVersion="10.8";
 </script>
 
 
-<script id="workspace-v120-conversation-workspace-marker">
-window.__languageTutorWorkspaceVersion="12.0-conversation-workspace";
+<script id="workspace-v1201-ask-tutor-conversation-fix-marker">
+window.__languageTutorWorkspaceVersion="12.0.1-ask-tutor-conversation-dictation-fix";
 </script>
 
 
@@ -23709,124 +23812,270 @@ window.__languageTutorWorkspaceVersion="12.0-conversation-workspace";
 (()=>{
 "use strict";
 
-const askState={context:""};
+const askState={
+    context:"",
+    thread:[]
+};
 
 function currentCfg(){
-    try{return typeof langConfig==="function"?langConfig():{name:"German",code:"de",locale:"de-DE"}}
-    catch(_){return {name:"German",code:"de",locale:"de-DE"}}
+    try{
+        return typeof langConfig==="function"
+            ? langConfig()
+            : {name:"German",code:"de",locale:"de-DE"};
+    }catch(_){
+        return {name:"German",code:"de",locale:"de-DE"};
+    }
 }
+
 function updateLanguageLabels(){
     const c=currentCfg();
     const btn=document.getElementById("ask-tutor-dictate-target");
-    if(btn)btn.textContent=`🎙 Attempt ${c.name}`;
+    if(btn && !btn.classList.contains("dictating")){
+        btn.textContent=`🎙 Attempt ${c.name}`;
+    }
     const title=document.getElementById("language-coach-title");
     const win=document.getElementById("language-coach-window");
     if(title && win && !win.hidden)title.textContent=`❓ Ask Tutor — ${c.name}`;
 }
+
+function setStatus(text,tone="normal"){
+    const status=document.getElementById("language-coach-status");
+    if(!status)return;
+    const clean=String(text||"").trim();
+    status.textContent=clean;
+    status.hidden=!clean;
+    status.style.color=tone==="error" ? "#be123c" : tone==="success" ? "#15803d" : "#64748b";
+}
+
+function clearShortcutResults(){
+    const box=document.getElementById("language-coach-results");
+    if(box){
+        box.replaceChildren();
+        box.hidden=false;
+        box.classList.remove("hidden");
+    }
+}
+
+function renderSafeMarkdown(container,value){
+    if(!container)return;
+    container.replaceChildren();
+
+    const source=String(value||"");
+    const lines=source.split(/\r?\n/);
+
+    lines.forEach((line,lineIndex)=>{
+        if(lineIndex>0)container.appendChild(document.createElement("br"));
+
+        let working=line;
+        const bullet=working.match(/^\s*[-•]\s+(.+)$/);
+        if(bullet){
+            container.appendChild(document.createTextNode("• "));
+            working=bullet[1];
+        }
+
+        const tokenRe=/(\*\*[^*\n]+\*\*|__[^_\n]+__|\*[^*\n]+\*|_[^_\n]+_|`[^`\n]+`)/g;
+        let last=0;
+        let match;
+        while((match=tokenRe.exec(working))){
+            if(match.index>last){
+                container.appendChild(document.createTextNode(working.slice(last,match.index)));
+            }
+            const token=match[0];
+            const strong=token.startsWith("**")||token.startsWith("__");
+            const code=token.startsWith("`");
+            const inner=strong ? token.slice(2,-2) : token.slice(1,-1);
+            const el=document.createElement(code ? "code" : strong ? "strong" : "em");
+            el.textContent=inner;
+            container.appendChild(el);
+            last=match.index+token.length;
+        }
+        if(last<working.length){
+            container.appendChild(document.createTextNode(working.slice(last)));
+        }
+    });
+}
+
+function renderAskThread(){
+    const host=document.getElementById("ask-tutor-thread");
+    if(!host)return;
+    host.replaceChildren();
+    host.hidden=!askState.thread.length;
+
+    askState.thread.forEach(turn=>{
+        const card=document.createElement("div");
+        card.className=`ask-tutor-turn ${turn.role}`;
+
+        const label=document.createElement("div");
+        label.className="ask-tutor-turn-label";
+        label.textContent=turn.role==="user" ? "You" : "Tutor";
+
+        const body=document.createElement("div");
+        body.className="ask-tutor-turn-body";
+        if(turn.role==="tutor")renderSafeMarkdown(body,turn.text);
+        else body.textContent=turn.text;
+
+        card.append(label,body);
+        host.appendChild(card);
+    });
+
+    requestAnimationFrame(()=>{host.scrollTop=host.scrollHeight;});
+}
+
+function resetAskThread(){
+    askState.thread=[];
+    renderAskThread();
+}
+
+function privateThreadText(){
+    return askState.thread.slice(-10).map(turn=>
+        `${turn.role==="user" ? "Learner" : "Tutor"}: ${turn.text}`
+    ).join("\n");
+}
+
+window.getAskTutorContext=function(){
+    return askState.context;
+};
+
 window.setAskTutorContext=function(text){
-    askState.context=String(text||"").trim();
+    const next=String(text||"").trim();
+    const changed=next!==askState.context;
+
+    askState.context=next;
     const box=document.getElementById("ask-tutor-context");
     const out=document.getElementById("ask-tutor-context-text");
     if(out)out.textContent=askState.context;
     if(box)box.hidden=!askState.context;
+
+    // A newly selected transcript line starts a fresh private help thread.
+    if(changed){
+        resetAskThread();
+        clearShortcutResults();
+        const input=document.getElementById("language-coach-input");
+        if(input)input.value="";
+        setStatus("");
+    }
 };
+
 window.clearAskTutorContext=function(){
     askState.context="";
     const box=document.getElementById("ask-tutor-context");
     const out=document.getElementById("ask-tutor-context-text");
     if(out)out.textContent="";
     if(box)box.hidden=true;
+    resetAskThread();
+    clearShortcutResults();
+    setStatus("");
 };
+
 function recentConversation(){
     if(typeof voiceTutorHistory!=="function")return "";
     const c=currentCfg();
     return voiceTutorHistory().slice(-8).map(entry=>{
         const raw=entry.role==="user"
             ? String(entry.text||"").trim()
-            : (typeof stripTutorMarkdown==="function"?stripTutorMarkdown(entry.text):String(entry.text||"").trim());
-        return `${entry.role==="user"?"Learner":c.name+" Tutor"}: ${raw}`;
+            : (typeof stripTutorMarkdown==="function"
+                ? stripTutorMarkdown(entry.text)
+                : String(entry.text||"").trim());
+        return `${entry.role==="user" ? "Learner" : c.name+" Tutor"}: ${raw}`;
     }).join("\n");
 }
-function addTutorAnswer(text){
-    const clean=String(text||"").trim();
-    if(!clean)return;
-    const box=document.getElementById("language-coach-results");
-    if(!box)return;
-    const panel=document.createElement("div");
-    panel.className="language-coach-explanation";
-    if(typeof renderTutorMarkdown==="function")renderTutorMarkdown(panel,clean);
-    else panel.textContent=clean;
-    box.prepend(panel);
-    box.hidden=false;
-    box.classList.remove("hidden");
-}
+
 window.askTutorQuestion=async function(){
     const input=document.getElementById("language-coach-input");
-    const question=String(input?.value||"").trim();
-    const context=askState.context||String(document.getElementById("ask-tutor-context-text")?.textContent||"").trim();
-    const status=document.getElementById("language-coach-status");
+    const typed=String(input?.value||"").trim();
+    const context=askState.context;
     const btn=document.getElementById("ask-tutor-ask-btn");
-    if(!question && !context){
-        if(status){status.hidden=false;status.textContent="Select a conversation line or type a question first.";}
+
+    let question=typed;
+    if(!question && context && askState.thread.length===0){
+        question="Help me understand this selected line. Explain anything important, and tell me how I could respond if useful.";
+    }
+
+    if(!question){
+        setStatus(
+            context || askState.thread.length
+                ? "Type a follow-up question for the Tutor."
+                : "Select a conversation line or type a question first.",
+            "error"
+        );
+        input?.focus();
         return;
     }
+
     const ai=typeof resolveWorkbenchAIConfig==="function"
         ? resolveWorkbenchAIConfig()
         : {available:Boolean(typeof getActiveAIKey==="function"&&getActiveAIKey())};
+
     if(!ai.available || typeof callAIJson!=="function"){
-        if(status){status.hidden=false;status.textContent="Ask Tutor requires your selected AI provider.";}
+        setStatus("Ask Tutor requires your selected AI provider.","error");
         return;
     }
+
     const c=currentCfg();
+    const priorThread=privateThreadText();
+
+    // Ask Tutor owns a real private conversation. Phrase-generation shortcuts
+    // remain below, but an Ask Tutor turn clears stale shortcut output.
+    clearShortcutResults();
+    askState.thread.push({role:"user",text:question});
+    renderAskThread();
+    if(input)input.value="";
+
     if(btn)btn.disabled=true;
-    if(status){status.hidden=false;status.textContent="Tutor is thinking…";}
+    setStatus("Tutor is thinking…");
+
     try{
         const prompt=`You are the private Ask Tutor help surface in LanguageTutor.
 Target language: ${c.name}
 
 Selected conversation context:
-${context||"(none selected)"}
+${context || "(none selected)"}
 
-Recent conversation:
-${recentConversation()||"(none)"}
+Recent live conversation:
+${recentConversation() || "(none)"}
 
-Learner question:
-${question||"Help me understand the selected context and how I could respond."}
+Private Ask Tutor conversation so far:
+${priorThread || "(this is the first private turn)"}
 
-Answer as a language tutor, not as the conversation partner.
+Learner's new question:
+${question}
+
+Respond as a language tutor, not as the live conversation partner.
 Use concise English explanations unless the learner clearly asks otherwise.
-Keep examples in ${c.name}.
-Explain grammar, vocabulary, nuance, or a natural response when useful.
+Keep target-language examples in ${c.name}.
+Answer follow-up questions in light of the earlier private Ask Tutor turns.
+You may explain grammar, vocabulary, nuance, corrections, or natural ways to reply.
+Do not automatically send anything into the live conversation.
 Return JSON only:
 {"answer":"helpful tutor answer"}`;
+
         const data=await callAIJson(prompt);
         const answer=String(data?.answer||data?.reply||data?.text||"").trim();
         if(!answer)throw new Error("Tutor returned no answer.");
-        addTutorAnswer(answer);
-        if(input)input.value="";
-        if(status){status.hidden=true;status.textContent="";}
+
+        askState.thread.push({role:"tutor",text:answer});
+        renderAskThread();
+        setStatus("");
+        input?.focus();
     }catch(e){
-        if(status){status.hidden=false;status.textContent="Tutor help unavailable. "+(e?.message||String(e));}
+        setStatus("Tutor help unavailable. "+(e?.message||String(e)),"error");
     }finally{
         if(btn)btn.disabled=false;
     }
 };
-function setDictation(mode){
-    const select=document.getElementById("language-coach-dictation-language");
-    if(select)select.value=mode;
-    window.toggleLanguageCoachDictation?.();
-}
 
 function ensureAnchor(id,node){
     if(!node)return null;
-    let a=document.getElementById(id);
-    if(!a){
-        a=document.createElement("span");
-        a.id=id;a.hidden=true;
-        node.parentElement?.insertBefore(a,node);
+    let anchor=document.getElementById(id);
+    if(!anchor){
+        anchor=document.createElement("span");
+        anchor.id=id;
+        anchor.hidden=true;
+        node.parentElement?.insertBefore(anchor,node);
     }
-    return a;
+    return anchor;
 }
+
 function parts(){
     const controls=document.getElementById("voice-start-btn")?.parentElement;
     const status=document.getElementById("voice-tutor-status");
@@ -23839,11 +24088,13 @@ function parts(){
         composerAnchor:ensureAnchor("v12-composer-home-anchor",composer)
     };
 }
+
 function moveToConversation(){
     const p=parts();
     const activitySlot=document.getElementById("conversation-activity-slot");
     const controlsSlot=document.getElementById("conversation-controls-slot");
     const composerSlot=document.getElementById("conversation-composer-slot");
+
     if(p.activity&&activitySlot){
         p.activity.classList.add("v12-activity-card");
         activitySlot.replaceChildren(p.activity);
@@ -23853,8 +24104,10 @@ function moveToConversation(){
         controlsSlot.replaceChildren(p.controls);
     }
     if(p.composer&&composerSlot)composerSlot.replaceChildren(p.composer);
+
     document.getElementById("socratic-chat-container")?.classList.add("v12-conversation-floating");
 }
+
 function restoreToPage(){
     const p=parts();
     const restore=(node,anchor)=>{
@@ -23876,6 +24129,7 @@ if(typeof oldOpen==="function"){
         return result;
     };
 }
+
 const oldDock=window.dockVoiceTranscript;
 if(typeof oldDock==="function"){
     window.dockVoiceTranscript=function(...args){
@@ -23883,6 +24137,7 @@ if(typeof oldDock==="function"){
         return oldDock.apply(this,args);
     };
 }
+
 const oldStart=window.startVoiceConversation;
 if(typeof oldStart==="function"){
     window.startVoiceConversation=function(...args){
@@ -23891,6 +24146,7 @@ if(typeof oldStart==="function"){
         return result;
     };
 }
+
 const oldSetLanguage=window.setStudyLanguage;
 if(typeof oldSetLanguage==="function"){
     window.setStudyLanguage=function(...args){
@@ -23901,18 +24157,30 @@ if(typeof oldSetLanguage==="function"){
 }
 
 function bind(){
-    document.getElementById("ask-tutor-context-clear")?.addEventListener("click",window.clearAskTutorContext);
-    document.getElementById("ask-tutor-dictate-english")?.addEventListener("click",()=>setDictation("en"));
-    document.getElementById("ask-tutor-dictate-target")?.addEventListener("click",()=>setDictation("target"));
-    document.getElementById("ask-tutor-ask-btn")?.addEventListener("click",window.askTutorQuestion);
-    document.getElementById("language-coach-input")?.addEventListener("keydown",e=>{
-        if((e.metaKey||e.ctrlKey)&&e.key==="Enter"){
-            e.preventDefault();
+    document.getElementById("ask-tutor-context-clear")
+        ?.addEventListener("click",window.clearAskTutorContext);
+
+    document.getElementById("ask-tutor-dictate-english")
+        ?.addEventListener("click",()=>window.toggleLanguageCoachDictation?.("en"));
+
+    document.getElementById("ask-tutor-dictate-target")
+        ?.addEventListener("click",()=>window.toggleLanguageCoachDictation?.("target"));
+
+    document.getElementById("ask-tutor-ask-btn")
+        ?.addEventListener("click",window.askTutorQuestion);
+
+    const input=document.getElementById("language-coach-input");
+    input?.addEventListener("keydown",event=>{
+        if(event.isComposing)return;
+        if(event.key==="Enter" && !event.shiftKey){
+            event.preventDefault();
             window.askTutorQuestion();
         }
     });
+
     updateLanguageLabels();
 }
+
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bind,{once:true});
 else bind();
 window.addEventListener("load",updateLanguageLabels,{once:true});
