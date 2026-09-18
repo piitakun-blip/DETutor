@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script id="workspace-v1431-startup-guard">
+document.documentElement.classList.add("language-tutor-booting");
+window.__languageTutorBootFailsafe=setTimeout(()=>document.documentElement.classList.remove("language-tutor-booting"),3000);
+</script>
+<style id="workspace-v1431-startup-guard-css">
+html.language-tutor-booting body{visibility:hidden!important}
+html.language-tutor-booting{background:#f8fafc!important}
+</style>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="application-name" content="LanguageTutor">
@@ -7356,6 +7365,44 @@ body.conversation-first-layout main.conversation-first-main{gap:var(--ws-gap)!im
 @media(max-width:640px){:root{--ws-pad:8px;--ws-bar:42px;--ws-title:12px}}
 </style>
 
+
+<style id="workspace-v1431-polish-css">
+/* v14.3.1: one floating-state strip, shared typography, no legacy flash. */
+:root{--lt-ui-font-size:13px;--lt-ui-small:11px;--lt-ui-title-weight:700}
+
+/* Transcript: while floating, show only its status/return strip. */
+#conversation-transcript-section.transcript-is-floating > #conversation-transcript-docked-bar{display:none!important}
+#conversation-transcript-section.transcript-is-floating > #conversation-transcript-placeholder{
+ display:flex!important;order:0!important;margin:0!important;min-height:44px!important;align-items:center!important;justify-content:space-between!important;gap:12px!important
+}
+/* Ask Tutor: while its placeholder is active, hide the normal Open/Return bar. */
+#ask-tutor-section:has(.ask-workspace-placeholder.is-active) > .unified-workspace-bar{display:none!important}
+#ask-tutor-section .ask-workspace-placeholder.is-active{margin:0!important}
+
+/* One typography system for docked workspace bars and floating title bars. */
+#tutor-controls-section .primary-workspace-docked-title,
+#conversation-transcript-section .primary-workspace-docked-title,
+#ask-tutor-section .unified-workspace-title,
+#language-tools-view .primary-workspace-docked-title,
+.primary-workspace-window-title,
+#conversation-view.conversation-floating .conversation-window-title,
+#language-coach-window .language-coach-title{
+ font-family:inherit!important;font-size:var(--lt-ui-font-size)!important;line-height:1.2!important;font-weight:var(--lt-ui-title-weight)!important;letter-spacing:0!important
+}
+.primary-workspace-window-subtitle,
+#conversation-view.conversation-floating .conversation-window-subtitle,
+#language-coach-window .language-coach-subtitle,
+.primary-workspace-placeholder,
+.ask-workspace-placeholder{
+ font-family:inherit!important;font-size:var(--lt-ui-small)!important;line-height:1.35!important;font-weight:500!important;letter-spacing:0!important
+}
+.primary-workspace-titlebar,
+#conversation-view.conversation-floating .conversation-window-header,
+#language-coach-window .language-coach-header{font-family:inherit!important}
+.primary-workspace-open-btn,.primary-workspace-return-btn,.ask-workspace-state{
+ font-family:inherit!important;font-size:11px!important;font-weight:700!important
+}
+</style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
 
@@ -8729,9 +8776,6 @@ body.conversation-first-layout main.conversation-first-main{gap:var(--ws-gap)!im
     </main>
 
     <!-- Page Footer -->
-    <footer class="bg-slate-800 text-slate-400 py-6 border-t border-slate-700 text-center text-xs">
-        <p>&copy; 2026 LanguageTutor App. Built for seamless browser-only execution without API keys.</p>
-    </footer>
 
     <!-- Interactive Javascript Logic -->
     <script>
@@ -24941,8 +24985,8 @@ window.__languageTutorWorkspaceVersion="10.8";
 </script>
 
 
-<script id="workspace-v1430-unified-workspaces-marker">
-window.__languageTutorWorkspaceVersion="14.3.0-unified-workspaces-ask-tutor";
+<script id="workspace-v1431-workspace-polish-marker">
+window.__languageTutorWorkspaceVersion="14.3.1-workspace-polish-startup";
 </script>
 
 
@@ -27289,8 +27333,13 @@ function observeAsk(){
   w.dataset.v143Observed="1";
   new MutationObserver(syncAsk).observe(w,{attributes:true,attributeFilter:["hidden","style","class"]});
 }
+function revealModernUI(){
+  document.documentElement.classList.remove("language-tutor-booting");
+  if(window.__languageTutorBootFailsafe){clearTimeout(window.__languageTutorBootFailsafe);window.__languageTutorBootFailsafe=null;}
+}
 function normalize(){
   decoupleTutor(); ensureAskSection(); order(); syncTranscript(); syncAsk(); observeAsk();
+  revealModernUI();
 }
 window.normalizeLanguageTutorWorkspaces=normalize;
 
