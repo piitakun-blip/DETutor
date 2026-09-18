@@ -6102,6 +6102,81 @@ body.conversation-first-layout #mobile-right-column{
     }
     .tutor-composer-tool-buttons button{flex:0 0 auto}
 }
+
+/* v12.2 — The original Analysis Workbench can live inline inside Ask Tutor. */
+.ask-tutor-analysis-host{
+    width:100%;
+    min-width:0;
+}
+.ask-tutor-analysis-host[hidden]{display:none!important}
+.ask-tutor-analysis-host > #analysis-workbench-window{
+    position:relative!important;
+    inset:auto!important;
+    left:auto!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:auto!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    transform:none!important;
+    resize:none!important;
+    z-index:auto!important;
+    margin:0!important;
+    box-shadow:none!important;
+    border:1px solid #cbd5e1!important;
+    border-radius:12px!important;
+    overflow:hidden!important;
+}
+.ask-tutor-analysis-host > #analysis-workbench-window.side-by-side-analysis{
+    width:100%!important;
+    height:auto!important;
+}
+.ask-tutor-analysis-host .analysis-workbench-titlebar{
+    cursor:default!important;
+    border-radius:0!important;
+}
+.ask-tutor-analysis-host .analysis-workbench-body{
+    height:auto!important;
+    max-height:480px!important;
+    min-height:0!important;
+    overflow:auto!important;
+}
+.ask-tutor-analysis-host .analysis-workbench-source{
+    position:static!important;
+}
+.ask-tutor-analysis-host .analysis-workbench-utility-tools button[onclick*="analysisWorkbenchCoach"]{
+    display:none!important;
+}
+#ask-tutor-analyze-btn[aria-expanded="true"]{
+    background:#e0e7ff!important;
+    border-color:#818cf8!important;
+    color:#3730a3!important;
+}
+</style>
+
+
+<style id="workspace-v13-live-voice-css">
+#conversation-live-voice-btn.live-active,
+#ask-tutor-live-voice-btn.live-active,
+#voice-start-btn.live-active{
+    border-color:#fb7185!important;
+    background:#fff1f2!important;
+    color:#be123c!important;
+}
+#ask-tutor-live-voice-btn{
+    min-height:36px;
+    padding:6px 9px;
+    border:1px solid #bbf7d0;
+    border-radius:9px;
+    background:#f0fdf4;
+    color:#15803d;
+    font-size:10px;
+    font-weight:800;
+}
 </style>
 
 </head>
@@ -6206,6 +6281,31 @@ body.conversation-first-layout #mobile-right-column{
                     <div id="ai-provider-status" class="text-[11px] text-slate-400">No AI provider configured</div>
                 </section>
             </div>
+
+            <section class="bg-slate-900/60 border border-slate-700 rounded-xl p-4 space-y-3">
+                <div>
+                    <div class="font-bold text-sm text-violet-300">GPT-Live Voice Gateway</div>
+                    <div class="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                        Optional. Paste your Cloudflare Worker URL here to enable natural full-duplex OpenAI Live voice.
+                        Your permanent OpenAI API key stays in Cloudflare. If this gateway is blank or unavailable,
+                        LanguageTutor automatically keeps the existing browser voice system as a fallback.
+                    </div>
+                </div>
+                <input type="url" id="live-gateway-url-input"
+                    class="w-full px-3 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-base sm:text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-violet-400"
+                    placeholder="https://languagetutor-live.YOUR-SUBDOMAIN.workers.dev">
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" onclick="saveLiveGatewaySettings()"
+                        class="px-4 py-2.5 bg-violet-500 hover:bg-violet-600 text-white font-bold text-xs rounded-lg">
+                        Save &amp; Test Live Voice
+                    </button>
+                    <button type="button" onclick="clearLiveGatewaySettings()"
+                        class="px-3 py-2.5 bg-slate-700 hover:bg-rose-600 text-white font-bold text-xs rounded-lg">
+                        Clear
+                    </button>
+                </div>
+                <div id="live-gateway-status" class="text-[11px] text-slate-400">Not configured</div>
+            </section>
         </div>
     </div>
 
@@ -6781,10 +6881,10 @@ body.conversation-first-layout #mobile-right-column{
                     </div>
 
                     <div class="shrink-0 flex flex-wrap items-center gap-2">
-                        <button type="button" id="voice-start-btn" onclick="startVoiceConversation()" title="Listening pauses automatically after 10 seconds of silence" class="min-h-[44px] px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition">
+                        <button type="button" id="voice-start-btn" onclick="toggleTutorLiveVoice('chat')" title="Listening pauses automatically after 10 seconds of silence" class="min-h-[44px] px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition">
                             🎙 Start Conversation
                         </button>
-                        <button type="button" id="voice-stop-btn" onclick="stopVoiceConversation()" class="hidden min-h-[44px] px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition">
+                        <button type="button" id="voice-stop-btn" onclick="stopTutorLiveVoiceOrFallback('chat')" class="hidden min-h-[44px] px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition">
                             ■ Stop
                         </button>
                         <button type="button" id="voice-listen-now-btn" onclick="resumeVoiceRecognition(true,'target')" class="hidden min-h-[44px] px-4 py-2 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 text-xs font-bold transition">
@@ -6828,6 +6928,11 @@ body.conversation-first-layout #mobile-right-column{
                         <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
 <div id="voice-text-input-hint" hidden></div>
                             <div class="flex flex-wrap items-center gap-2 ml-auto">
+                                <button type="button" id="conversation-live-voice-btn" onclick="toggleTutorLiveVoice('chat')"
+                                    class="min-h-[36px] px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px] font-bold transition"
+                                    title="Start natural GPT-Live voice; automatically falls back to the existing voice system if needed">
+                                    🎙 Live voice
+                                </button>
                                 <button type="button" id="conversation-keyboard-btn" onclick="openConversationKeyboard()"
                                     class="min-h-[36px] px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 text-[10px] font-bold transition"
                                     title="Open a movable language keyboard">
@@ -7561,6 +7666,7 @@ body.conversation-first-layout #mobile-right-column{
 
             syncProviderSettingsUI();
             updateApiStatusHeader();
+            if(typeof syncLiveGatewaySettingsUI==="function")syncLiveGatewaySettingsUI();
         }
 
         function syncProviderSettingsUI() {
@@ -13974,6 +14080,10 @@ Do not add quotation marks or labels.`;
         appendVoiceTutorBubble(entry,true);
         updateVoiceRestateButton();
     }
+
+    // v13 bridge: GPT-Live feeds the same transcript/history renderer.
+    window.recordVoiceTutorEntry=recordVoiceTutorEntry;
+    window.getVoiceTutorHistory=voiceTutorHistory;
 
     function renderVoiceLiveTurn(listeningText=""){
         const live=document.getElementById("voice-live-transcript");
@@ -21223,11 +21333,13 @@ Do not continue the conversation.`;
         </div>
 
         <div class="ask-tutor-study-actions" aria-label="Tutor study shortcuts">
-            <button type="button" id="ask-tutor-analyze-btn">🔎 Analyze</button>
+            <button type="button" id="ask-tutor-analyze-btn" aria-expanded="false">🔎 Analyze</button>
             <button type="button" id="ask-tutor-translate-btn">🌐 Translate</button>
             <button type="button" id="ask-tutor-why-btn">❓ Why this wording?</button>
             <button type="button" id="ask-tutor-reply-btn">↩ Help me reply</button>
         </div>
+
+        <div id="ask-tutor-analysis-host" class="ask-tutor-analysis-host" hidden></div>
 
         <div id="ask-tutor-thread" class="ask-tutor-thread" hidden aria-live="polite"></div>
 
@@ -21243,8 +21355,9 @@ Do not continue the conversation.`;
             <div class="tutor-composer-tools">
                 <div id="language-coach-status" class="tutor-composer-status"></div>
                 <div class="tutor-composer-tool-buttons">
-                    <button type="button" id="ask-tutor-speak-english">🎙 Speak English</button>
-                    <button type="button" id="ask-tutor-speak-target">🎙 Speak German</button>
+                    <button type="button" id="ask-tutor-live-voice-btn" title="Start natural GPT-Live Tutor voice; automatically falls back if needed">🎙 Live voice</button>
+                    <button type="button" id="ask-tutor-speak-english" hidden aria-hidden="true">🎙 Ask by voice</button>
+                    <button type="button" id="ask-tutor-speak-target" hidden aria-hidden="true">🎙 Speak German</button>
                     <button type="button" id="ask-tutor-keyboard-btn" onclick="focusCoachAndOpenKeyboard()">⌨ German keys</button>
                 </div>
             </div>
@@ -22940,396 +23053,6 @@ Requirements:
 
 
 
-<script id="workspace-v87-ai-only-parse-guard">
-(()=>{
-    "use strict";
-
-    // v8.7 final authority: Analysis Workbench Parse never renders a local fallback.
-    // This guard loads after legacy workspace scripts so an older handler cannot win.
-    const install=()=>{
-        const current=window.analysisWorkbenchFullParse;
-        if(typeof current!=="function")return;
-
-        // v8.6 implementation is already AI-only. Mark it so repeated installation
-        // does not wrap it unnecessarily.
-        if(current.__aiOnlyParseV87)return;
-
-        const source=Function.prototype.toString.call(current);
-        const looksAIOnly=
-            source.includes("Grammar analysis unavailable.") &&
-            source.includes("getWorkbenchParseData") &&
-            !source.includes("workbenchLocalResult");
-
-        if(looksAIOnly){
-            try{Object.defineProperty(current,"__aiOnlyParseV87",{value:true})}catch(e){}
-            return;
-        }
-
-        // If a legacy Parse handler somehow survived, replace it with the same
-        // AI-only behavior rather than allowing AI UNAVAILABLE.
-        const replacement=async function(button){
-            if(!window.__v87RunAIOnlyParse){
-                console.error("AI-only Parse guard could not find its runner.");
-                return;
-            }
-            return window.__v87RunAIOnlyParse(button);
-        };
-        replacement.__aiOnlyParseV87=true;
-        window.analysisWorkbenchFullParse=replacement;
-    };
-
-    // Capture the known-good v8.6/v8.7 handler as the authoritative runner.
-    if(typeof window.analysisWorkbenchFullParse==="function"){
-        const candidate=window.analysisWorkbenchFullParse;
-        const source=Function.prototype.toString.call(candidate);
-        if(source.includes("Grammar analysis unavailable.") &&
-           source.includes("getWorkbenchParseData") &&
-           !source.includes("workbenchLocalResult")){
-            window.__v87RunAIOnlyParse=candidate;
-            try{Object.defineProperty(candidate,"__aiOnlyParseV87",{value:true})}catch(e){}
-        }
-    }
-
-    install();
-    window.addEventListener("load",install,{once:true});
-})();
-</script>
-
-
-
-
-<script id="workspace-v90-coach-output-fix">
-(()=>{
-    "use strict";
-
-    const status=(text,tone="normal")=>{
-        const el=document.getElementById("language-coach-status");
-        if(!el)return;
-        const clean=String(text||"").trim();
-        el.textContent=clean;
-        el.hidden=!clean;
-        el.style.color=tone==="error" ? "#be123c" : "#64748b";
-    };
-
-    const results=()=>document.getElementById("language-coach-results");
-    const clear=()=>{
-        const box=results();
-        if(!box)return;
-        box.replaceChildren();
-        box.hidden=false;
-        box.classList.remove("hidden");
-    };
-
-    const config=()=>{
-        const code=typeof currentStudyLanguage!=="undefined" ? currentStudyLanguage : "de";
-        if(typeof LANGUAGE_MODES!=="undefined" && LANGUAGE_MODES[code])return LANGUAGE_MODES[code];
-        if(typeof langConfig==="function")return langConfig();
-        return {code:"de",name:"German",locale:"de-DE"};
-    };
-
-    const aiConfig=()=>typeof resolveWorkbenchAIConfig==="function"
-        ? resolveWorkbenchAIConfig()
-        : {available:Boolean(typeof getActiveAIKey==="function" && getActiveAIKey()),providerName:"AI"};
-
-    const timeout=(promise,ms=20000)=>new Promise((resolve,reject)=>{
-        const timer=setTimeout(()=>reject(new Error(`Tutor request timed out after ${Math.round(ms/1000)} seconds.`)),ms);
-        Promise.resolve(promise).then(
-            value=>{clearTimeout(timer);resolve(value);},
-            error=>{clearTimeout(timer);reject(error);}
-        );
-    });
-
-    const addCard=(phrase,note="",label="Suggested phrase",primary=true)=>{
-        phrase=String(phrase||"").trim();
-        if(!phrase)throw new Error("Tutor returned an empty phrase.");
-        const box=results();
-        if(!box)throw new Error("Ask Tutor results area is unavailable.");
-        const cfg=config();
-
-        const card=document.createElement("div");
-        card.className="language-coach-result-card"+(primary?" primary":"");
-
-        const lab=document.createElement("div");
-        lab.className="language-coach-result-label";
-        lab.textContent=label;
-
-        const phraseEl=document.createElement("div");
-        phraseEl.className="language-coach-result-text";
-        phraseEl.textContent=phrase;
-        card.append(lab,phraseEl);
-
-        if(note){
-            const noteEl=document.createElement("div");
-            noteEl.className="language-coach-result-note";
-            noteEl.textContent=String(note||"")
-                .replace(/`([^`]+)`/g,"$1")
-                .replace(/\*\*([^*]+)\*\*/g,"$1")
-                .replace(/__([^_]+)__/g,"$1")
-                .replace(/\*([^*]+)\*/g,"$1")
-                .replace(/^\s*(?:[-*+]\s+|\d+[.)]\s+)/gm,"")
-                .replace(/\s*\n\s*/g," ")
-                .replace(/\s{2,}/g," ")
-                .trim();
-            card.appendChild(noteEl);
-        }
-
-        const actions=document.createElement("div");
-        actions.className="language-coach-result-actions";
-
-        const action=(label,fn,cls="")=>{
-            const b=document.createElement("button");
-            b.type="button";
-            b.textContent=label;
-            if(cls)b.className=cls;
-            b.addEventListener("click",fn);
-            actions.appendChild(b);
-        };
-
-        action("↩ Use in reply",()=>{
-            if(typeof window.useLanguageCoachPhrase==="function")window.useLanguageCoachPhrase(phrase);
-        },"coach-use");
-        action("🔊 Listen",()=>{
-            if(typeof speakRawText==="function")speakRawText(phrase,cfg.locale);
-        });
-        action("⧉ Copy",async()=>{
-            try{
-                if(typeof copyVoiceTutorText==="function")await copyVoiceTutorText(phrase);
-                else await navigator.clipboard.writeText(phrase);
-            }catch(e){}
-        });
-        action("🔎 Analyze",()=>{
-            const code=typeof currentStudyLanguage!=="undefined" ? currentStudyLanguage : cfg.code;
-            if(typeof window.openAnalysisWorkbench==="function"){
-                window.openAnalysisWorkbench(phrase,code,{source:"tutor-coach",text:phrase});
-                if(typeof window.workspaceOpenTool==="function")window.workspaceOpenTool("analysis");
-                const analysis=document.getElementById("analysis-workbench-window");
-                if(analysis){analysis.hidden=false;analysis.classList.remove("workspace-docked");}
-            }
-        });
-        action("☆ Save",()=>{
-            if(typeof window.saveVoiceTutorPhrase==="function"){
-                const code=typeof currentStudyLanguage!=="undefined" ? currentStudyLanguage : cfg.code;
-                window.saveVoiceTutorPhrase(phrase,code);
-            }
-        });
-
-        card.appendChild(actions);
-        box.appendChild(card);
-        box.hidden=false;
-        box.classList.remove("hidden");
-        try{box.scrollIntoView({behavior:"smooth",block:"nearest"});}catch(e){}
-    };
-
-    const context=()=>{
-        if(typeof voiceTutorHistory!=="function")return "";
-        const cfg=config();
-        return voiceTutorHistory().slice(-6).map(entry=>{
-            const raw=entry.role==="user"
-                ? String(entry.text||"").trim()
-                : (typeof stripTutorMarkdown==="function"
-                    ? stripTutorMarkdown(entry.text)
-                    : String(entry.text||"").trim());
-            return `${entry.role==="user" ? "Learner" : cfg.name+" Tutor"}: ${raw}`;
-        }).join("\n");
-    };
-
-    window.languageCoachQuickTranslate=async function(){
-        const input=document.getElementById("language-coach-input");
-        const request=String(input?.value||"").trim();
-        if(!request){status("Write what you want to say first.","error");return;}
-
-        const cfg=config();
-        const ai=aiConfig();
-        const btn=document.getElementById("language-coach-quick-btn");
-        const old=btn?.textContent||"🌐 Quick translation";
-        clear();
-        if(btn){btn.disabled=true;btn.textContent="Translating…";}
-
-        try{
-            let phrase="";
-            let note="";
-
-            // Prefer the selected AI route when available: it handles words,
-            // fragments, and full sentences consistently.
-            if(ai.available && typeof callAIJson==="function"){
-                status(`Translating to ${cfg.name}…`);
-                const prompt=`You are the quick translation tool in LanguageTutor.
-Target language: ${cfg.name}
-Learner input: "${request}"
-
-The learner may enter a single English word, a phrase, a full sentence, or text already in ${cfg.name}.
-Return JSON only:
-{"text":"the concise natural ${cfg.name} equivalent","note":"very short English note only when useful"}
-
-For German nouns entered as English vocabulary, include the normal definite article, e.g. dog -> der Hund.
-Do not continue a conversation. Do not add explanations unless useful.`;
-                const data=await timeout(callAIJson(prompt),20000);
-                phrase=String(data?.text||data?.translation||data?.primary||"").trim();
-                note=String(data?.note||"").trim();
-            }else if(typeof googleTranslateApiCall==="function"){
-                status(`Translating to ${cfg.name}…`);
-                phrase=String(await timeout(googleTranslateApiCall(request,"en",cfg.code),15000)).trim();
-            }else{
-                throw new Error("No translation service is available.");
-            }
-
-            if(!phrase)throw new Error("Translation returned no text.");
-            if(typeof normalizeTargetText==="function")phrase=normalizeTargetText(phrase,cfg.code);
-            addCard(phrase,note,`Quick ${cfg.name}`,true);
-            status("");
-        }catch(e){
-            console.error("Coach quick translation failed.",e);
-            status("Quick translation unavailable. "+((e&&e.message)?e.message:String(e)),"error");
-        }finally{
-            if(btn){btn.disabled=false;btn.textContent=old;}
-        }
-    };
-
-    window.languageCoachNaturalOptions=async function(){
-        const input=document.getElementById("language-coach-input");
-        const typed=String(input?.value||"").trim();
-        const selected=String(window.getAskTutorContext?.()||"").trim();
-        const request=typed||selected;
-        if(!request){status("Type an idea or select a conversation line first.","error");return;}
-
-        const cfg=config();
-        const ai=aiConfig();
-        if(!ai.available || typeof callAIJson!=="function"){
-            status("Natural options require your selected AI provider.","error");
-            return;
-        }
-
-        const btn=document.getElementById("language-coach-ai-btn");
-        const old=btn?.textContent||"✨ Natural options";
-        clear();
-        if(btn){btn.disabled=true;btn.textContent="Coaching…";}
-        status("Creating natural options…");
-
-        const prompt=`You are the private Ask Tutor helper in LanguageTutor.
-Target language: ${cfg.name}
-Recent conversation context:
-${context() || "(none)"}
-
-Learner request:
-"${request}"
-
-The request may be a word lookup, phrase, sentence, rough target-language attempt, or an English idea.
-Return JSON only:
-{"primary":"best natural ${cfg.name} wording","primary_note":"short English note","alternatives":[{"text":"alternative wording","note":"short English distinction"}]}
-
-For German vocabulary nouns, include the article with the noun (der/die/das).
-Do not continue the Tutor conversation. Keep output concise.`;
-
-        try{
-            const data=await timeout(callAIJson(prompt),20000);
-            const primary=String(data?.primary||data?.text||data?.translation||"").trim();
-            if(!primary)throw new Error("Tutor returned no primary suggestion.");
-
-            addCard(primary,String(data?.primary_note||data?.note||"").trim(),"Natural choice",true);
-            const alternatives=Array.isArray(data?.alternatives)?data.alternatives:[];
-            alternatives.slice(0,3).forEach((alt,index)=>{
-                const phrase=String(typeof alt==="string"?alt:alt?.text||"").trim();
-                if(!phrase)return;
-                addCard(phrase,String(typeof alt==="object"?alt?.note||"":"").trim(),`Alternative ${index+1}`,false);
-            });
-            status("");
-        }catch(e){
-            console.error("Coach natural options failed.",e);
-            status("Tutor help unavailable. "+((e&&e.message)?e.message:String(e)),"error");
-        }finally{
-            if(btn){btn.disabled=false;btn.textContent=old;}
-        }
-    };
-
-    const bind=()=>{
-        const quick=document.getElementById("language-coach-quick-btn");
-        const natural=document.getElementById("language-coach-ai-btn");
-
-        // Replace buttons with clean clones so legacy listeners cannot fire in
-        // parallel with the authoritative v9 handlers.
-        if(quick && !quick.dataset.v90Bound){
-            const clone=quick.cloneNode(true);
-            clone.dataset.v90Bound="1";
-            quick.replaceWith(clone);
-            clone.addEventListener("click",e=>{
-                e.preventDefault();
-                window.languageCoachQuickTranslate();
-            });
-        }
-        if(natural && !natural.dataset.v90Bound){
-            const clone=natural.cloneNode(true);
-            clone.dataset.v90Bound="1";
-            natural.replaceWith(clone);
-            clone.addEventListener("click",e=>{
-                e.preventDefault();
-                window.languageCoachNaturalOptions();
-            });
-        }
-    };
-
-    if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bind,{once:true});
-    else bind();
-    window.addEventListener("load",bind,{once:true});
-})();
-</script>
-
-
-<script id="workspace-v91-language-scoped-saved-transcripts">
-(()=>{
-    "use strict";
-    const refresh=()=>{
-        if(typeof renderSavedTutorTranscripts==="function")renderSavedTutorTranscripts();
-    };
-    window.addEventListener("load",refresh,{once:true});
-})();
-</script>
-
-
-<script id="workspace-v94-standard-window-controls">
-(()=>{
-    "use strict";
-    const defs=[
-        ["analysis","analysis-workbench-window","analysis-workbench-drag-handle",".analysis-workbench-close"],
-        ["coach","language-coach-window","language-coach-drag-handle",".language-coach-close"],
-        ["transcript","voice-transcript-window","voice-transcript-drag-handle",".voice-transcript-close,.voice-transcript-window-close"],
-        ["keyboard","special-character-palette","special-character-drag-handle",".special-character-close"],
-        ["keyboard","floating-kana-tool","floating-kana-drag-handle",".floating-kana-close,#floating-kana-close"]
-    ];
-    const normalize=()=>{
-        defs.forEach(([name,panelId,titlebarId,closeSelector])=>{
-            const panel=document.getElementById(panelId);
-            const bar=document.getElementById(titlebarId)||panel?.querySelector('[class*="titlebar"]');
-            if(!panel||!bar)return;
-            let actions=bar.querySelector(".workspace-standard-window-actions");
-            if(!actions){actions=document.createElement("div");actions.className="workspace-standard-window-actions";bar.appendChild(actions);}
-
-            // Remove duplicate minimize buttons generated by older workspace code.
-            [...bar.querySelectorAll(".workspace-title-action")].forEach(btn=>{
-                if(!actions.contains(btn)||btn!==actions.querySelector('[data-standard-minimize]'))btn.remove();
-            });
-            let minimize=actions.querySelector('[data-standard-minimize]');
-            if(!minimize){
-                minimize=document.createElement("button");
-                minimize.type="button"; minimize.className="workspace-title-action";
-                minimize.dataset.standardMinimize="1"; minimize.textContent="—"; minimize.title="Minimize";
-                minimize.addEventListener("click",e=>{e.stopPropagation();window.workspaceMinimizeTool?.(name);});
-                actions.prepend(minimize);
-            }
-            const close=bar.querySelector(closeSelector);
-            if(close){close.title="Close";actions.appendChild(close);}
-
-            // Kill obsolete empty wrappers; they otherwise become extra flex children.
-            [...bar.querySelectorAll(".voice-transcript-window-actions,.special-character-window-actions,.floating-kana-window-actions")]
-                .filter(el=>el!==actions && !el.children.length).forEach(el=>el.remove());
-        });
-    };
-    const boot=()=>{normalize();setTimeout(normalize,0);setTimeout(normalize,300);};
-    if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});else boot();
-    window.addEventListener("load",normalize,{once:true});
-})();
-</script>
-
-
 <script id="workspace-v93-coach-analysis-routing">
 (()=>{
     "use strict";
@@ -24026,8 +23749,8 @@ window.__languageTutorWorkspaceVersion="10.8";
 </script>
 
 
-<script id="workspace-v121-unified-tutor-inputs-marker">
-window.__languageTutorWorkspaceVersion="12.1-unified-tutor-inputs-integrated-analysis";
+<script id="workspace-v130-gpt-live-marker">
+window.__languageTutorWorkspaceVersion="13.0-beta-gpt-live-cloudflare";
 </script>
 
 
@@ -24164,6 +23887,18 @@ function renderAskThread(){
     requestAnimationFrame(()=>{host.scrollTop=host.scrollHeight;});
 }
 
+window.addAskTutorLiveTurn=function(role,text){
+    const clean=String(text||"").trim();
+    if(!clean)return;
+    askState.thread.push({
+        role:role==="tutor" ? "tutor" : "user",
+        text:clean,
+        displayText:clean
+    });
+    if(askState.thread.length>100)askState.thread.splice(0,askState.thread.length-100);
+    renderAskThread();
+};
+
 function resetAskThread(){
     askState.thread=[];
     renderAskThread();
@@ -24196,8 +23931,10 @@ window.setAskTutorContext=function(text){
     const out=document.getElementById("ask-tutor-context-text");
     if(out)out.textContent=askState.context;
     if(box)box.hidden=!askState.context;
+    window.updateTutorLiveAskContext?.(askState.context);
 
     if(changed){
+        window.closeAskTutorEmbeddedAnalysis?.();
         resetAskThread();
         clearLegacyPhraseOutput();
         const input=document.getElementById("language-coach-input");
@@ -24208,6 +23945,7 @@ window.setAskTutorContext=function(text){
 };
 
 window.clearAskTutorContext=function(){
+    window.closeAskTutorEmbeddedAnalysis?.();
     askState.context="";
     const box=document.getElementById("ask-tutor-context");
     const out=document.getElementById("ask-tutor-context-text");
@@ -24218,6 +23956,122 @@ window.clearAskTutorContext=function(){
     setStatus("");
     setHeard("");
 };
+
+
+let analysisHomeAnchor=null;
+
+function ensureAnalysisHomeAnchor(){
+    const win=document.getElementById("analysis-workbench-window");
+    if(!win)return null;
+    if(analysisHomeAnchor?.isConnected)return analysisHomeAnchor;
+
+    let anchor=document.getElementById("ask-tutor-analysis-home-anchor");
+    if(!anchor){
+        anchor=document.createElement("span");
+        anchor.id="ask-tutor-analysis-home-anchor";
+        anchor.hidden=true;
+        win.parentElement?.insertBefore(anchor,win);
+    }
+    analysisHomeAnchor=anchor;
+    return anchor;
+}
+
+function clearAnalysisFloatingGeometry(win){
+    if(!win)return;
+    ["left","right","top","bottom","width","height","minWidth","minHeight","maxWidth","maxHeight","zIndex","transform"]
+        .forEach(prop=>{try{win.style.removeProperty(prop.replace(/[A-Z]/g,m=>"-"+m.toLowerCase()))}catch(_){}});
+    win.classList.remove("side-by-side-analysis","workspace-docked");
+}
+
+window.closeAskTutorEmbeddedAnalysis=function(){
+    const host=document.getElementById("ask-tutor-analysis-host");
+    const win=document.getElementById("analysis-workbench-window");
+    const button=document.getElementById("ask-tutor-analyze-btn");
+    const anchor=ensureAnalysisHomeAnchor();
+
+    if(win){
+        win.hidden=true;
+        win.classList.remove("ask-tutor-embedded-analysis","side-by-side-analysis","workspace-docked");
+        clearAnalysisFloatingGeometry(win);
+        if(anchor?.parentElement)anchor.parentElement.insertBefore(win,anchor.nextSibling);
+    }
+    if(host)host.hidden=true;
+    if(button){
+        button.setAttribute("aria-expanded","false");
+        button.textContent="🔎 Analyze";
+    }
+};
+
+window.toggleAskTutorAnalysis=async function(){
+    const host=document.getElementById("ask-tutor-analysis-host");
+    const win=document.getElementById("analysis-workbench-window");
+    const button=document.getElementById("ask-tutor-analyze-btn");
+    const context=String(askState.context||"").trim();
+
+    if(!host || !win || !button)return;
+
+    if(button.getAttribute("aria-expanded")==="true"){
+        window.closeAskTutorEmbeddedAnalysis();
+        return;
+    }
+
+    if(!context){
+        setStatus("Select a conversation line first so the Tutor knows what to analyze.","error");
+        return;
+    }
+
+    ensureAnalysisHomeAnchor();
+
+    if(typeof window.openAnalysisWorkbench!=="function"){
+        setStatus("The grammar parser is unavailable.","error");
+        return;
+    }
+
+    // Use the ORIGINAL Analysis Workbench and its established parser renderer.
+    window.openAnalysisWorkbench(
+        context,
+        currentCfg().code || currentCfg().locale || "de",
+        {source:"ask-tutor",text:context}
+    );
+
+    clearAnalysisFloatingGeometry(win);
+    win.classList.add("ask-tutor-embedded-analysis");
+    host.replaceChildren(win);
+    host.hidden=false;
+    win.hidden=false;
+
+    button.setAttribute("aria-expanded","true");
+    button.textContent="🔎 Hide analysis";
+    setStatus("");
+
+    // openAnalysisWorkbench may have queued its old floating placement on RAF.
+    // Clear that geometry again after the queued placement, then run the same
+    // Full Parse behavior the previous Analysis window used.
+    requestAnimationFrame(()=>{
+        clearAnalysisFloatingGeometry(win);
+        win.classList.add("ask-tutor-embedded-analysis");
+
+        const parseButton=[...win.querySelectorAll(".analysis-workbench-primary-tools button")]
+            .find(b=>/parse/i.test(b.textContent||""));
+        const results=document.getElementById("analysis-workbench-results");
+        if(typeof window.analysisWorkbenchFullParse==="function" && !results?.children?.length){
+            window.analysisWorkbenchFullParse(parseButton||null);
+        }
+    });
+};
+
+
+const originalCloseAnalysisWorkbench=window.closeAnalysisWorkbench;
+if(typeof originalCloseAnalysisWorkbench==="function"){
+    window.closeAnalysisWorkbench=function(...args){
+        const win=document.getElementById("analysis-workbench-window");
+        if(win?.classList.contains("ask-tutor-embedded-analysis")){
+            window.closeAskTutorEmbeddedAnalysis?.();
+            return;
+        }
+        return originalCloseAnalysisWorkbench.apply(this,args);
+    };
+}
 
 function recentConversation(){
     if(typeof voiceTutorHistory!=="function")return "";
@@ -24287,12 +24141,12 @@ function updateAskVoiceButtons(){
     });
 
     if(!askState.voice.active){
-        if(en)en.textContent="🎙 Speak English";
+        if(en)en.textContent="🎙 Ask by voice";
         if(target)target.textContent=`🎙 Speak ${c.name}`;
         return;
     }
 
-    if(en)en.textContent=askState.voice.mode==="en" ? "■ Stop voice" : "🎙 Speak English";
+    if(en)en.textContent=askState.voice.mode==="en" ? "■ Stop voice" : "🎙 Ask by voice";
     if(target)target.textContent=askState.voice.mode==="target" ? "■ Stop voice" : `🎙 Speak ${c.name}`;
 
     const active=activeAskVoiceButton();
@@ -24394,7 +24248,7 @@ function speakAskTutorAnswer(answer){
     const finish=()=>{
         askState.voice.speaking=false;
         if(askState.voice.active){
-            setStatus(`Listening in ${askState.voice.mode==="target" ? currentCfg().name : "English"}…`);
+            setStatus(askState.voice.mode==="target" ? `Listening in ${currentCfg().name}…` : `Listening for your mixed-language question…`);
             scheduleAskListen(250);
         }else{
             setStatus("");
@@ -24403,6 +24257,44 @@ function speakAskTutorAnswer(answer){
     utterance.onend=finish;
     utterance.onerror=finish;
     window.speechSynthesis.speak(utterance);
+}
+
+
+async function normalizeMixedAskVoiceQuestion(rawText){
+    const raw=String(rawText||"").trim();
+    if(!raw || askState.voice.mode==="target")return raw;
+
+    // Web Speech cannot reliably recognize two languages simultaneously.
+    // Repair likely target-language words after recognition, using context.
+    if(typeof callAIJson!=="function")return raw;
+
+    const c=currentCfg();
+    const context=String(askState.context||"").trim();
+    try{
+        const data=await callAIJson(`A language learner asked a spoken question mostly in English but may have inserted ${c.name} words.
+Browser speech recognition listened in English, so ${c.name} words may have been converted into English-looking homophones.
+
+Raw browser transcript:
+${raw}
+
+Selected ${c.name} context:
+${context || "(none selected)"}
+
+Recent live conversation:
+${recentConversation() || "(none)"}
+
+Restore likely ${c.name} words ONLY when strongly supported by the selected context, recent conversation, or the meaning of the question.
+Keep the English parts in English.
+Do not translate the whole question into ${c.name}.
+Do not rewrite the learner's intent.
+Preserve quoted or clearly intentional ${c.name} words as ${c.name}.
+Return JSON only:
+{"question":"normalized mixed-language question"}`);
+        const normalized=String(data?.question||"").trim();
+        return normalized || raw;
+    }catch(_){
+        return raw;
+    }
 }
 
 function listenAskTutorVoice(){
@@ -24433,7 +24325,7 @@ function listenAskTutorVoice(){
     rec.maxAlternatives=1;
 
     setHeard("");
-    setStatus(`Listening in ${askState.voice.mode==="target" ? c.name : "English"}…`);
+    setStatus(askState.voice.mode==="target" ? `Listening in ${c.name}…` : `Listening for an English + ${c.name} question…`);
     updateAskVoiceButtons();
 
     let finalSent=false;
@@ -24454,10 +24346,19 @@ function listenAskTutorVoice(){
             askState.voice.waitingForTutor=true;
             askState.voice.recognition=null;
             try{rec.stop()}catch(_){}
-            window.askTutorQuestion(finalText.trim(),{
-                fromVoice:true,
-                inputLanguage:askState.voice.mode
-            });
+
+            const rawQuestion=finalText.trim();
+            (async()=>{
+                if(askState.voice.mode==="en"){
+                    setStatus(`Interpreting your English + ${c.name} question…`);
+                }
+                const normalized=await normalizeMixedAskVoiceQuestion(rawQuestion);
+                window.askTutorQuestion(normalized,{
+                    fromVoice:true,
+                    inputLanguage:askState.voice.mode,
+                    rawVoiceText:rawQuestion
+                });
+            })();
         }
     };
 
@@ -24583,6 +24484,7 @@ ${question}
 Respond naturally as a language tutor, not as the live role-play conversation partner.
 This is a real back-and-forth private tutoring conversation: answer follow-ups in context.
 Use concise English explanations unless the learner clearly asks to converse in ${c.name}.
+The learner may ask in English while inserting ${c.name} words or phrases. Treat those ${c.name} terms as intentional language-study targets; do not convert them into English words or translate them away.
 Keep target-language examples in ${c.name}.
 You can translate, analyze grammar, explain wording, correct an attempt, or help formulate a reply.
 Do not automatically send anything into the live conversation.
@@ -24718,6 +24620,7 @@ const previousCoachClose=window.closeLanguageCoach;
 if(typeof previousCoachClose==="function"){
     window.closeLanguageCoach=function(...args){
         window.stopAskTutorVoice?.(true);
+        window.closeAskTutorEmbeddedAnalysis?.();
         return previousCoachClose.apply(this,args);
     };
 }
@@ -24729,6 +24632,9 @@ function bind(){
     document.getElementById("ask-tutor-send-btn")
         ?.addEventListener("click",()=>window.askTutorQuestion());
 
+    document.getElementById("ask-tutor-live-voice-btn")
+        ?.addEventListener("click",()=>window.toggleTutorLiveVoice?.("ask"));
+
     document.getElementById("ask-tutor-speak-english")
         ?.addEventListener("click",()=>window.startAskTutorVoice("en"));
 
@@ -24736,7 +24642,7 @@ function bind(){
         ?.addEventListener("click",()=>window.startAskTutorVoice("target"));
 
     document.getElementById("ask-tutor-analyze-btn")
-        ?.addEventListener("click",()=>runShortcut("analyze"));
+        ?.addEventListener("click",()=>window.toggleAskTutorAnalysis?.());
 
     document.getElementById("ask-tutor-translate-btn")
         ?.addEventListener("click",()=>runShortcut("translate"));
@@ -24762,6 +24668,531 @@ function bind(){
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bind,{once:true});
 else bind();
 window.addEventListener("load",updateLanguageLabels,{once:true});
+})();
+</script>
+
+
+<script id="workspace-v13-gpt-live-voice">
+(()=>{
+"use strict";
+
+const LIVE_GATEWAY_KEY="languagetutor_live_gateway_url_v1";
+
+const liveState={
+    active:false,
+    mode:null,
+    pc:null,
+    dc:null,
+    stream:null,
+    audio:null,
+    ready:false,
+    sessionId:"",
+    input:{text:"",start:null,end:null,timer:null},
+    output:{text:"",start:null,end:null,timer:null}
+};
+
+function gatewayUrl(){
+    return String(localStorage.getItem(LIVE_GATEWAY_KEY)||"").trim().replace(/\/+$/,"");
+}
+function setGatewayUrl(value){
+    const clean=String(value||"").trim().replace(/\/+$/,"");
+    if(clean)localStorage.setItem(LIVE_GATEWAY_KEY,clean);
+    else localStorage.removeItem(LIVE_GATEWAY_KEY);
+}
+function showGatewayStatus(text,tone="normal"){
+    const el=document.getElementById("live-gateway-status");
+    if(!el)return;
+    el.textContent=String(text||"");
+    el.style.color=tone==="good" ? "#86efac" : tone==="bad" ? "#fda4af" : "#94a3b8";
+}
+
+window.syncLiveGatewaySettingsUI=function(){
+    const input=document.getElementById("live-gateway-url-input");
+    if(input)input.value=gatewayUrl();
+    showGatewayStatus(gatewayUrl() ? "Configured — ready to test" : "Not configured");
+};
+
+window.saveLiveGatewaySettings=async function(){
+    const input=document.getElementById("live-gateway-url-input");
+    const value=String(input?.value||"").trim();
+    if(!value){
+        showGatewayStatus("Paste your Cloudflare Worker URL first.","bad");
+        return;
+    }
+    setGatewayUrl(value);
+    showGatewayStatus("Testing…");
+    try{
+        const response=await fetch(gatewayUrl()+"/health",{method:"GET",cache:"no-store"});
+        const data=await response.json().catch(()=>({}));
+        if(!response.ok || !data?.ok)throw new Error(data?.error||`HTTP ${response.status}`);
+        showGatewayStatus("✓ Live voice gateway connected","good");
+        updateLiveButtons();
+    }catch(e){
+        showGatewayStatus("Gateway test failed: "+(e?.message||String(e)),"bad");
+    }
+};
+
+window.clearLiveGatewaySettings=function(){
+    setGatewayUrl("");
+    const input=document.getElementById("live-gateway-url-input");
+    if(input)input.value="";
+    showGatewayStatus("Not configured");
+    updateLiveButtons();
+};
+
+function languageInfo(){
+    try{
+        const cfg=typeof langConfig==="function" ? langConfig() : null;
+        if(cfg)return cfg;
+    }catch(_){}
+    const code=typeof currentStudyLanguage!=="undefined" ? currentStudyLanguage : "de";
+    return {
+        code,
+        name:code==="es"?"Spanish":code==="ja"?"Japanese":"German",
+        locale:code==="es"?"es-ES":code==="ja"?"ja-JP":"de-DE"
+    };
+}
+
+function selectedAskContext(){
+    try{return String(window.getAskTutorContext?.()||"").trim()}catch(_){return ""}
+}
+
+function chatSettingsSummary(){
+    const get=(id)=>String(document.getElementById(id)?.value||"").trim();
+    return {
+        mode:get("voice-tutor-mode")||get("voice-mode-select")||"natural",
+        scenario:get("voice-roleplay-scenario")||get("voice-scenario-select")||"open conversation"
+    };
+}
+
+function liveInstructions(mode){
+    const lang=languageInfo();
+
+    if(mode==="ask"){
+        return `You are the private language Tutor in LanguageTutor.
+This is a natural spoken tutoring conversation.
+The learner is studying ${lang.name}.
+The learner may freely mix English and ${lang.name} in the SAME sentence.
+Preserve ${lang.name} words as ${lang.name}; never reinterpret them as English homophones.
+Use English for explanations unless the learner asks to practice ${lang.name}.
+Selected conversation context:
+${selectedAskContext() || "(none selected)"}
+You may explain vocabulary, grammar, pronunciation, nuance, or help formulate a reply.
+Keep spoken answers conversational and reasonably concise.
+Do not pretend to be the live role-play conversation partner.`;
+    }
+
+    const settings=chatSettingsSummary();
+    return `You are the ${lang.name} conversation Tutor in LanguageTutor.
+Have a natural spoken conversation primarily in ${lang.name}.
+Adapt to the learner's level, keep turns reasonably short, and ask natural follow-up questions.
+Correct only important errors unless the learner asks for more correction.
+If the learner temporarily uses English, understand the intent and help them continue in ${lang.name}.
+Conversation mode: ${settings.mode}.
+Scenario/topic: ${settings.scenario}.
+This is live voice practice: sound natural and allow interruptions.`;
+}
+
+function setChatStatus(text){
+    try{
+        if(typeof voiceTutorStatus==="function"){
+            voiceTutorStatus(text);
+            return;
+        }
+    }catch(_){}
+    const el=document.getElementById("voice-tutor-status");
+    if(el)el.textContent=String(text||"");
+}
+function setAskStatus(text){
+    const el=document.getElementById("language-coach-status");
+    if(el){
+        el.textContent=String(text||"");
+        el.hidden=false;
+    }
+}
+function setModeStatus(text){
+    if(liveState.mode==="ask")setAskStatus(text);
+    else setChatStatus(text);
+}
+
+function setLiveHeard(){
+    if(liveState.mode==="ask"){
+        const el=document.getElementById("ask-tutor-voice-heard");
+        if(!el)return;
+        const heard=String(liveState.input.text||"").trim();
+        el.textContent=heard ? `Hearing: ${heard}` : "";
+        el.hidden=!heard;
+        return;
+    }
+
+    const el=document.getElementById("voice-live-transcript");
+    if(!el)return;
+    const user=String(liveState.input.text||"").trim();
+    const tutor=String(liveState.output.text||"").trim();
+    const lines=[];
+    if(user)lines.push(`You: ${user}`);
+    if(tutor)lines.push(`Tutor: ${tutor}`);
+    el.textContent=lines.length ? lines.join("\n\n") : "Live voice is listening…";
+    el.scrollTop=el.scrollHeight;
+}
+
+function clearTimer(seg){
+    if(seg.timer){
+        clearTimeout(seg.timer);
+        seg.timer=null;
+    }
+}
+function resetSegment(seg){
+    clearTimer(seg);
+    seg.text="";
+    seg.start=null;
+    seg.end=null;
+}
+
+function commitSegment(which){
+    const seg=liveState[which];
+    const text=String(seg.text||"").replace(/\s+/g," ").trim();
+    if(!text){
+        resetSegment(seg);
+        return;
+    }
+
+    if(liveState.mode==="chat"){
+        if(typeof window.recordVoiceTutorEntry==="function"){
+            window.recordVoiceTutorEntry(
+                which==="input"
+                ? {role:"user",text,inputMode:"target",liveVoice:true}
+                : {role:"assistant",text,note:"",correctionAudio:"",replyLanguage:"target",liveVoice:true}
+            );
+        }
+    }else if(liveState.mode==="ask"){
+        window.addAskTutorLiveTurn?.(which==="input" ? "user" : "tutor",text);
+    }
+
+    resetSegment(seg);
+    setLiveHeard();
+}
+
+function appendTranscript(which,event){
+    const other=which==="input" ? "output" : "input";
+    if(liveState[other].text.trim())commitSegment(other);
+
+    const seg=liveState[which];
+    const start=Number(event.start_ms);
+    const end=Number(event.end_ms);
+
+    if(seg.text && Number.isFinite(start) && Number.isFinite(seg.end) && start-seg.end>700){
+        commitSegment(which);
+    }
+
+    if(seg.start==null && Number.isFinite(start))seg.start=start;
+    if(Number.isFinite(end))seg.end=end;
+    seg.text+=String(event.delta||"");
+
+    setLiveHeard();
+    clearTimer(seg);
+    seg.timer=setTimeout(()=>commitSegment(which),1100);
+
+    setModeStatus(which==="input" ? "Listening…" : "Tutor is speaking…");
+}
+
+function sendEvent(payload){
+    if(!liveState.dc || liveState.dc.readyState!=="open")return false;
+    try{
+        liveState.dc.send(JSON.stringify(payload));
+        return true;
+    }catch(_){
+        return false;
+    }
+}
+
+function handleLiveEvent(event){
+    if(!event || typeof event!=="object")return;
+
+    switch(event.type){
+        case "session.started":
+            liveState.ready=true;
+            liveState.sessionId=String(event.session?.id||"");
+            sendEvent({
+                type:"session.instructions.append",
+                content:liveInstructions(liveState.mode)
+            });
+            setModeStatus("Live voice connected — speak naturally.");
+            break;
+
+        case "session.input_transcript.delta":
+            appendTranscript("input",event);
+            break;
+
+        case "session.output_transcript.delta":
+            appendTranscript("output",event);
+            break;
+
+        case "session.closed":
+            commitSegment("input");
+            commitSegment("output");
+            setModeStatus("Live voice ended.");
+            cleanupLive(false);
+            break;
+
+        case "error":
+            console.error("GPT-Live server error",event);
+            setModeStatus("Live voice error: "+String(event.error?.message||event.message||"unknown error"));
+            break;
+    }
+}
+
+function updateLiveButtons(){
+    const configured=Boolean(gatewayUrl());
+    const active=liveState.active;
+    const mode=liveState.mode;
+
+    const chatComposer=document.getElementById("conversation-live-voice-btn");
+    const chatTop=document.getElementById("voice-start-btn");
+    const ask=document.getElementById("ask-tutor-live-voice-btn");
+    const stop=document.getElementById("voice-stop-btn");
+
+    const chatActive=active && mode==="chat";
+    const askActive=active && mode==="ask";
+
+    if(chatComposer){
+        chatComposer.classList.toggle("live-active",chatActive);
+        chatComposer.textContent=chatActive ? "■ Stop live voice" : "🎙 Live voice";
+    }
+    if(chatTop){
+        chatTop.classList.toggle("live-active",chatActive);
+        chatTop.textContent=chatActive
+            ? "■ Stop live voice"
+            : (configured ? "🎙 Start live conversation" : "🎙 Start Conversation");
+    }
+    if(ask){
+        ask.classList.toggle("live-active",askActive);
+        ask.textContent=askActive ? "■ Stop live voice" : "🎙 Live voice";
+    }
+    if(stop){
+        stop.classList.toggle("hidden",!chatActive);
+    }
+}
+
+function cleanupLive(stopTracks=true){
+    clearTimer(liveState.input);
+    clearTimer(liveState.output);
+
+    try{
+        if(liveState.dc?.readyState==="open"){
+            liveState.dc.send(JSON.stringify({type:"session.close"}));
+        }
+    }catch(_){}
+    try{liveState.dc?.close()}catch(_){}
+    try{liveState.pc?.close()}catch(_){}
+
+    if(stopTracks){
+        try{liveState.stream?.getTracks()?.forEach(track=>track.stop())}catch(_){}
+    }
+
+    if(liveState.audio){
+        try{liveState.audio.pause()}catch(_){}
+        liveState.audio.srcObject=null;
+        liveState.audio.remove();
+    }
+
+    liveState.active=false;
+    liveState.mode=null;
+    liveState.pc=null;
+    liveState.dc=null;
+    liveState.stream=null;
+    liveState.audio=null;
+    liveState.ready=false;
+    liveState.sessionId="";
+    resetSegment(liveState.input);
+    resetSegment(liveState.output);
+    updateLiveButtons();
+}
+
+window.stopTutorLiveVoice=async function(){
+    if(!liveState.active)return;
+    commitSegment("input");
+    commitSegment("output");
+    cleanupLive(true);
+};
+
+function fallbackStart(mode){
+    if(mode==="ask"){
+        if(typeof window.startAskTutorVoice==="function"){
+            window.startAskTutorVoice("en");
+            return;
+        }
+    }else if(typeof window.startVoiceConversation==="function"){
+        window.startVoiceConversation();
+        return;
+    }
+    setModeStatus("Voice fallback is unavailable.");
+}
+
+window.stopTutorLiveVoiceOrFallback=function(mode="chat"){
+    if(liveState.active){
+        window.stopTutorLiveVoice();
+        return;
+    }
+    if(mode==="ask")window.stopAskTutorVoice?.(true);
+    else window.stopVoiceConversation?.();
+};
+
+async function createLiveSession(mode){
+    const base=gatewayUrl();
+    if(!base)throw new Error("Live gateway is not configured.");
+    if(!navigator.mediaDevices?.getUserMedia)throw new Error("Microphone access is unavailable.");
+
+    const stream=await navigator.mediaDevices.getUserMedia({
+        audio:{
+            echoCancellation:true,
+            noiseSuppression:true,
+            autoGainControl:true
+        }
+    });
+
+    const pc=new RTCPeerConnection();
+    const audio=document.createElement("audio");
+    audio.autoplay=true;
+    audio.playsInline=true;
+    audio.hidden=true;
+    document.body.appendChild(audio);
+
+    pc.ontrack=event=>{
+        const remote=event.streams?.[0];
+        if(remote)audio.srcObject=remote;
+    };
+
+    stream.getAudioTracks().forEach(track=>pc.addTrack(track,stream));
+
+    const dc=pc.createDataChannel("oai-events");
+    dc.onmessage=message=>{
+        try{
+            handleLiveEvent(JSON.parse(message.data));
+        }catch(e){
+            console.warn("Unparsed GPT-Live event",message.data,e);
+        }
+    };
+    dc.onopen=()=>setModeStatus("Live voice connected…");
+    dc.onclose=()=>{
+        if(liveState.active)setModeStatus("Live voice connection closed.");
+    };
+
+    const offer=await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    const response=await fetch(base+"/live",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+            sdp:pc.localDescription?.sdp||offer.sdp,
+            mode,
+            language:languageInfo().code
+        })
+    });
+
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok){
+        throw new Error(data?.error||data?.message||`Gateway returned HTTP ${response.status}`);
+    }
+
+    const answer=String(data?.transport?.sdp||"").trim();
+    if(!answer)throw new Error("Gateway returned no WebRTC SDP answer.");
+
+    await pc.setRemoteDescription({type:"answer",sdp:answer});
+
+    liveState.pc=pc;
+    liveState.dc=dc;
+    liveState.stream=stream;
+    liveState.audio=audio;
+}
+
+window.toggleTutorLiveVoice=async function(mode="chat"){
+    const requested=mode==="ask" ? "ask" : "chat";
+
+    if(liveState.active){
+        if(liveState.mode===requested){
+            await window.stopTutorLiveVoice();
+            return;
+        }
+        await window.stopTutorLiveVoice();
+    }
+
+    if(!gatewayUrl()){
+        fallbackStart(requested);
+        return;
+    }
+
+    try{
+        if(requested==="chat")window.stopVoiceConversation?.(true);
+        else window.stopAskTutorVoice?.(true);
+    }catch(_){}
+
+    liveState.active=true;
+    liveState.mode=requested;
+    updateLiveButtons();
+    setModeStatus("Connecting GPT-Live voice…");
+
+    try{
+        await createLiveSession(requested);
+        if(requested==="chat")window.openVoiceTranscriptWindow?.();
+    }catch(e){
+        console.error("GPT-Live startup failed",e);
+        cleanupLive(true);
+        setModeStatus("GPT-Live unavailable; using the existing voice fallback.");
+        fallbackStart(requested);
+    }
+};
+
+window.updateTutorLiveAskContext=function(context){
+    if(!liveState.active || liveState.mode!=="ask" || !liveState.ready)return;
+    sendEvent({
+        type:"session.instructions.append",
+        content:`The learner selected a new conversation line for study. Use this as the current tutoring context:\n${String(context||"(none selected)")}`
+    });
+};
+
+function mirrorTypedContext(text,source){
+    if(!liveState.active || !liveState.ready)return;
+    const clean=String(text||"").trim();
+    if(!clean)return;
+    sendEvent({
+        type:"session.instructions.append",
+        content:`LanguageTutor UI context update (${source}): the learner typed: ${clean}`
+    });
+}
+
+const oldUnifiedSend=window.sendUnifiedTutorText;
+if(typeof oldUnifiedSend==="function"){
+    window.sendUnifiedTutorText=async function(...args){
+        const value=String(document.getElementById("voice-text-input")?.value||"").trim();
+        mirrorTypedContext(value,"live conversation");
+        return oldUnifiedSend.apply(this,args);
+    };
+}
+
+const oldAskQuestion=window.askTutorQuestion;
+if(typeof oldAskQuestion==="function"){
+    window.askTutorQuestion=async function(...args){
+        const override=args[0];
+        const value=override!=null
+            ? String(override||"").trim()
+            : String(document.getElementById("language-coach-input")?.value||"").trim();
+        mirrorTypedContext(value,"Ask Tutor");
+        return oldAskQuestion.apply(this,args);
+    };
+}
+
+function init(){
+    window.syncLiveGatewaySettingsUI?.();
+    updateLiveButtons();
+    window.addEventListener("beforeunload",()=>{
+        try{cleanupLive(true)}catch(_){}
+    });
+}
+
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});
+else init();
 })();
 </script>
 
