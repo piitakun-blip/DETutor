@@ -7403,6 +7403,20 @@ body.conversation-first-layout main.conversation-first-main{gap:var(--ws-gap)!im
  font-family:inherit!important;font-size:11px!important;font-weight:700!important
 }
 </style>
+<style id="workspace-v1432-transcript-first-start-css">
+#conversation-transcript-section:not(.transcript-is-floating) > #conversation-view{
+    display:flex!important;
+    visibility:visible!important;
+    opacity:1!important;
+}
+#conversation-transcript-section:not(.transcript-is-floating) #voice-chat-messages-log{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    min-height:70px!important;
+}
+</style>
+
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
 
@@ -14985,6 +14999,7 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
     }
 
     function renderVoiceTutorTranscript(){
+        repairSharedConversationLayout();
         const log=document.getElementById("voice-chat-messages-log");
         if(!log)return;
         log.innerHTML="";
@@ -15634,13 +15649,32 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
         if(matched)utterance.voice=matched;
 
         return new Promise((resolve,reject)=>{
-            utterance.onend=()=>{
+            let finished=false;
+            const estimatedMs=Math.min(90000,Math.max(15000,7000+(clean.length*95)));
+            const watchdog=setTimeout(()=>{
+                if(finished)return;
+                finished=true;
+                try{window.speechSynthesis.cancel()}catch(_){}
                 voiceTutorState.speaking=false;
+                voiceTutorState.phase="idle";
+                console.warn("Tutor speech watchdog released a stalled speech-synthesis turn.");
                 resolve();
-            };
-            utterance.onerror=event=>{
+            },estimatedMs);
+
+            const finish=(error)=>{
+                if(finished)return;
+                finished=true;
+                clearTimeout(watchdog);
                 voiceTutorState.speaking=false;
-                reject(new Error(event?.error||"Speech playback failed."));
+                if(error)reject(error);
+                else resolve();
+            };
+
+            utterance.onend=()=>finish();
+            utterance.onerror=event=>{
+                const code=String(event?.error||"");
+                if(code==="canceled" || code==="interrupted")finish();
+                else finish(new Error(code||"Speech playback failed."));
             };
             window.speechSynthesis.speak(utterance);
         });
@@ -16016,6 +16050,12 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
         }
 
         saveVoiceTutorSettings();
+
+        // v14.3.2: make the docked Transcript usable on the very first start.
+        repairSharedConversationLayout();
+        renderVoiceTutorTranscript();
+        window.normalizeLanguageTutorWorkspaces?.();
+
         voiceTutorState.active=true;
         voiceTutorState.micSession=true;
         voiceTutorState.resumeMicAfterTurn=true;
@@ -24985,8 +25025,8 @@ window.__languageTutorWorkspaceVersion="10.8";
 </script>
 
 
-<script id="workspace-v1431-workspace-polish-marker">
-window.__languageTutorWorkspaceVersion="14.3.1-workspace-polish-startup";
+<script id="workspace-v1432-voice-watchdog-transcript-start-marker">
+window.__languageTutorWorkspaceVersion="14.3.2-voice-watchdog-transcript-start";
 </script>
 
 
@@ -25704,7 +25744,14 @@ function speakAskTutorAnswer(answer){
         if(exact||english)utterance.voice=exact||english;
     }catch(_){}
 
+    let finished=false;
+    const spokenText=String(answer||"");
+    let watchdog=null;
+
     const finish=()=>{
+        if(finished)return;
+        finished=true;
+        if(watchdog)clearTimeout(watchdog);
         askState.voice.speaking=false;
         if(askState.voice.active){
             setStatus(askState.voice.mode==="target" ? `Listening in ${currentCfg().name}…` : `Listening for your mixed-language question…`);
@@ -25713,6 +25760,14 @@ function speakAskTutorAnswer(answer){
             setStatus("");
         }
     };
+
+    watchdog=setTimeout(()=>{
+        if(finished)return;
+        try{window.speechSynthesis.cancel()}catch(_){}
+        console.warn("Ask Tutor speech watchdog released a stalled speech-synthesis turn.");
+        finish();
+    },Math.min(90000,Math.max(15000,7000+(spokenText.length*95))));
+
     utterance.onend=finish;
     utterance.onerror=finish;
     window.speechSynthesis.speak(utterance);
