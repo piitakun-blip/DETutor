@@ -15627,6 +15627,12 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
         voiceTutorState.phase="speaking";
         voiceTutorStatus("Tutor is speaking…","speaking");
         setVoiceMicIndicator(false);
+        const interruptBtn=document.getElementById("voice-listen-now-btn");
+        if(interruptBtn){
+            interruptBtn.classList.remove("hidden");
+            interruptBtn.textContent="🎙 Speak now";
+            interruptBtn.onclick=()=>window.interruptVoiceTutorAndListen("target");
+        }
         window.speechSynthesis.cancel();
 
         const utterance=new SpeechSynthesisUtterance(clean);
@@ -15650,26 +15656,42 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
 
         return new Promise((resolve,reject)=>{
             let finished=false;
-            const estimatedMs=Math.min(90000,Math.max(15000,7000+(clean.length*95)));
-            const watchdog=setTimeout(()=>{
-                if(finished)return;
-                finished=true;
-                try{window.speechSynthesis.cancel()}catch(_){}
-                voiceTutorState.speaking=false;
-                voiceTutorState.phase="idle";
-                console.warn("Tutor speech watchdog released a stalled speech-synthesis turn.");
-                resolve();
-            },estimatedMs);
+            let began=false;
+            let quietTicks=0;
+            const hardLimitMs=Math.min(45000,Math.max(10000,3500+(clean.length*75)));
 
             const finish=(error)=>{
                 if(finished)return;
                 finished=true;
                 clearTimeout(watchdog);
+                clearInterval(stateProbe);
                 voiceTutorState.speaking=false;
                 if(error)reject(error);
                 else resolve();
             };
 
+            // Do not rely only on onend/onerror. Safari/Chrome can occasionally
+            // lose those events. Once speech has actually begun, two consecutive
+            // probes reporting neither speaking nor pending means the turn ended.
+            const stateProbe=setInterval(()=>{
+                if(finished)return;
+                const synth=window.speechSynthesis;
+                if(synth.speaking || synth.pending){
+                    began=true;
+                    quietTicks=0;
+                    return;
+                }
+                if(began && ++quietTicks>=2)finish();
+            },350);
+
+            const watchdog=setTimeout(()=>{
+                if(finished)return;
+                try{window.speechSynthesis.cancel()}catch(_){}
+                console.warn("Tutor speech watchdog released a stalled speech-synthesis turn.");
+                finish();
+            },hardLimitMs);
+
+            utterance.onstart=()=>{began=true;quietTicks=0;};
             utterance.onend=()=>finish();
             utterance.onerror=event=>{
                 const code=String(event?.error||"");
@@ -15885,6 +15907,22 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
     };
     window.askVoiceTutorInEnglish=window.replyToVoiceTutorInEnglish;
 
+    // v14.3.3: learner can take the microphone back immediately if browser TTS
+    // is stuck or if they simply want to interrupt the Tutor.
+    window.interruptVoiceTutorAndListen=function(inputMode="target"){
+        if(!voiceTutorState.active)return;
+        try{window.speechSynthesis?.cancel();}catch(e){}
+        voiceTutorState.speaking=false;
+        voiceTutorState.phase="idle";
+        clearVoiceSilenceTimer();
+        destroyVoiceRecognition();
+        setVoiceMicIndicator(false);
+        voiceTutorState.resumeMicAfterTurn=true;
+        voiceTutorState.micSession=true;
+        voiceTutorStatus(inputMode==="english" ? "Listening for your English question…" : `Listening in ${langConfig().name}…`,"listening");
+        setTimeout(()=>resumeVoiceRecognition(true,inputMode==="english" ? "english" : "target"),100);
+    };
+
     function englishTutorIntent(text){
         const raw=String(text||"").trim();
         const t=raw.toLowerCase();
@@ -15955,6 +15993,13 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
             voiceTutorState.liveTutorText=String(result.reply||"").trim();
             renderVoiceLiveTurn();
             await speakVoiceTutorText(result.reply,result.replyLanguage);
+
+            const listenBtn=document.getElementById("voice-listen-now-btn");
+            if(listenBtn){
+                listenBtn.textContent="🎙 Listen now";
+                listenBtn.onclick=()=>resumeVoiceRecognition(true,"target");
+                listenBtn.classList.add("hidden");
+            }
 
             if(voiceTutorState.active){
                 clearVoiceSilenceTimer();
@@ -25025,8 +25070,8 @@ window.__languageTutorWorkspaceVersion="10.8";
 </script>
 
 
-<script id="workspace-v1432-voice-watchdog-transcript-start-marker">
-window.__languageTutorWorkspaceVersion="14.3.2-voice-watchdog-transcript-start";
+<script id="workspace-v1433-voice-release-barge-in-marker">
+window.__languageTutorWorkspaceVersion="14.3.3-voice-release-barge-in";
 </script>
 
 
