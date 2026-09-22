@@ -1,7 +1,8 @@
 <!--
-LanguageTutor — VERSION 2A
+LanguageTutor — VERSION 2B
 Based on Version 1 / exact user rollback baseline.
-Changes: Version 1 scrolling fix + exact Open Conversation test.
+Changes: Version 1 scrolling fix + exact Open Conversation test + expanded,
+high-contrast live transcription and text-entry areas in Tutor Controls.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -8110,7 +8111,7 @@ body.conversation-first-layout main.conversation-first-main{gap:var(--ws-gap)!im
                         </button>
                     </div>
 
-                    <div class="shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-2">
+                    <div class="tutor-live-transcription-panel shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-2">
                         <div class="flex items-center justify-between gap-2">
                             <div id="voice-tutor-status" class="text-[11px] font-bold text-slate-600">Ready.</div>
                             <div id="voice-mic-indicator" class="hidden items-center gap-1.5 text-[10px] font-bold text-rose-600">
@@ -8120,7 +8121,7 @@ body.conversation-first-layout main.conversation-first-main{gap:var(--ws-gap)!im
                         </div>
                         <div class="mt-2 rounded-lg bg-slate-50 border border-slate-100 px-2.5 py-2">
                             <div class="text-[9px] uppercase tracking-wider font-bold text-slate-400">Live transcription</div>
-                            <div id="voice-live-transcript" class="text-[12px] text-slate-700 mt-1 min-h-[58px] max-h-[96px] overflow-y-auto leading-relaxed pr-1 whitespace-pre-wrap">What the microphone hears will appear here.</div>
+                            <div id="voice-live-transcript" class="tutor-live-transcription-window text-[12px] text-slate-700 mt-1 min-h-[58px] max-h-[96px] overflow-y-auto leading-relaxed pr-1 whitespace-pre-wrap">What the microphone hears will appear here.</div>
                         </div>
                     </div>
 
@@ -27395,5 +27396,40 @@ test.addEventListener("click",()=>{
 });
 })();
 </script>
+
+<style id="language-tutor-version-2b-tutor-controls-emphasis">
+/* VERSION 2B — keep approximately three short live turns visible and make
+   both active response areas easy to locate at a glance. */
+#voice-live-transcript.tutor-live-transcription-window,
+#voice-live-transcript.tutor-live-transcription-window.voice-live-interim-status,
+#voice-live-transcript.tutor-live-transcription-window.voice-live-interim-status.voice-live-interim-idle{
+  box-sizing:border-box!important;
+  width:100%!important;
+  height:174px!important;
+  min-height:174px!important;
+  max-height:174px!important;
+  margin:7px 0 2px!important;
+  padding:10px 12px!important;
+  overflow-y:auto!important;
+  border:2px solid #6f8fce!important;
+  border-radius:10px!important;
+  background:#fff!important;
+  color:#334155!important;
+  font-size:12px!important;
+  line-height:1.5!important;
+  opacity:1!important;
+  box-shadow:0 0 0 3px rgba(111,143,206,.13)!important;
+  pointer-events:auto!important;
+}
+
+#unified-text-entry.tutor-composer-shell{
+  border:2px solid #6f8fce!important;
+  box-shadow:0 0 0 3px rgba(111,143,206,.13)!important;
+}
+#unified-text-entry.tutor-composer-shell:focus-within{
+  border-color:#4f67b1!important;
+  box-shadow:0 0 0 4px rgba(79,103,177,.18)!important;
+}
+</style>
 </body>
 </html>
