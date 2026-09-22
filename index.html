@@ -1,9 +1,11 @@
 <!--
-LanguageTutor — VERSION 2D CANDIDATE
+LanguageTutor — VERSION 2G CANDIDATE
 Based on Version 1 / exact user rollback baseline.
 Changes: Version 1 scrolling fix + exact Open Conversation test; expanded,
 high-contrast Tutor Controls transcription and text entry; latest-three-turn
-live transcript; Sentence Diagram removed; Restate replays the tutor cue.
+live transcript; Sentence Diagram removed; Restate replays the tutor cue;
+Conversation Transcript opens tall enough for a complete learner–tutor turn;
+continuing a saved conversation replays its most recent tutor line.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -17465,6 +17467,13 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
             : currentStudyLanguage;
         const restored=normalizedSavedConversationEntries(selected.entries);
         if(!restored.length)return;
+        let lastTutor=null;
+        for(let i=restored.length-1;i>=0;i--){
+            if(restored[i]?.role==="assistant"){
+                lastTutor=restored[i];
+                break;
+            }
+        }
 
         const current=voiceTutorHistories[language]||[];
         const currentHasTurns=current.some(entry=>String(entry?.text||"").trim());
@@ -17514,6 +17523,20 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
         // Resume on the page by default. If the learner wants the movable
         // version, Open Conversation moves this exact same restored view.
         window.dockVoiceTranscript?.();
+
+        const lastTutorText=String(lastTutor?.text||"").trim();
+        if(lastTutorText){
+            voiceTutorStatus("Saved Conversation restored. Replaying the tutor's last line…","speaking");
+            try{
+                await speakVoiceTutorText(
+                    lastTutorText,
+                    lastTutor?.replyLanguage==="en" ? "en" : "target"
+                );
+            }catch(e){
+                console.warn("Could not replay the saved tutor line.",e);
+            }
+            voiceTutorState.phase="idle";
+        }
 
         voiceTutorStatus(
             "Saved Conversation restored. Continue with your next reply.",
@@ -27388,6 +27411,28 @@ test.addEventListener("click",()=>{
 #unified-text-entry.tutor-composer-shell:focus-within{
   border-color:#4f67b1!important;
   box-shadow:0 0 0 4px rgba(79,103,177,.18)!important;
+}
+</style>
+
+<style id="language-tutor-version-2f-starting-transcript-height">
+/* VERSION 2F — keep the docked Conversation Transcript tall enough to show a
+   complete learner–tutor exchange, including in its initial empty state. */
+#conversation-view:not(.is-floating),
+#conversation-view:not(.is-floating).conversation-is-empty{
+  height:360px!important;
+  min-height:300px!important;
+}
+#conversation-view.conversation-is-empty #voice-chat-messages-log{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  max-height:none!important;
+}
+@media(max-width:640px){
+  #conversation-view:not(.is-floating),
+  #conversation-view:not(.is-floating).conversation-is-empty{
+    height:320px!important;
+    min-height:280px!important;
+  }
 }
 </style>
 </body>
