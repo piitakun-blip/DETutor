@@ -1,10 +1,9 @@
 <!--
-LanguageTutor — VERSION 2C
+LanguageTutor — VERSION 2D CANDIDATE
 Based on Version 1 / exact user rollback baseline.
-Changes: Version 1 scrolling fix + exact Open Conversation test + expanded,
-high-contrast live transcription and text-entry areas in Tutor Controls.
-The live transcription retains the latest three conversation turns, and the
-Sentence Diagram option has been removed in favor of the grammar parser.
+Changes: Version 1 scrolling fix + exact Open Conversation test; expanded,
+high-contrast Tutor Controls transcription and text entry; latest-three-turn
+live transcript; Sentence Diagram removed; Restate replays the tutor cue.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -8105,7 +8104,7 @@ body.conversation-first-layout main.conversation-first-main{gap:var(--ws-gap)!im
                         <button type="button" id="voice-english-turn-btn" onclick="replyToVoiceTutorInEnglish()" class="hidden min-h-[44px] px-4 py-2 rounded-xl border border-sky-200 bg-sky-50 text-sky-700 text-xs font-bold transition" title="Say your reply in English and see how to say it in the target language">
                             🇺🇸 Reply in English
                         </button>
-                        <button type="button" id="voice-restate-btn" onclick="restateLastVoiceTurn()" class="hidden min-h-[44px] px-4 py-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-xs font-bold transition" title="Discard the last captured turn and say it again">
+                        <button type="button" id="voice-restate-btn" onclick="restateLastVoiceTurn()" class="hidden min-h-[44px] px-4 py-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-xs font-bold transition" title="Replay the tutor's previous turn and answer again">
                             ↺ Restate
                         </button>
                         <button type="button" onclick="newVoiceConversation()" class="min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition">
@@ -15366,9 +15365,8 @@ Do not add quotation marks or labels.`;
         const turns=voiceTutorHistory().map(normalize).filter(Boolean);
         const pendingTurns=pending.map(normalize).filter(Boolean);
 
-        // The classic voice path keeps the current exchange in both state and
-        // history. Remove only that shared suffix/prefix so genuine repeated
-        // phrases still remain separate conversation turns.
+        // Current voice state can overlap with finalized history. Remove only
+        // that shared suffix/prefix so intentional repeated phrases remain.
         let overlap=Math.min(turns.length,pendingTurns.length);
         while(overlap>0){
             const historyStart=turns.length-overlap;
@@ -15960,7 +15958,7 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
         }
     }
 
-    window.restateLastVoiceTurn=function(){
+    window.restateLastVoiceTurn=async function(){
         if(!voiceTutorState.active)return;
         if(voiceTutorState.phase==="processing"){
             voiceTutorStatus("Wait for the tutor to finish this turn, then tap Restate.","normal");
@@ -15983,6 +15981,13 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
 
         const previousUser=history[userIndex];
         const inputMode=previousUser?.inputMode==="english" ? "english" : "target";
+        let previousTutor=null;
+        for(let i=userIndex-1;i>=0;i--){
+            if(history[i]?.role==="assistant"){
+                previousTutor=history[i];
+                break;
+            }
+        }
 
         // Remove the learner turn and anything the tutor produced after it.
         history.splice(userIndex);
@@ -16001,14 +16006,26 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
         voiceTutorState.phase="idle";
         voiceTutorState.inputMode=inputMode;
         renderVoiceLiveTurn("Restate your last turn…");
-        voiceTutorStatus(
-            inputMode==="english"
-                ? "Restate your English question."
-                : `Restate your ${langConfig().name} turn.`,
-            "listening"
-        );
         updateVoiceRestateButton();
 
+        const cueText=String(previousTutor?.text||"").trim();
+        if(cueText){
+            voiceTutorStatus("Replaying the tutor's previous turn, then listening for your new reply.","speaking");
+            try{
+                await speakVoiceTutorText(cueText,previousTutor?.replyLanguage||"target");
+            }catch(e){
+                console.warn("Could not replay the previous tutor turn.",e);
+            }
+            if(!voiceTutorState.active)return;
+        }
+
+        voiceTutorState.phase="idle";
+        voiceTutorStatus(
+            inputMode==="english"
+                ? "Now give your new English reply."
+                : `Now give your new ${langConfig().name} reply.`,
+            "listening"
+        );
         setTimeout(()=>resumeVoiceRecognition(true,inputMode),150);
     };
 
@@ -27339,8 +27356,8 @@ test.addEventListener("click",()=>{
 })();
 </script>
 
-<style id="language-tutor-version-2c-tutor-controls-emphasis">
-/* VERSION 2C — keep approximately three recent conversation turns visible and
+<style id="language-tutor-version-2d-tutor-controls-emphasis">
+/* VERSION 2D — keep approximately three recent conversation turns visible and
    make both active response areas easy to locate at a glance. */
 #voice-live-transcript.tutor-live-transcription-window,
 #voice-live-transcript.tutor-live-transcription-window.voice-live-interim-status,
