@@ -1,15 +1,17 @@
 <!--
-LanguageTutor — VERSION 2B
+LanguageTutor — VERSION 2C
 Based on Version 1 / exact user rollback baseline.
 Changes: Version 1 scrolling fix + exact Open Conversation test + expanded,
 high-contrast live transcription and text-entry areas in Tutor Controls.
+The live transcription retains the latest three conversation turns, and the
+Sentence Diagram option has been removed in favor of the grammar parser.
 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="application-name" content="LanguageTestTutor">
+    <meta name="application-name" content="LanguageTutor">
     <meta name="apple-mobile-web-app-title" content="LanguageTutor">
     <title>LanguageTutor</title>
     <!-- Tailwind CSS for rich, modern styling -->
@@ -15340,6 +15342,45 @@ Do not add quotation marks or labels.`;
     window.recordVoiceTutorEntry=recordVoiceTutorEntry;
     window.getVoiceTutorHistory=voiceTutorHistory;
 
+    function formatVoiceLiveEntry(entry){
+        const isTutor=entry?.role==="assistant" || entry?.role==="tutor";
+        const role=isTutor ? "Tutor" : "You";
+        const raw=isTutor
+            ? stripTutorMarkdown(entry?.text||"")
+            : String(entry?.text||"").trim();
+        if(!raw)return "";
+        const translation=!isTutor ? String(entry?.targetTranslation||"").trim() : "";
+        return translation
+            ? `${role}: ${raw}\n${langConfig().name}: ${translation}`
+            : `${role}: ${raw}`;
+    }
+
+    function recentVoiceLiveLines(pending=[]){
+        const normalize=entry=>{
+            const formatted=formatVoiceLiveEntry(entry);
+            if(!formatted)return null;
+            const role=entry?.role==="assistant" || entry?.role==="tutor" ? "assistant" : "user";
+            const key=`${role}|${String(entry?.text||"").trim()}`;
+            return {key,formatted};
+        };
+        const turns=voiceTutorHistory().map(normalize).filter(Boolean);
+        const pendingTurns=pending.map(normalize).filter(Boolean);
+
+        // The classic voice path keeps the current exchange in both state and
+        // history. Remove only that shared suffix/prefix so genuine repeated
+        // phrases still remain separate conversation turns.
+        let overlap=Math.min(turns.length,pendingTurns.length);
+        while(overlap>0){
+            const historyStart=turns.length-overlap;
+            const matches=pendingTurns.slice(0,overlap)
+                .every((turn,index)=>turn.key===turns[historyStart+index]?.key);
+            if(matches)break;
+            overlap--;
+        }
+        turns.push(...pendingTurns.slice(overlap));
+        return turns.slice(-3).map(turn=>turn.formatted);
+    }
+
     function renderVoiceLiveTurn(listeningText=""){
         const live=document.getElementById("voice-live-transcript");
         if(!live)return;
@@ -15347,14 +15388,23 @@ Do not add quotation marks or labels.`;
         const targetTranslation=String(voiceTutorState.liveUserTargetTranslation||"").trim();
         const tutor=stripTutorMarkdown(voiceTutorState.liveTutorText);
         const listening=String(listeningText||"").trim();
-        const lines=[];
-        if(user) lines.push(`You: ${user}`);
-        if(targetTranslation) lines.push(`${langConfig().name}: ${targetTranslation}`);
-        if(tutor) lines.push(`Tutor: ${tutor}`);
-        if(listening) lines.push(listening);
-        live.textContent=lines.length ? lines.join("\n\n") : "What the microphone hears will appear here.";
+        const pending=[];
+        if(user)pending.push({role:"user",text:user,targetTranslation});
+        if(tutor)pending.push({role:"assistant",text:tutor});
+        const lines=recentVoiceLiveLines(pending);
+        live.textContent=lines.length
+            ? lines.join("\n\n")
+            : (listening || "What the microphone hears will appear here.");
         live.scrollTop=live.scrollHeight;
     }
+
+    window.renderRecentVoiceTutorLiveTranscript=function(pending=[]){
+        const live=document.getElementById("voice-live-transcript");
+        if(!live)return;
+        const lines=recentVoiceLiveLines(Array.isArray(pending) ? pending : []);
+        live.textContent=lines.length ? lines.join("\n\n") : "Live voice is listening…";
+        live.scrollTop=live.scrollHeight;
+    };
 
     window.newVoiceConversation=function(){
         if(voiceTutorState.active) stopVoiceConversation(true);
@@ -21792,7 +21842,6 @@ Rules:
                 source:"AI",
                 chunks,
                 sentences,
-                // Diagram is requested separately and is AI-only.
                 diagram:null
             };
             workbenchAIParseCache.set(key,result);
@@ -21855,20 +21904,7 @@ Rules:
             legend.classList.toggle("hidden",!opening);
             legendToggle.textContent=opening ? "Hide color key" : "Show color key";
         });
-        const viewSwitch=document.createElement("div");
-        viewSwitch.className="analysis-parser-view-switch";
-
-        const tilesViewButton=document.createElement("button");
-        tilesViewButton.type="button";
-        tilesViewButton.className="active";
-        tilesViewButton.textContent="Tiles";
-
-        const diagramViewButton=document.createElement("button");
-        diagramViewButton.type="button";
-        diagramViewButton.textContent="Diagram";
-
-        viewSwitch.append(tilesViewButton,diagramViewButton);
-        card.append(viewSwitch,legendToggle,legend);
+        card.append(legendToggle,legend);
 
         const tiles=document.createElement("div");
         tiles.className="analysis-parser-tiles";
@@ -21999,98 +22035,6 @@ Rules:
         });
 
         card.append(tiles,detail);
-
-        const diagramHost=document.createElement("div");
-        diagramHost.className="analysis-parser-diagram-host hidden";
-        card.appendChild(diagramHost);
-
-        const showTiles=()=>{
-            tiles.classList.remove("hidden");
-            detail.classList.add("hidden");
-            diagramHost.classList.add("hidden");
-            tilesViewButton.classList.add("active");
-            diagramViewButton.classList.remove("active");
-        };
-
-        const showDiagram=async()=>{
-            const beforeKey=workbenchParseKey();
-            try{if(!(await ensureWorkbenchGrammarGate()))return;}
-            catch(e){
-                diagramHost.classList.remove("hidden");
-                diagramHost.innerHTML="<div class=\"analysis-diagram-unavailable\"><strong>Grammar check unavailable.</strong><span>AI could not verify the sentence before diagramming. Try again.</span></div>";
-                return;
-            }
-            if(beforeKey!==workbenchParseKey()){
-                window.analysisWorkbenchFullParse(
-                    [...document.querySelectorAll("#analysis-workbench-window .analysis-workbench-primary-tools button")]
-                    .find(btn=>btn.textContent.trim()==="Parse")||null
-                );
-                return;
-            }
-            tiles.classList.add("hidden");
-            detail.classList.add("hidden");
-            diagramHost.classList.remove("hidden");
-            tilesViewButton.classList.remove("active");
-            diagramViewButton.classList.add("active");
-
-            if(diagramHost.dataset.loaded==="1")return;
-
-            const ai=resolveWorkbenchAIConfig();
-            diagramHost.replaceChildren();
-
-            if(!ai.available){
-                const unavailable=document.createElement("div");
-                unavailable.className="analysis-diagram-unavailable";
-                unavailable.innerHTML="<strong>Sentence diagram unavailable.</strong><span>AI is required for a reliable diagram. Add or select an AI API key in Settings, then try again.</span>";
-                diagramHost.appendChild(unavailable);
-                diagramHost.dataset.loaded="1";
-                return;
-            }
-
-            const loading=document.createElement("div");
-            loading.className="analysis-diagram-refining-badge";
-            loading.textContent=`✨ ${ai.providerName||"AI"} • BUILDING DIAGRAM…`;
-            diagramHost.appendChild(loading);
-
-            try{
-                const diagram=await getWorkbenchDiagramData(parsed);
-                const tree=buildDiagramSentenceGroups(diagram);
-                if(!tree)throw new Error("AI did not return a usable diagram.");
-
-                diagramHost.replaceChildren();
-                const done=document.createElement("div");
-                done.className="analysis-diagram-refining-badge";
-                done.textContent=`✨ ${ai.providerName||"AI"}`;
-                diagramHost.append(done,tree);
-                diagramHost.dataset.loaded="1";
-            }catch(e){
-                diagramHost.replaceChildren();
-                const unavailable=document.createElement("div");
-                unavailable.className="analysis-diagram-unavailable";
-
-                const title=document.createElement("strong");
-                title.textContent="Sentence diagram unavailable.";
-
-                const note=document.createElement("span");
-                note.textContent="AI could not produce a reliable diagram right now. Try Diagram again.";
-
-                const retry=document.createElement("button");
-                retry.type="button";
-                retry.textContent="Try again";
-                retry.addEventListener("click",()=>{
-                    diagramHost.dataset.loaded="";
-                    showDiagram();
-                });
-
-                unavailable.append(title,note,retry);
-                diagramHost.appendChild(unavailable);
-                // Deliberately do not cache failure, so retry can make a fresh request.
-                diagramHost.dataset.loaded="";
-            }
-        };
-
-        tilesViewButton.addEventListener("click",showTiles);
-        diagramViewButton.addEventListener("click",showDiagram);
     }
 
 
@@ -22196,11 +22140,10 @@ Rules:
             });
 
             if(gate.status==="correction"){
-                // A clear grammar error must be corrected before Parse/Diagram.
-                // Do not offer an escape hatch that knowingly diagrams malformed input.
+                // A clear grammar error must be corrected before parsing.
                 const required=document.createElement("div");
                 required.className="analysis-grammar-gate-required";
-                required.textContent="Correction required before Parse or Diagram.";
+                required.textContent="Correction required before Parse.";
                 card.appendChild(required);
                 actions.appendChild(use);
             }else{
@@ -26273,15 +26216,14 @@ function setLiveHeard(){
         return;
     }
 
-    const el=document.getElementById("voice-live-transcript");
-    if(!el)return;
     const user=String(liveState.input.text||"").trim();
     const tutor=String(liveState.output.text||"").trim();
-    const lines=[];
-    if(user)lines.push(`You: ${user}`);
-    if(tutor)lines.push(`Tutor: ${tutor}`);
-    el.textContent=lines.length ? lines.join("\n\n") : "Live voice is listening…";
-    el.scrollTop=el.scrollHeight;
+    const pending=[];
+    if(user)pending.push({role:"user",text:user});
+    if(tutor)pending.push({role:"assistant",text:tutor});
+    if(typeof window.renderRecentVoiceTutorLiveTranscript==="function"){
+        window.renderRecentVoiceTutorLiveTranscript(pending);
+    }
 }
 
 function clearTimer(seg){
@@ -27397,9 +27339,9 @@ test.addEventListener("click",()=>{
 })();
 </script>
 
-<style id="language-tutor-version-2b-tutor-controls-emphasis">
-/* VERSION 2B — keep approximately three short live turns visible and make
-   both active response areas easy to locate at a glance. */
+<style id="language-tutor-version-2c-tutor-controls-emphasis">
+/* VERSION 2C — keep approximately three recent conversation turns visible and
+   make both active response areas easy to locate at a glance. */
 #voice-live-transcript.tutor-live-transcription-window,
 #voice-live-transcript.tutor-live-transcription-window.voice-live-interim-status,
 #voice-live-transcript.tutor-live-transcription-window.voice-live-interim-status.voice-live-interim-idle{
