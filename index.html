@@ -1,9 +1,35 @@
 <!--
-LanguageTutor — v1.09
-Based on the user-provided stable baseline.
-Changes: Adds a compact, automatic two-way Quick Translate tool inside Ask Tutor
-and clarifies that the language-specific Conversation window contains transcripts.
-The existing context-aware Translate shortcut, microphone behavior, and window logic are unchanged.
+LanguageTutor — v1.10 SOURCE
+Based on Version 1 / exact user rollback baseline.
+Changes: replaces dock/close lifecycle with one persistent floating
+workspace state. Tutor Controls, Conversation Transcript, Ask Tutor, and
+Language Tools open at startup and can be dragged or resized. Minimize turns
+each window into a draggable title card; restore expands that same window.
+Ask Tutor uses a CSS-only checkbox collapse so legacy observers receive no
+outer-window mutation and no JavaScript-driven minimize DOM update.
+Conversation speech recognition now pauses only while Ask Tutor actively owns
+the microphone, rather than whenever its permanently open window is visible.
+v1.03: continuing a saved conversation mirrors its last three turns in Tutor
+Controls and speaks the most recent Tutor line before the learner continues.
+The empty/new-conversation state now uses the same full-height floating
+transcript area instead of the retired compact 70–90 px page layout.
+v1.04: Saved Transcripts is promoted above every open workspace whenever it
+opens or receives pointer focus.
+v1.05: opening or clicking Ask Tutor promotes it above the other windows
+without mutating Ask Tutor's observed outer-window style.
+v1.06: all movable windows share click-to-front focus behavior; Saved
+Transcripts and Ask Tutor are also promoted immediately when opened.
+The Conversation minimize control is anchored to the title bar's upper-right
+edge instead of inheriting the legacy title-copy flex geometry.
+v1.07: Conversation settings moves from the permanent Tutor Controls layout
+into an on-demand movable window opened by a button beside Start Conversation.
+The Tutor Controls window is renamed Chat with Tutor, and the redundant
+page-level Chat with Tutor status bar is hidden after detachment.
+v1.08: Ask Tutor's active results, thread, or analysis area expands with the
+resizable window while its composer remains anchored at the bottom.
+v1.10: retains the confirmed all-floating-window startup state, adds a compact
+automatic two-way Quick Translate tool inside Ask Tutor, and renames the
+language-specific conversation window to identify it as a transcript.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -15731,11 +15757,16 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
 
     window.resumeVoiceRecognition=function(manual=false,inputMode="target"){
         if(!voiceTutorState.active)return;
-        // The private Coach owns the mic while its window is open. This prevents
-        // Tutor speech completion / recognition onend from silently restarting
-        // the live conversation microphone behind Coach dictation.
-        const coachWindow=document.getElementById("language-coach-window");
-        if(coachWindow && !coachWindow.hidden){
+        // In the all-floating workspace Ask Tutor is always visible. Visibility
+        // therefore cannot indicate microphone ownership; only its active voice
+        // or dictation controls may pause live Conversation recognition.
+        const coachOwnsMic=Boolean(document.querySelector(
+            "#language-coach-window .dictating,"+
+            "#ask-tutor-speak-english.listening,"+
+            "#ask-tutor-speak-target.listening,"+
+            "#ask-tutor-live-voice-btn.live-active"
+        ));
+        if(coachOwnsMic){
             voiceTutorState.coachMicPaused=true;
             return;
         }
@@ -15972,6 +16003,11 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
             voiceTutorStatus("Speech recognition is not available in this browser/device.","error");
             return;
         }
+
+        // A deliberate Conversation start transfers microphone ownership away
+        // from Ask Tutor without closing its permanently visible window.
+        try{window.stopAskTutorVoice?.(true)}catch(_){}
+        voiceTutorState.coachMicPaused=false;
 
         if(voiceTutorState.micSession){
             resumeVoiceRecognition(true);
@@ -17390,6 +17426,26 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
         );
     }
 
+    function showRecentSavedTurnsInTutorControls(entries){
+        const live=document.getElementById("voice-live-transcript");
+        if(!live)return;
+        const languageName=langConfig().name;
+        const recent=normalizedSavedConversationEntries(entries).slice(-3);
+        const lines=recent.map(entry=>{
+            const text=entry.role==="assistant"
+                ? stripTutorMarkdown(entry.text)
+                : String(entry.text||"").trim();
+            const speaker=entry.role==="assistant"
+                ? `${languageName} Tutor`
+                : (entry.inputMode==="english" ? "You (English)" : "You");
+            return `${speaker}: ${text}`;
+        }).filter(Boolean);
+        live.textContent=lines.length
+            ? lines.join("\n\n")
+            : "What the microphone hears will appear here.";
+        live.scrollTop=live.scrollHeight;
+    }
+
     window.resumeSavedTutorConversation=async function(id){
         const selected=readSavedTutorTranscripts().find(item=>item.id===id);
         if(!selected)return;
@@ -17439,15 +17495,15 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
         voiceTutorState.resumeMicAfterTurn=false;
 
         renderVoiceTutorTranscript();
-        renderVoiceLiveTurn();
+        showRecentSavedTurnsInTutorControls(restored);
         updateVoiceRestateButton();
         updateUnifiedTutorTextUI();
 
         window.closeSavedTutorTranscripts?.();
 
-        // Resume on the page by default. If the learner wants the movable
-        // version, Open Conversation moves this exact same restored view.
-        window.dockVoiceTranscript?.();
+        // Floating-only layout: continue inside the existing Conversation
+        // window instead of rebuilding the retired docked page state.
+        window.openVoiceTranscriptWindow?.();
 
         voiceTutorStatus(
             "Saved Conversation restored. Continue with your next reply.",
@@ -17455,16 +17511,46 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
         );
 
         requestAnimationFrame(()=>{
-            document.getElementById("conversation-view")?.scrollIntoView?.({
-                behavior:"smooth",
-                block:"nearest"
-            });
             const input=document.getElementById("voice-text-input");
             input?.focus?.({preventScroll:true});
             const log=document.getElementById("voice-chat-messages-log");
             if(log)log.scrollTop=log.scrollHeight;
         });
+
+        const lastTutor=[...restored].reverse().find(entry=>
+            entry.role==="assistant" && String(entry.text||"").trim()
+        );
+        if(lastTutor){
+            try{
+                await speakVoiceTutorText(stripTutorMarkdown(lastTutor.text),lastTutor.replyLanguage||"target");
+            }catch(error){
+                console.warn("Could not replay the saved Tutor line.",error);
+            }finally{
+                voiceTutorState.speaking=false;
+                voiceTutorState.phase="idle";
+                voiceTutorStatus(
+                    `Saved Conversation restored. Ready for your next ${langConfig().name} reply.`,
+                    "normal"
+                );
+            }
+        }
     };
+
+    function bringSavedTutorTranscriptsToFront(win){
+        if(!win)return;
+        const otherWindows=document.querySelectorAll(
+            "#tutor-controls-window,#voice-transcript-window,#language-coach-window,"+
+            "#language-tools-window,#text-transcript-window,#analysis-workbench-window,"+
+            "#special-character-palette,#floating-kana-tool"
+        );
+        let highest=40000;
+        otherWindows.forEach(panel=>{
+            if(panel===win || panel.hidden)return;
+            const layer=Number.parseInt(getComputedStyle(panel).zIndex,10);
+            if(Number.isFinite(layer))highest=Math.max(highest,layer);
+        });
+        win.style.setProperty("z-index",String(highest+10),"important");
+    }
 
     window.openSavedTutorTranscripts=function(){
         const win=document.getElementById("saved-transcripts-window");
@@ -17472,6 +17558,11 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
         renderSavedTutorTranscripts();
         win.hidden=false;
         win.classList.remove("collapsed");
+        bringSavedTutorTranscriptsToFront(win);
+        if(win.dataset.frontLayerBound!=="1"){
+            win.dataset.frontLayerBound="1";
+            win.addEventListener("pointerdown",()=>bringSavedTutorTranscriptsToFront(win),true);
+        }
         const btn=document.getElementById("saved-transcripts-collapse-btn");
         if(btn)btn.textContent="—";
     };
@@ -22904,10 +22995,34 @@ Do not continue the conversation.`;
         box.appendChild(panel);
     }
 
+    function bringLanguageCoachToFront(){
+        const win=document.getElementById("language-coach-window");
+        if(!win)return;
+        const otherWindows=document.querySelectorAll(
+            "#tutor-controls-window,#voice-transcript-window,#language-tools-window,"+
+            "#saved-transcripts-window,#text-transcript-window,#analysis-workbench-window,"+
+            "#special-character-palette,#floating-kana-tool"
+        );
+        let highest=40000;
+        otherWindows.forEach(panel=>{
+            if(panel.hidden)return;
+            const layer=Number.parseInt(getComputedStyle(panel).zIndex,10);
+            if(Number.isFinite(layer))highest=Math.max(highest,layer);
+        });
+        document.body.style.setProperty("--ask-tutor-front-layer",String(highest+10));
+        document.body.classList.add("ask-tutor-force-front");
+    }
+    window.bringAskTutorToFront=bringLanguageCoachToFront;
+
     window.openLanguageCoach=function(seed=""){
         const win=document.getElementById("language-coach-window");
         const input=document.getElementById("language-coach-input");
         if(!win)return;
+        bringLanguageCoachToFront();
+        if(!win.__askTutorFrontLayerBound){
+            win.__askTutorFrontLayerBound=true;
+            win.addEventListener("pointerdown",bringLanguageCoachToFront,true);
+        }
 
         // This is a sidebar, not a new Tutor turn. Pause live recognition while
         // the learner works privately, then resume when they return.
@@ -23533,7 +23648,19 @@ Requirements:
     function keepConversationMicPausedWhileCoachOpen(){
         try{
             if(typeof voiceTutorState==="undefined" || !voiceTutorState?.active)return;
-            if(document.getElementById("language-coach-window")?.hidden)return;
+            const coachOwnsMic=Boolean(document.querySelector(
+                "#language-coach-window .dictating,"+
+                "#ask-tutor-speak-english.listening,"+
+                "#ask-tutor-speak-target.listening,"+
+                "#ask-tutor-live-voice-btn.live-active"
+            ));
+            if(!coachOwnsMic){
+                voiceTutorState.coachMicPaused=false;
+                if(voiceTutorState.micSession && !voiceTutorState.speaking && voiceTutorState.phase!=="processing"){
+                    setTimeout(()=>window.resumeVoiceRecognition?.(true,"target"),120);
+                }
+                return;
+            }
             if(voiceTutorState.recognition){
                 if(typeof destroyVoiceRecognition==="function")destroyVoiceRecognition();
                 if(typeof setVoiceMicIndicator==="function")setVoiceMicIndicator(false);
@@ -26653,7 +26780,7 @@ const STORAGE_KEY="languagetutor_primary_workspace_rects_v1414";
 
 const registry={
     tutor:{
-        label:"Tutor Controls",
+        label:"Chat with Tutor",
         subtitle:"Settings, voice controls, live status, and reply composer",
         viewId:"tutor-controls-view",
         shellId:"tutor-controls-window",
@@ -27397,8 +27524,675 @@ test.addEventListener("click",()=>{
 });
 })();
 </script>
+<style id="language-tutor-v2t-all-floating-css">
+/* One workspace state only: every primary tool is a visible movable window. */
+#tutor-controls-placeholder,
+#language-tools-placeholder,
+#conversation-transcript-placeholder,
+#ask-tutor-section,
+#tutor-controls-section,
+#conversation-transcript-section,
+#language-tools-view > .primary-workspace-docked-bar,
+#language-tutor-open-conversation-test,
+#workspace-minimized-tray{display:none!important}
 
-<style id="language-tutor-v109-ask-tutor-quick-translate-css">
+#tutor-controls-window,
+#voice-transcript-window,
+#language-coach-window,
+#language-tools-window{
+  position:fixed!important;
+  display:flex!important;
+  flex-direction:column!important;
+  min-width:300px!important;
+  min-height:180px!important;
+  max-width:calc(100vw - 16px)!important;
+  max-height:calc(100vh - 16px)!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+  overflow:hidden!important;
+  resize:both!important;
+}
+
+#tutor-controls-window.is-minimized,
+#language-tools-window.is-minimized,
+#language-coach-window.ask-tutor-titlebar-minimized{
+  height:auto!important;
+  max-height:calc(100vh - 16px)!important;
+}
+#tutor-controls-window.is-minimized .primary-workspace-window-body,
+#language-tools-window.is-minimized .primary-workspace-window-body,
+#language-coach-window.ask-tutor-titlebar-minimized .language-coach-body{display:flex!important}
+
+/* Legacy controls are retired. One new title-card minimize control is added. */
+#tutor-controls-window .primary-workspace-title-actions,
+#language-tools-window .primary-workspace-title-actions,
+#voice-transcript-drag-handle > .workspace-v95-title-actions,
+#voice-transcript-drag-handle > .workspace-standard-window-actions,
+#voice-transcript-drag-handle > .voice-transcript-window-actions,
+#voice-transcript-collapse-btn,
+#language-coach-drag-handle > .workspace-v95-title-actions,
+#language-coach-drag-handle > .workspace-standard-window-actions,
+#language-coach-drag-handle > .language-coach-window-actions,
+#language-coach-window .language-coach-close{display:none!important}
+#voice-transcript-drag-handle button:not(.all-floating-minimize),
+#language-coach-drag-handle button:not(.all-floating-minimize){display:none!important}
+
+.all-floating-minimize{
+  margin-left:auto!important;flex:0 0 auto!important;width:34px!important;height:34px!important;
+  border:1px solid #cbd5e1!important;border-radius:8px!important;background:#fff!important;
+  color:#475569!important;font-size:17px!important;font-weight:900!important;cursor:pointer!important
+}
+.all-floating-minimize:hover{background:#f8fafc!important;border-color:#94a3b8!important}
+.ask-css-minimize-toggle{position:absolute!important;opacity:0!important;pointer-events:none!important}
+.ask-css-minimize-label::before{content:"—"}
+.ask-css-minimize-toggle:checked + .ask-css-minimize-label::before{content:"□"}
+
+#tutor-controls-window.all-floating-minimized,
+#voice-transcript-window.all-floating-minimized,
+#language-tools-window.all-floating-minimized{
+  width:340px!important;height:52px!important;min-height:52px!important;
+  max-height:52px!important;resize:none!important;overflow:hidden!important
+}
+#tutor-controls-window.all-floating-minimized > :not(.primary-workspace-titlebar),
+#language-tools-window.all-floating-minimized > :not(.primary-workspace-titlebar){display:none!important}
+/* The transcript title bar lives inside #conversation-view, not directly
+   under the outer window. Keep both wrappers and hide only its content. */
+#voice-transcript-window.all-floating-minimized #voice-transcript-window-body,
+#voice-transcript-window.all-floating-minimized #conversation-view{
+  display:flex!important;height:52px!important;min-height:52px!important;
+  max-height:52px!important;overflow:hidden!important
+}
+#voice-transcript-window.all-floating-minimized #conversation-view > :not(#voice-transcript-drag-handle){display:none!important}
+#voice-transcript-window.all-floating-minimized #voice-transcript-drag-handle{display:flex!important}
+#language-coach-window:has(.ask-css-minimize-toggle:checked){
+  width:340px!important;height:52px!important;min-height:52px!important;
+  max-height:52px!important;resize:none!important;overflow:hidden!important
+}
+#language-coach-window:has(.ask-css-minimize-toggle:checked) .language-coach-body{display:none!important}
+
+#all-floating-reset-layout{
+  position:fixed;right:12px;top:10px;z-index:2147483647;
+  border:1px solid #94a3b8;border-radius:9px;background:#fff;
+  color:#334155;padding:7px 10px;font:800 11px/1.1 system-ui,sans-serif;
+  box-shadow:0 3px 12px rgba(15,23,42,.18);cursor:pointer
+}
+#all-floating-reset-layout:hover{background:#f8fafc}
+
+@media(max-width:700px){
+  #all-floating-reset-layout{top:6px;right:6px}
+  #tutor-controls-window,#voice-transcript-window,#language-coach-window,#language-tools-window{
+    width:calc(100vw - 24px)!important;height:72vh!important;
+    min-width:0!important;resize:none!important
+  }
+}
+</style>
+
+<script id="language-tutor-v2t-all-floating-runtime">
+(()=>{
+"use strict";
+const STORAGE_KEY="languagetutor_all_floating_layout_v2t";
+const specs={
+  tutor:{id:"tutor-controls-window",open:"openTutorControlsWorkspace",left:18,top:56,width:430,height:600},
+  transcript:{id:"voice-transcript-window",open:"openVoiceTranscriptWindow",left:330,top:24,width:600,height:650},
+  coach:{id:"language-coach-window",open:"openAskTutorWorkspace",left:155,top:115,width:560,height:610},
+  tools:{id:"language-tools-window",open:"openLanguageToolsWorkspace",left:650,top:82,width:650,height:650}
+};
+let topLayer=32000;
+let normalizing=false;
+let observersBound=false;
+let launchComplete=false;
+let contentRepairQueued=false;
+
+function loadLayout(){
+  try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}")||{}}catch(_){return {}}
+}
+function saveLayout(){
+  const layout={};
+  Object.entries(specs).forEach(([name,spec])=>{
+    const panel=document.getElementById(spec.id);
+    if(!panel)return;
+    const rect=panel.getBoundingClientRect();
+    const minimized=name==="coach"
+      ? Boolean(panel.querySelector(".ask-css-minimize-toggle")?.checked)
+      : panel.classList.contains("all-floating-minimized");
+    layout[name]={
+      left:rect.left,top:rect.top,
+      width:minimized?(Number(panel.dataset.expandedWidth)||spec.width):rect.width,
+      height:minimized?(Number(panel.dataset.expandedHeight)||spec.height):rect.height
+    };
+  });
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(layout))}catch(_){}
+}
+function clamp(value,min,max){return Math.max(min,Math.min(max,value))}
+function positionPanel(name,panel,forceDefaults=false){
+  const spec=specs[name],saved=forceDefaults?null:loadLayout()[name];
+  const mobile=window.innerWidth<=700;
+  let width=mobile?window.innerWidth-24:Number(saved?.width)||spec.width;
+  let height=mobile?Math.max(360,window.innerHeight*.72):Number(saved?.height)||spec.height;
+  width=clamp(width,mobile?280:320,Math.max(280,window.innerWidth-16));
+  height=clamp(height,180,Math.max(180,window.innerHeight-16));
+  const mobileIndex=Object.keys(specs).indexOf(name);
+  let left=mobile?12+mobileIndex*4:Number(saved?.left);
+  let top=mobile?44+mobileIndex*18:Number(saved?.top);
+  if(!Number.isFinite(left))left=spec.left;
+  if(!Number.isFinite(top))top=spec.top;
+  left=clamp(left,8,Math.max(8,window.innerWidth-width-8));
+  top=clamp(top,8,Math.max(8,window.innerHeight-height-8));
+  Object.assign(panel.style,{left:left+"px",top:top+"px",right:"auto",bottom:"auto",width:width+"px",height:height+"px",zIndex:String(++topLayer)});
+}
+function makeVisible(panel){
+  panel.hidden=false;
+  panel.removeAttribute("hidden");
+  panel.classList.remove("is-minimized","workspace-docked","ask-tutor-titlebar-minimized","collapsed");
+  panel.style.display="flex";
+}
+function focusPanel(panel){panel.style.zIndex=String(++topLayer)}
+function titlebarFor(name,panel){
+  if(name==="transcript")return panel.querySelector("#voice-transcript-drag-handle");
+  if(name==="coach")return panel.querySelector("#language-coach-drag-handle");
+  return panel.querySelector(".primary-workspace-titlebar");
+}
+function toggleTitleCard(name){
+  const spec=specs[name],panel=document.getElementById(spec?.id);
+  if(!panel)return;
+  if(name!=="coach")focusPanel(panel);
+  const coachToggle=name==="coach" ? panel.querySelector(".ask-css-minimize-toggle") : null;
+  const minimizing=name==="coach"
+    ? !coachToggle?.checked
+    : !panel.classList.contains("all-floating-minimized");
+  if(name==="coach" && coachToggle){
+    if(minimizing){
+      const rect=panel.getBoundingClientRect();
+      panel.dataset.expandedWidth=String(rect.width);
+      panel.dataset.expandedHeight=String(rect.height);
+    }
+    coachToggle.checked=minimizing;
+  }else if(minimizing){
+    const rect=panel.getBoundingClientRect();
+    panel.dataset.expandedWidth=String(rect.width);
+    panel.dataset.expandedHeight=String(rect.height);
+    panel.classList.add("all-floating-minimized");
+  }else{
+    panel.classList.remove("all-floating-minimized");
+    const width=Number(panel.dataset.expandedWidth)||spec.width;
+    const height=Number(panel.dataset.expandedHeight)||spec.height;
+    panel.style.width=Math.min(width,window.innerWidth-16)+"px";
+    panel.style.height=Math.min(height,window.innerHeight-16)+"px";
+  }
+  const button=panel.querySelector(".all-floating-minimize");
+  if(button && name!=="coach"){button.textContent=minimizing?"□":"—";button.title=minimizing?"Restore":"Minimize to title card"}
+  saveLayout();
+}
+
+/* Older runtimes may still try to return these views to their former docked
+   sections. The floating windows own the live nodes in v1.01. */
+function enforceFloatingContents(){
+  const transcript=document.getElementById("voice-transcript-window");
+  const transcriptBody=document.getElementById("voice-transcript-window-body");
+  const conversationView=document.getElementById("conversation-view");
+  if(transcript && transcriptBody && conversationView && conversationView.parentElement!==transcriptBody){
+    transcriptBody.appendChild(conversationView);
+    conversationView.classList.add("is-floating");
+    makeVisible(transcript);
+  }
+
+  const tools=document.getElementById("language-tools-window");
+  const toolsBody=document.getElementById("language-tools-window-body");
+  const toolsView=document.getElementById("language-tools-view");
+  if(tools && toolsBody && toolsView && toolsView.parentElement!==toolsBody){
+    toolsBody.appendChild(toolsView);
+    toolsView.classList.add("is-floating");
+    makeVisible(tools);
+  }
+}
+function queueFloatingContentRepair(){
+  if(contentRepairQueued)return;
+  contentRepairQueued=true;
+  requestAnimationFrame(()=>{
+    contentRepairQueued=false;
+    enforceFloatingContents();
+  });
+}
+
+function openAll(forceDefaults=false){
+  if(normalizing)return;
+  normalizing=true;
+  try{
+    Object.values(specs).forEach(spec=>{
+      if((!launchComplete || !document.getElementById(spec.id)) && typeof window[spec.open]==="function"){
+        try{window[spec.open]()}catch(error){console.warn("Could not open workspace",spec.id,error)}
+      }
+    });
+    enforceFloatingContents();
+    launchComplete=true;
+    Object.entries(specs).forEach(([name,spec])=>{
+      const panel=document.getElementById(spec.id);
+      if(!panel)return;
+      makeVisible(panel);
+      positionPanel(name,panel,forceDefaults);
+    });
+    bindPanels();
+  }finally{normalizing=false}
+}
+
+function bindPanels(){
+  Object.entries(specs).forEach(([name,spec])=>{
+    const panel=document.getElementById(spec.id);
+    if(!panel || panel.dataset.allFloatingBound==="1")return;
+    panel.dataset.allFloatingBound="1";
+    const titlebar=titlebarFor(name,panel);
+    /* In floating-only mode the title bar has exactly one control: minimize.
+       Remove native close/return buttons instead of merely redirecting them. */
+    titlebar?.querySelectorAll("button:not(.all-floating-minimize)").forEach(button=>button.remove());
+    if(name==="coach" && titlebar && !titlebar.querySelector(".ask-css-minimize-toggle")){
+      const toggle=document.createElement("input");
+      toggle.type="checkbox";toggle.id="ask-css-minimize-toggle";
+      toggle.className="ask-css-minimize-toggle";
+      toggle.setAttribute("aria-label","Minimize or restore Ask Tutor");
+      const label=document.createElement("button");
+      label.type="button";label.className="all-floating-minimize ask-css-minimize-label";
+      label.title="Minimize or restore Ask Tutor";
+      label.setAttribute("aria-label","Minimize or restore Ask Tutor");
+      label.addEventListener("click",event=>{
+        event.preventDefault();event.stopPropagation();
+        toggleTitleCard("coach");
+      });
+      titlebar.append(toggle,label);
+    }else if(titlebar && !titlebar.querySelector(".all-floating-minimize")){
+      const button=document.createElement("button");
+      button.type="button";button.className="all-floating-minimize";
+      button.textContent="—";button.title="Minimize to title card";
+      button.setAttribute("aria-label",`Minimize ${name} window`);
+      button.addEventListener("click",event=>{event.preventDefault();event.stopPropagation();toggleTitleCard(name)});
+      titlebar.appendChild(button);
+    }
+    /* Ask Tutor's legacy observer watches outer style changes. Do not change
+       its z-index on click; its CSS-only minimize must remain mutation-free. */
+    if(name!=="coach")panel.addEventListener("pointerdown",()=>{
+      document.body.classList.remove("ask-tutor-force-front");
+      focusPanel(panel);
+    },true);
+    panel.addEventListener("pointerup",()=>setTimeout(saveLayout,0));
+    if("ResizeObserver" in window)new ResizeObserver(()=>{
+      if(!normalizing && !panel.hidden)saveLayout();
+    }).observe(panel);
+    new MutationObserver(()=>{
+      if(normalizing)return;
+      if(panel.hidden || panel.classList.contains("is-minimized") || panel.classList.contains("workspace-docked") || panel.classList.contains("ask-tutor-titlebar-minimized")){
+        normalizing=true;
+        try{makeVisible(panel)}finally{normalizing=false}
+      }
+    }).observe(panel,{attributes:true,attributeFilter:["hidden","class"]});
+  });
+  observersBound=true;
+}
+
+function installSingleStateApi(){
+  const nativeCoachClose=window.closeLanguageCoach;
+  if(typeof nativeCoachClose==="function" && !nativeCoachClose.__allFloating){
+    const keepCoachOpen=function(...args){
+      const result=nativeCoachClose.apply(this,args);
+      const panel=document.getElementById(specs.coach.id);
+      if(panel)makeVisible(panel);
+      return result;
+    };
+    keepCoachOpen.__allFloating=true;
+    window.closeLanguageCoach=keepCoachOpen;
+  }
+  const focus=name=>{const panel=document.getElementById(specs[name]?.id);if(panel){makeVisible(panel);focusPanel(panel)}};
+  window.workspaceMinimizeTool=name=>toggleTitleCard(name);
+  window.workspaceRestoreTool=focus;
+  window.workspaceDockTool=focus;
+  window.togglePrimaryWorkspaceMinimize=name=>toggleTitleCard(name);
+  window.returnTutorControlsWorkspace=()=>focus("tutor");
+  window.returnTranscriptWorkspace=()=>focus("transcript");
+  window.returnAskTutorWorkspace=()=>focus("coach");
+  window.returnLanguageToolsWorkspace=()=>focus("tools");
+  /* Retire transcript docking/closing entry points that remain in saved-view
+     and legacy event handlers. They now reveal the one persistent window. */
+  window.dockVoiceTranscript=()=>{enforceFloatingContents();focus("transcript")};
+  window.closeVoiceTranscriptWindow=()=>focus("transcript");
+}
+
+function ensureResetButton(){
+  if(document.getElementById("all-floating-reset-layout"))return;
+  const button=document.createElement("button");
+  button.id="all-floating-reset-layout";
+  button.type="button";
+  button.textContent="Reset window positions";
+  button.addEventListener("click",()=>{
+    try{localStorage.removeItem(STORAGE_KEY)}catch(_){}
+    Object.values(specs).forEach(spec=>{
+      const panel=document.getElementById(spec.id);
+      panel?.classList.remove("all-floating-minimized");
+      const coachToggle=panel?.querySelector(".ask-css-minimize-toggle");
+      if(coachToggle)coachToggle.checked=false;
+      const minimize=panel?.querySelector(".all-floating-minimize");
+      if(minimize){minimize.textContent="—";minimize.title="Minimize to title card"}
+    });
+    openAll(true);saveLayout();
+  });
+  document.body.appendChild(button);
+}
+function boot(){
+  installSingleStateApi();
+  ensureResetButton();
+  openAll(false);
+  setTimeout(()=>openAll(false),150);
+  setTimeout(()=>openAll(false),700);
+  setTimeout(()=>{enforceFloatingContents();bindPanels()},1200);
+  setTimeout(()=>{enforceFloatingContents();bindPanels()},1800);
+  new MutationObserver(queueFloatingContentRepair).observe(document.body,{childList:true,subtree:true});
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});
+else boot();
+window.addEventListener("resize",()=>openAll(false));
+})();
+</script>
+<style id="language-tutor-v102-transcript-height-fix">
+/* v1.02 — The floating Conversation history uses the full window height.
+   Each nested flex layer is allowed to grow; only the history log scrolls. */
+#voice-transcript-window:not(.all-floating-minimized) > #voice-transcript-window-body{
+  flex:1 1 0%!important;
+  width:100%!important;
+  height:0!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:hidden!important;
+}
+#voice-transcript-window:not(.all-floating-minimized) #conversation-view{
+  flex:1 1 0%!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+}
+#voice-transcript-window:not(.all-floating-minimized) #conversation-view .conversation-shared-body{
+  flex:1 1 0%!important;
+  height:0!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:hidden!important;
+}
+#voice-transcript-window:not(.all-floating-minimized) #voice-chat-messages-log{
+  flex:1 1 0%!important;
+  height:100%!important;
+  min-height:260px!important;
+  max-height:none!important;
+  overflow-y:auto!important;
+}
+</style>
+<style id="language-tutor-v103-new-conversation-height-fix">
+/* v1.03 — The legacy starting-page rule caps an empty transcript at 90px.
+   Floating-only mode keeps the same useful history area before turn one. */
+#voice-transcript-window:not(.all-floating-minimized)
+  #conversation-view.conversation-is-empty{
+  flex:1 1 0%!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+}
+#voice-transcript-window:not(.all-floating-minimized)
+  #conversation-view.conversation-is-empty .conversation-shared-body{
+  flex:1 1 0%!important;
+  height:0!important;
+  min-height:0!important;
+  max-height:none!important;
+}
+#voice-transcript-window:not(.all-floating-minimized)
+  #conversation-view.conversation-is-empty #voice-chat-messages-log{
+  flex:1 1 0%!important;
+  height:100%!important;
+  min-height:260px!important;
+  max-height:none!important;
+  overflow-y:auto!important;
+}
+</style>
+<style id="language-tutor-v105-ask-tutor-front-layer">
+/* Raise Ask Tutor through a body-owned layer so its mutation-sensitive outer
+   window receives no style/class changes. */
+body.ask-tutor-force-front #language-coach-window{
+  z-index:var(--ask-tutor-front-layer,40010)!important;
+}
+</style>
+<style id="language-tutor-v106-transcript-button-position">
+#voice-transcript-window #voice-transcript-drag-handle{
+  position:relative!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+  padding-right:50px!important;
+}
+#voice-transcript-window #voice-transcript-drag-handle > .all-floating-minimize{
+  position:absolute!important;
+  top:7px!important;
+  right:8px!important;
+  margin:0!important;
+}
+</style>
+<script id="language-tutor-v106-window-focus-manager">
+(()=>{
+"use strict";
+const panelIds=[
+  "tutor-controls-window","voice-transcript-window","language-coach-window",
+  "language-tools-window","saved-transcripts-window","text-transcript-window",
+  "analysis-workbench-window","conversation-settings-window",
+  "special-character-palette","floating-kana-tool"
+];
+const selector=panelIds.map(id=>`#${id}`).join(",");
+let focusLayer=100000;
+
+function nextLayer(target){
+  let highest=focusLayer;
+  panelIds.forEach(id=>{
+    const panel=document.getElementById(id);
+    if(!panel || panel===target || panel.hidden)return;
+    const layer=Number.parseInt(getComputedStyle(panel).zIndex,10);
+    if(Number.isFinite(layer))highest=Math.max(highest,layer);
+  });
+  focusLayer=Math.min(highest+10,2147483000);
+  return focusLayer;
+}
+function bringToFront(panelOrId){
+  const panel=typeof panelOrId==="string"
+    ? document.getElementById(panelOrId)
+    : panelOrId;
+  if(!panel)return;
+  const layer=nextLayer(panel);
+  if(panel.id==="language-coach-window"){
+    document.body.style.setProperty("--ask-tutor-front-layer",String(layer));
+    document.body.classList.add("ask-tutor-force-front");
+  }else{
+    document.body.classList.remove("ask-tutor-force-front");
+    panel.style.setProperty("z-index",String(layer),"important");
+  }
+}
+window.bringFloatingWindowToFront=bringToFront;
+
+document.addEventListener("pointerdown",event=>{
+  const panel=event.target?.closest?.(selector);
+  if(panel && !panel.hidden)bringToFront(panel);
+},true);
+
+function focusAfterOpen(functionName,panelId){
+  const original=window[functionName];
+  if(typeof original!=="function" || original.__v106FocusWrapped)return;
+  const wrapped=function(...args){
+    const result=original.apply(this,args);
+    requestAnimationFrame(()=>bringToFront(panelId));
+    return result;
+  };
+  wrapped.__v106FocusWrapped=true;
+  window[functionName]=wrapped;
+}
+focusAfterOpen("openSavedTutorTranscripts","saved-transcripts-window");
+focusAfterOpen("openLanguageCoach","language-coach-window");
+})();
+</script>
+<style id="language-tutor-v107-conversation-settings-window-css">
+/* The floating Chat with Tutor window replaces this old page-level header. */
+#conversation-primary-section{display:none!important}
+#conversation-settings-window[hidden]{display:none!important}
+#conversation-settings-window{
+  position:fixed;left:max(16px,calc(50vw - 380px));top:64px;
+  width:min(760px,calc(100vw - 32px));height:min(620px,calc(100vh - 96px));
+  min-width:360px;min-height:260px;max-width:calc(100vw - 16px);
+  max-height:calc(100vh - 16px);display:flex;flex-direction:column;
+  overflow:hidden;resize:both;border:1px solid #bfd2ff;border-radius:15px;
+  background:#f8fbff;box-shadow:0 20px 55px rgba(15,23,42,.22)
+}
+.conversation-settings-titlebar{
+  flex:0 0 48px;display:flex;align-items:center;gap:10px;padding:0 8px 0 13px;
+  border-bottom:1px solid #d7e4ff;background:#eef4ff;cursor:move;
+  user-select:none;touch-action:none
+}
+.conversation-settings-titlecopy{min-width:0;flex:1 1 auto}
+.conversation-settings-title{color:#274b86;font-size:12px;font-weight:900}
+.conversation-settings-subtitle{margin-top:1px;color:#7890b8;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conversation-settings-actions{margin-left:auto;display:flex;gap:4px;flex:0 0 auto}
+.conversation-settings-actions button{
+  width:34px;height:34px;border:1px solid #cbd5e1;border-radius:8px;
+  background:#fff;color:#475569;font-size:17px;font-weight:900;cursor:pointer
+}
+.conversation-settings-window-body{flex:1 1 auto;min-height:0;overflow:auto;padding:12px}
+#conversation-settings-window #voice-settings-panel{display:block!important;border:0!important;background:transparent!important}
+#conversation-settings-window #voice-settings-panel > .voice-settings-summary{display:none!important}
+#conversation-settings-window #voice-settings-panel > .voice-settings-panel-body{display:block!important;padding:0!important}
+#conversation-settings-window.conversation-settings-collapsed{
+  width:360px!important;height:48px!important;min-height:48px!important;
+  max-height:48px!important;resize:none!important
+}
+#conversation-settings-window.conversation-settings-collapsed .conversation-settings-window-body{display:none!important}
+#conversation-settings-open-btn{white-space:nowrap}
+@media(max-width:640px){
+  #conversation-settings-window{left:8px!important;top:58px!important;width:calc(100vw - 16px)!important;height:calc(100dvh - 70px)!important;min-width:0;resize:none}
+  .conversation-settings-titlebar{cursor:default;touch-action:auto}
+}
+</style>
+<script id="language-tutor-v107-conversation-settings-window-runtime">
+(()=>{
+"use strict";
+function bringForward(){
+  if(typeof window.bringFloatingWindowToFront==="function"){
+    window.bringFloatingWindowToFront("conversation-settings-window");
+  }else{
+    document.getElementById("conversation-settings-window")?.style.setProperty("z-index","100100","important");
+  }
+}
+window.openConversationSettingsWindow=function(){
+  const win=document.getElementById("conversation-settings-window");
+  if(!win)return;
+  win.hidden=false;
+  win.classList.remove("conversation-settings-collapsed");
+  const minimize=document.getElementById("conversation-settings-minimize");
+  if(minimize)minimize.textContent="—";
+  bringForward();
+};
+window.closeConversationSettingsWindow=function(){
+  const win=document.getElementById("conversation-settings-window");
+  if(win)win.hidden=true;
+};
+window.toggleConversationSettingsWindow=function(){
+  const win=document.getElementById("conversation-settings-window");
+  if(!win)return;
+  const collapsed=win.classList.toggle("conversation-settings-collapsed");
+  const minimize=document.getElementById("conversation-settings-minimize");
+  if(minimize)minimize.textContent=collapsed?"□":"—";
+  bringForward();
+};
+function bindDrag(win,handle){
+  let dragging=false,pointerId=null,offsetX=0,offsetY=0;
+  handle.addEventListener("pointerdown",event=>{
+    if(window.matchMedia("(max-width:640px)").matches || event.target.closest("button"))return;
+    dragging=true;pointerId=event.pointerId;
+    const rect=win.getBoundingClientRect();
+    offsetX=event.clientX-rect.left;offsetY=event.clientY-rect.top;
+    try{handle.setPointerCapture(pointerId)}catch(_){}
+  });
+  handle.addEventListener("pointermove",event=>{
+    if(!dragging || event.pointerId!==pointerId)return;
+    const maxLeft=Math.max(8,window.innerWidth-win.offsetWidth-8);
+    const maxTop=Math.max(8,window.innerHeight-win.offsetHeight-8);
+    win.style.left=Math.min(maxLeft,Math.max(8,event.clientX-offsetX))+"px";
+    win.style.top=Math.min(maxTop,Math.max(8,event.clientY-offsetY))+"px";
+  });
+  const stop=event=>{
+    if(!dragging || (event && event.pointerId!==pointerId))return;
+    dragging=false;pointerId=null;
+  };
+  handle.addEventListener("pointerup",stop);handle.addEventListener("pointercancel",stop);
+}
+function build(){
+  if(document.getElementById("conversation-settings-window"))return;
+  const settings=document.getElementById("voice-settings-panel");
+  const start=document.getElementById("voice-start-btn");
+  if(!settings || !start)return;
+
+  const oldWrapper=settings.parentElement;
+  const win=document.createElement("section");
+  win.id="conversation-settings-window";win.hidden=true;
+  win.setAttribute("aria-label","Conversation settings window");
+  win.innerHTML=`<div id="conversation-settings-drag-handle" class="conversation-settings-titlebar">
+    <div class="conversation-settings-titlecopy"><div class="conversation-settings-title">Conversation settings</div>
+    <div class="conversation-settings-subtitle">Mode, level, corrections, language help, speed, voice, and scenario</div></div>
+    <div class="conversation-settings-actions"><button type="button" id="conversation-settings-minimize" title="Minimize">—</button>
+    <button type="button" id="conversation-settings-close" title="Close" aria-label="Close Conversation settings">×</button></div>
+  </div><div class="conversation-settings-window-body"></div>`;
+  document.body.appendChild(win);
+  win.querySelector(".conversation-settings-window-body").appendChild(settings);
+  if(oldWrapper && oldWrapper!==settings)oldWrapper.remove();
+
+  const button=document.createElement("button");
+  button.type="button";button.id="conversation-settings-open-btn";
+  button.className="min-h-[44px] px-3 py-2 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-xs font-bold transition";
+  button.textContent="⚙ Conversation settings";
+  button.addEventListener("click",window.openConversationSettingsWindow);
+  start.insertAdjacentElement("afterend",button);
+
+  document.getElementById("conversation-settings-minimize")?.addEventListener("click",window.toggleConversationSettingsWindow);
+  document.getElementById("conversation-settings-close")?.addEventListener("click",window.closeConversationSettingsWindow);
+  bindDrag(win,document.getElementById("conversation-settings-drag-handle"));
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",build,{once:true});
+else build();
+})();
+</script>
+<style id="language-tutor-v108-ask-tutor-height-layout">
+/* Let Ask Tutor use the full resizable window. The active content surface is
+   the scrolling region; the context/actions and composer remain available. */
+#language-coach-window:not(:has(.ask-css-minimize-toggle:checked)) .language-coach-body{
+  flex:1 1 0%!important;
+  height:0!important;
+  min-height:0!important;
+  max-height:none!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:8px!important;
+  overflow:hidden!important;
+}
+#language-coach-window .ask-tutor-context,
+#language-coach-window .ask-tutor-study-actions{
+  flex:0 0 auto!important;
+}
+#language-coach-window #ask-tutor-analysis-host:not([hidden]),
+#language-coach-window #ask-tutor-thread:not([hidden]),
+#language-coach-window #language-coach-results:not(:empty){
+  flex:1 1 0%!important;
+  min-height:120px!important;
+  max-height:none!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+}
+#language-coach-window #ask-tutor-thread{order:4}
+#language-coach-window #ask-tutor-analysis-host{order:4}
+#language-coach-window #language-coach-results{order:4;margin-top:0!important}
+#language-coach-window #ask-tutor-composer{
+  order:10;
+  flex:0 0 auto!important;
+  margin-top:auto!important;
+}
+</style>
++<style id="language-tutor-v110-ask-tutor-quick-translate-css">
 #ask-tutor-quick-translate{
   flex:0 0 auto;
   margin:0;
@@ -27487,7 +28281,7 @@ test.addEventListener("click",()=>{
 }
 </style>
 
-<script id="language-tutor-v109-ask-tutor-quick-translate-runtime">
+<script id="language-tutor-v110-ask-tutor-quick-translate-runtime">
 (()=>{
 "use strict";
 
