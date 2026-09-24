@@ -1,12 +1,12 @@
 <!--
-LanguageTutor — VERSION 2V ALL-FLOATING EXPERIMENT
+LanguageTutor — VERSION 2U ALL-FLOATING EXPERIMENT
 Based on Version 1 / exact user rollback baseline.
 Changes: replaces dock/close lifecycle with one persistent floating
 workspace state. Tutor Controls, Conversation Transcript, Ask Tutor, and
 Language Tools open at startup and can be dragged or resized. Minimize turns
 each window into a draggable title card; restore expands that same window.
-Ask Tutor uses a CSS-only checkbox collapse so legacy observers receive no
-outer-window mutation and no JavaScript-driven minimize DOM update.
+Ask Tutor collapses through its inner body so legacy observers never receive
+an outer-window minimize mutation.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -27460,9 +27460,6 @@ test.addEventListener("click",()=>{
   color:#475569!important;font-size:17px!important;font-weight:900!important;cursor:pointer!important
 }
 .all-floating-minimize:hover{background:#f8fafc!important;border-color:#94a3b8!important}
-.ask-css-minimize-toggle{position:absolute!important;opacity:0!important;pointer-events:none!important}
-.ask-css-minimize-label::before{content:"—"}
-.ask-css-minimize-toggle:checked + .ask-css-minimize-label::before{content:"□"}
 
 #tutor-controls-window.all-floating-minimized,
 #voice-transcript-window.all-floating-minimized,
@@ -27473,11 +27470,11 @@ test.addEventListener("click",()=>{
 #tutor-controls-window.all-floating-minimized > :not(.primary-workspace-titlebar),
 #language-tools-window.all-floating-minimized > :not(.primary-workspace-titlebar),
 #voice-transcript-window.all-floating-minimized > :not(#voice-transcript-drag-handle){display:none!important}
-#language-coach-window:has(.ask-css-minimize-toggle:checked){
+#language-coach-window:has(.language-coach-body.all-floating-body-minimized){
   width:340px!important;height:52px!important;min-height:52px!important;
   max-height:52px!important;resize:none!important;overflow:hidden!important
 }
-#language-coach-window:has(.ask-css-minimize-toggle:checked) .language-coach-body{display:none!important}
+#language-coach-window .language-coach-body.all-floating-body-minimized{display:none!important}
 
 #all-floating-reset-layout{
   position:fixed;right:12px;top:10px;z-index:2147483647;
@@ -27521,7 +27518,7 @@ function saveLayout(){
     if(!panel)return;
     const rect=panel.getBoundingClientRect();
     const minimized=name==="coach"
-      ? Boolean(panel.querySelector(".ask-css-minimize-toggle")?.checked)
+      ? panel.querySelector(".language-coach-body")?.classList.contains("all-floating-body-minimized")
       : panel.classList.contains("all-floating-minimized");
     layout[name]={
       left:rect.left,top:rect.top,
@@ -27563,18 +27560,18 @@ function titlebarFor(name,panel){
 function toggleTitleCard(name){
   const spec=specs[name],panel=document.getElementById(spec?.id);
   if(!panel)return;
-  if(name!=="coach")focusPanel(panel);
-  const coachToggle=name==="coach" ? panel.querySelector(".ask-css-minimize-toggle") : null;
+  focusPanel(panel);
+  const coachBody=name==="coach" ? panel.querySelector(".language-coach-body") : null;
   const minimizing=name==="coach"
-    ? !coachToggle?.checked
+    ? !coachBody?.classList.contains("all-floating-body-minimized")
     : !panel.classList.contains("all-floating-minimized");
-  if(name==="coach" && coachToggle){
+  if(name==="coach" && coachBody){
     if(minimizing){
       const rect=panel.getBoundingClientRect();
       panel.dataset.expandedWidth=String(rect.width);
       panel.dataset.expandedHeight=String(rect.height);
     }
-    coachToggle.checked=minimizing;
+    coachBody.classList.toggle("all-floating-body-minimized",minimizing);
   }else if(minimizing){
     const rect=panel.getBoundingClientRect();
     panel.dataset.expandedWidth=String(rect.width);
@@ -27588,7 +27585,7 @@ function toggleTitleCard(name){
     panel.style.height=Math.min(height,window.innerHeight-16)+"px";
   }
   const button=panel.querySelector(".all-floating-minimize");
-  if(button && name!=="coach"){button.textContent=minimizing?"□":"—";button.title=minimizing?"Restore":"Minimize to title card"}
+  if(button){button.textContent=minimizing?"□":"—";button.title=minimizing?"Restore":"Minimize to title card"}
   saveLayout();
 }
 
@@ -27621,16 +27618,7 @@ function bindPanels(){
     /* In floating-only mode the title bar has exactly one control: minimize.
        Remove native close/return buttons instead of merely redirecting them. */
     titlebar?.querySelectorAll("button:not(.all-floating-minimize)").forEach(button=>button.remove());
-    if(name==="coach" && titlebar && !titlebar.querySelector(".ask-css-minimize-toggle")){
-      const toggle=document.createElement("input");
-      toggle.type="checkbox";toggle.id="ask-css-minimize-toggle";
-      toggle.className="ask-css-minimize-toggle";
-      toggle.setAttribute("aria-label","Minimize or restore Ask Tutor");
-      const label=document.createElement("label");
-      label.htmlFor=toggle.id;label.className="all-floating-minimize ask-css-minimize-label";
-      label.title="Minimize or restore Ask Tutor";
-      titlebar.append(toggle,label);
-    }else if(titlebar && !titlebar.querySelector(".all-floating-minimize")){
+    if(titlebar && !titlebar.querySelector(".all-floating-minimize")){
       const button=document.createElement("button");
       button.type="button";button.className="all-floating-minimize";
       button.textContent="—";button.title="Minimize to title card";
@@ -27638,9 +27626,7 @@ function bindPanels(){
       button.addEventListener("click",event=>{event.preventDefault();event.stopPropagation();toggleTitleCard(name)});
       titlebar.appendChild(button);
     }
-    /* Ask Tutor's legacy observer watches outer style changes. Do not change
-       its z-index on click; its CSS-only minimize must remain mutation-free. */
-    if(name!=="coach")panel.addEventListener("pointerdown",()=>focusPanel(panel),true);
+    panel.addEventListener("pointerdown",()=>focusPanel(panel),true);
     panel.addEventListener("pointerup",()=>setTimeout(saveLayout,0));
     if("ResizeObserver" in window)new ResizeObserver(()=>{
       if(!normalizing && !panel.hidden)saveLayout();
@@ -27690,8 +27676,7 @@ function ensureResetButton(){
     Object.values(specs).forEach(spec=>{
       const panel=document.getElementById(spec.id);
       panel?.classList.remove("all-floating-minimized");
-      const coachToggle=panel?.querySelector(".ask-css-minimize-toggle");
-      if(coachToggle)coachToggle.checked=false;
+      panel?.querySelector(".language-coach-body")?.classList.remove("all-floating-body-minimized");
       const minimize=panel?.querySelector(".all-floating-minimize");
       if(minimize){minimize.textContent="—";minimize.title="Minimize to title card"}
     });
