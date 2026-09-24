@@ -1,5 +1,5 @@
 <!--
-LanguageTutor — VERSION 2W ALL-FLOATING EXPERIMENT
+LanguageTutor — v1.01 SOURCE
 Based on Version 1 / exact user rollback baseline.
 Changes: replaces dock/close lifecycle with one persistent floating
 workspace state. Tutor Controls, Conversation Transcript, Ask Tutor, and
@@ -17460,9 +17460,9 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
 
         window.closeSavedTutorTranscripts?.();
 
-        // Resume on the page by default. If the learner wants the movable
-        // version, Open Conversation moves this exact same restored view.
-        window.dockVoiceTranscript?.();
+        // Floating-only layout: continue inside the existing Conversation
+        // window instead of rebuilding the retired docked page state.
+        window.openVoiceTranscriptWindow?.();
 
         voiceTutorStatus(
             "Saved Conversation restored. Continue with your next reply.",
@@ -17470,10 +17470,6 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
         );
 
         requestAnimationFrame(()=>{
-            document.getElementById("conversation-view")?.scrollIntoView?.({
-                behavior:"smooth",
-                block:"nearest"
-            });
             const input=document.getElementById("voice-text-input");
             input?.focus?.({preventScroll:true});
             const log=document.getElementById("voice-chat-messages-log");
@@ -27495,8 +27491,16 @@ test.addEventListener("click",()=>{
   max-height:52px!important;resize:none!important;overflow:hidden!important
 }
 #tutor-controls-window.all-floating-minimized > :not(.primary-workspace-titlebar),
-#language-tools-window.all-floating-minimized > :not(.primary-workspace-titlebar),
-#voice-transcript-window.all-floating-minimized > :not(#voice-transcript-drag-handle){display:none!important}
+#language-tools-window.all-floating-minimized > :not(.primary-workspace-titlebar){display:none!important}
+/* The transcript title bar lives inside #conversation-view, not directly
+   under the outer window. Keep both wrappers and hide only its content. */
+#voice-transcript-window.all-floating-minimized #voice-transcript-window-body,
+#voice-transcript-window.all-floating-minimized #conversation-view{
+  display:flex!important;height:52px!important;min-height:52px!important;
+  max-height:52px!important;overflow:hidden!important
+}
+#voice-transcript-window.all-floating-minimized #conversation-view > :not(#voice-transcript-drag-handle){display:none!important}
+#voice-transcript-window.all-floating-minimized #voice-transcript-drag-handle{display:flex!important}
 #language-coach-window:has(.ask-css-minimize-toggle:checked){
   width:340px!important;height:52px!important;min-height:52px!important;
   max-height:52px!important;resize:none!important;overflow:hidden!important
@@ -27534,6 +27538,7 @@ let topLayer=32000;
 let normalizing=false;
 let observersBound=false;
 let launchComplete=false;
+let contentRepairQueued=false;
 
 function loadLayout(){
   try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}")||{}}catch(_){return {}}
@@ -27616,6 +27621,36 @@ function toggleTitleCard(name){
   saveLayout();
 }
 
+/* Older runtimes may still try to return these views to their former docked
+   sections. The floating windows own the live nodes in v1.01. */
+function enforceFloatingContents(){
+  const transcript=document.getElementById("voice-transcript-window");
+  const transcriptBody=document.getElementById("voice-transcript-window-body");
+  const conversationView=document.getElementById("conversation-view");
+  if(transcript && transcriptBody && conversationView && conversationView.parentElement!==transcriptBody){
+    transcriptBody.appendChild(conversationView);
+    conversationView.classList.add("is-floating");
+    makeVisible(transcript);
+  }
+
+  const tools=document.getElementById("language-tools-window");
+  const toolsBody=document.getElementById("language-tools-window-body");
+  const toolsView=document.getElementById("language-tools-view");
+  if(tools && toolsBody && toolsView && toolsView.parentElement!==toolsBody){
+    toolsBody.appendChild(toolsView);
+    toolsView.classList.add("is-floating");
+    makeVisible(tools);
+  }
+}
+function queueFloatingContentRepair(){
+  if(contentRepairQueued)return;
+  contentRepairQueued=true;
+  requestAnimationFrame(()=>{
+    contentRepairQueued=false;
+    enforceFloatingContents();
+  });
+}
+
 function openAll(forceDefaults=false){
   if(normalizing)return;
   normalizing=true;
@@ -27625,6 +27660,7 @@ function openAll(forceDefaults=false){
         try{window[spec.open]()}catch(error){console.warn("Could not open workspace",spec.id,error)}
       }
     });
+    enforceFloatingContents();
     launchComplete=true;
     Object.entries(specs).forEach(([name,spec])=>{
       const panel=document.getElementById(spec.id);
@@ -27650,9 +27686,14 @@ function bindPanels(){
       toggle.type="checkbox";toggle.id="ask-css-minimize-toggle";
       toggle.className="ask-css-minimize-toggle";
       toggle.setAttribute("aria-label","Minimize or restore Ask Tutor");
-      const label=document.createElement("label");
-      label.htmlFor=toggle.id;label.className="all-floating-minimize ask-css-minimize-label";
+      const label=document.createElement("button");
+      label.type="button";label.className="all-floating-minimize ask-css-minimize-label";
       label.title="Minimize or restore Ask Tutor";
+      label.setAttribute("aria-label","Minimize or restore Ask Tutor");
+      label.addEventListener("click",event=>{
+        event.preventDefault();event.stopPropagation();
+        toggleTitleCard("coach");
+      });
       titlebar.append(toggle,label);
     }else if(titlebar && !titlebar.querySelector(".all-floating-minimize")){
       const button=document.createElement("button");
@@ -27701,6 +27742,10 @@ function installSingleStateApi(){
   window.returnTranscriptWorkspace=()=>focus("transcript");
   window.returnAskTutorWorkspace=()=>focus("coach");
   window.returnLanguageToolsWorkspace=()=>focus("tools");
+  /* Retire transcript docking/closing entry points that remain in saved-view
+     and legacy event handlers. They now reveal the one persistent window. */
+  window.dockVoiceTranscript=()=>{enforceFloatingContents();focus("transcript")};
+  window.closeVoiceTranscriptWindow=()=>focus("transcript");
 }
 
 function ensureResetButton(){
@@ -27729,6 +27774,9 @@ function boot(){
   openAll(false);
   setTimeout(()=>openAll(false),150);
   setTimeout(()=>openAll(false),700);
+  setTimeout(()=>{enforceFloatingContents();bindPanels()},1200);
+  setTimeout(()=>{enforceFloatingContents();bindPanels()},1800);
+  new MutationObserver(queueFloatingContentRepair).observe(document.body,{childList:true,subtree:true});
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});
 else boot();
