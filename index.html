@@ -1,5 +1,5 @@
 <!--
-LanguageTutor — v1.02 SOURCE
+LanguageTutor — v1.05 SOURCE
 Based on Version 1 / exact user rollback baseline.
 Changes: replaces dock/close lifecycle with one persistent floating
 workspace state. Tutor Controls, Conversation Transcript, Ask Tutor, and
@@ -9,6 +9,14 @@ Ask Tutor uses a CSS-only checkbox collapse so legacy observers receive no
 outer-window mutation and no JavaScript-driven minimize DOM update.
 Conversation speech recognition now pauses only while Ask Tutor actively owns
 the microphone, rather than whenever its permanently open window is visible.
+v1.03: continuing a saved conversation mirrors its last three turns in Tutor
+Controls and speaks the most recent Tutor line before the learner continues.
+The empty/new-conversation state now uses the same full-height floating
+transcript area instead of the retired compact 70–90 px page layout.
+v1.04: Saved Transcripts is promoted above every open workspace whenever it
+opens or receives pointer focus.
+v1.05: opening or clicking Ask Tutor promotes it above the other windows
+without mutating Ask Tutor's observed outer-window style.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -17405,6 +17413,26 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
         );
     }
 
+    function showRecentSavedTurnsInTutorControls(entries){
+        const live=document.getElementById("voice-live-transcript");
+        if(!live)return;
+        const languageName=langConfig().name;
+        const recent=normalizedSavedConversationEntries(entries).slice(-3);
+        const lines=recent.map(entry=>{
+            const text=entry.role==="assistant"
+                ? stripTutorMarkdown(entry.text)
+                : String(entry.text||"").trim();
+            const speaker=entry.role==="assistant"
+                ? `${languageName} Tutor`
+                : (entry.inputMode==="english" ? "You (English)" : "You");
+            return `${speaker}: ${text}`;
+        }).filter(Boolean);
+        live.textContent=lines.length
+            ? lines.join("\n\n")
+            : "What the microphone hears will appear here.";
+        live.scrollTop=live.scrollHeight;
+    }
+
     window.resumeSavedTutorConversation=async function(id){
         const selected=readSavedTutorTranscripts().find(item=>item.id===id);
         if(!selected)return;
@@ -17454,7 +17482,7 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
         voiceTutorState.resumeMicAfterTurn=false;
 
         renderVoiceTutorTranscript();
-        renderVoiceLiveTurn();
+        showRecentSavedTurnsInTutorControls(restored);
         updateVoiceRestateButton();
         updateUnifiedTutorTextUI();
 
@@ -17475,7 +17503,41 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
             const log=document.getElementById("voice-chat-messages-log");
             if(log)log.scrollTop=log.scrollHeight;
         });
+
+        const lastTutor=[...restored].reverse().find(entry=>
+            entry.role==="assistant" && String(entry.text||"").trim()
+        );
+        if(lastTutor){
+            try{
+                await speakVoiceTutorText(stripTutorMarkdown(lastTutor.text),lastTutor.replyLanguage||"target");
+            }catch(error){
+                console.warn("Could not replay the saved Tutor line.",error);
+            }finally{
+                voiceTutorState.speaking=false;
+                voiceTutorState.phase="idle";
+                voiceTutorStatus(
+                    `Saved Conversation restored. Ready for your next ${langConfig().name} reply.`,
+                    "normal"
+                );
+            }
+        }
     };
+
+    function bringSavedTutorTranscriptsToFront(win){
+        if(!win)return;
+        const otherWindows=document.querySelectorAll(
+            "#tutor-controls-window,#voice-transcript-window,#language-coach-window,"+
+            "#language-tools-window,#text-transcript-window,#analysis-workbench-window,"+
+            "#special-character-palette,#floating-kana-tool"
+        );
+        let highest=40000;
+        otherWindows.forEach(panel=>{
+            if(panel===win || panel.hidden)return;
+            const layer=Number.parseInt(getComputedStyle(panel).zIndex,10);
+            if(Number.isFinite(layer))highest=Math.max(highest,layer);
+        });
+        win.style.setProperty("z-index",String(highest+10),"important");
+    }
 
     window.openSavedTutorTranscripts=function(){
         const win=document.getElementById("saved-transcripts-window");
@@ -17483,6 +17545,11 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
         renderSavedTutorTranscripts();
         win.hidden=false;
         win.classList.remove("collapsed");
+        bringSavedTutorTranscriptsToFront(win);
+        if(win.dataset.frontLayerBound!=="1"){
+            win.dataset.frontLayerBound="1";
+            win.addEventListener("pointerdown",()=>bringSavedTutorTranscriptsToFront(win),true);
+        }
         const btn=document.getElementById("saved-transcripts-collapse-btn");
         if(btn)btn.textContent="—";
     };
@@ -22915,10 +22982,34 @@ Do not continue the conversation.`;
         box.appendChild(panel);
     }
 
+    function bringLanguageCoachToFront(){
+        const win=document.getElementById("language-coach-window");
+        if(!win)return;
+        const otherWindows=document.querySelectorAll(
+            "#tutor-controls-window,#voice-transcript-window,#language-tools-window,"+
+            "#saved-transcripts-window,#text-transcript-window,#analysis-workbench-window,"+
+            "#special-character-palette,#floating-kana-tool"
+        );
+        let highest=40000;
+        otherWindows.forEach(panel=>{
+            if(panel.hidden)return;
+            const layer=Number.parseInt(getComputedStyle(panel).zIndex,10);
+            if(Number.isFinite(layer))highest=Math.max(highest,layer);
+        });
+        document.body.style.setProperty("--ask-tutor-front-layer",String(highest+10));
+        document.body.classList.add("ask-tutor-force-front");
+    }
+    window.bringAskTutorToFront=bringLanguageCoachToFront;
+
     window.openLanguageCoach=function(seed=""){
         const win=document.getElementById("language-coach-window");
         const input=document.getElementById("language-coach-input");
         if(!win)return;
+        bringLanguageCoachToFront();
+        if(!win.__askTutorFrontLayerBound){
+            win.__askTutorFrontLayerBound=true;
+            win.addEventListener("pointerdown",bringLanguageCoachToFront,true);
+        }
 
         // This is a sidebar, not a new Tutor turn. Pause live recognition while
         // the learner works privately, then resume when they return.
@@ -27705,7 +27796,10 @@ function bindPanels(){
     }
     /* Ask Tutor's legacy observer watches outer style changes. Do not change
        its z-index on click; its CSS-only minimize must remain mutation-free. */
-    if(name!=="coach")panel.addEventListener("pointerdown",()=>focusPanel(panel),true);
+    if(name!=="coach")panel.addEventListener("pointerdown",()=>{
+      document.body.classList.remove("ask-tutor-force-front");
+      focusPanel(panel);
+    },true);
     panel.addEventListener("pointerup",()=>setTimeout(saveLayout,0));
     if("ResizeObserver" in window)new ResizeObserver(()=>{
       if(!normalizing && !panel.hidden)saveLayout();
@@ -27814,6 +27908,39 @@ window.addEventListener("resize",()=>openAll(false));
   min-height:260px!important;
   max-height:none!important;
   overflow-y:auto!important;
+}
+</style>
+<style id="language-tutor-v103-new-conversation-height-fix">
+/* v1.03 — The legacy starting-page rule caps an empty transcript at 90px.
+   Floating-only mode keeps the same useful history area before turn one. */
+#voice-transcript-window:not(.all-floating-minimized)
+  #conversation-view.conversation-is-empty{
+  flex:1 1 0%!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+}
+#voice-transcript-window:not(.all-floating-minimized)
+  #conversation-view.conversation-is-empty .conversation-shared-body{
+  flex:1 1 0%!important;
+  height:0!important;
+  min-height:0!important;
+  max-height:none!important;
+}
+#voice-transcript-window:not(.all-floating-minimized)
+  #conversation-view.conversation-is-empty #voice-chat-messages-log{
+  flex:1 1 0%!important;
+  height:100%!important;
+  min-height:260px!important;
+  max-height:none!important;
+  overflow-y:auto!important;
+}
+</style>
+<style id="language-tutor-v105-ask-tutor-front-layer">
+/* Raise Ask Tutor through a body-owned layer so its mutation-sensitive outer
+   window receives no style/class changes. */
+body.ask-tutor-force-front #language-coach-window{
+  z-index:var(--ask-tutor-front-layer,40010)!important;
 }
 </style>
 </body>
