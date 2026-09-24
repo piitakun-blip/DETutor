@@ -1,5 +1,5 @@
 <!--
-LanguageTutor — VERSION 2V ALL-FLOATING EXPERIMENT
+LanguageTutor — VERSION 2W ALL-FLOATING EXPERIMENT
 Based on Version 1 / exact user rollback baseline.
 Changes: replaces dock/close lifecycle with one persistent floating
 workspace state. Tutor Controls, Conversation Transcript, Ask Tutor, and
@@ -7,6 +7,8 @@ Language Tools open at startup and can be dragged or resized. Minimize turns
 each window into a draggable title card; restore expands that same window.
 Ask Tutor uses a CSS-only checkbox collapse so legacy observers receive no
 outer-window mutation and no JavaScript-driven minimize DOM update.
+Conversation speech recognition now pauses only while Ask Tutor actively owns
+the microphone, rather than whenever its permanently open window is visible.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -15734,11 +15736,16 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
 
     window.resumeVoiceRecognition=function(manual=false,inputMode="target"){
         if(!voiceTutorState.active)return;
-        // The private Coach owns the mic while its window is open. This prevents
-        // Tutor speech completion / recognition onend from silently restarting
-        // the live conversation microphone behind Coach dictation.
-        const coachWindow=document.getElementById("language-coach-window");
-        if(coachWindow && !coachWindow.hidden){
+        // In the all-floating workspace Ask Tutor is always visible. Visibility
+        // therefore cannot indicate microphone ownership; only its active voice
+        // or dictation controls may pause live Conversation recognition.
+        const coachOwnsMic=Boolean(document.querySelector(
+            "#language-coach-window .dictating,"+
+            "#ask-tutor-speak-english.listening,"+
+            "#ask-tutor-speak-target.listening,"+
+            "#ask-tutor-live-voice-btn.live-active"
+        ));
+        if(coachOwnsMic){
             voiceTutorState.coachMicPaused=true;
             return;
         }
@@ -15975,6 +15982,11 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
             voiceTutorStatus("Speech recognition is not available in this browser/device.","error");
             return;
         }
+
+        // A deliberate Conversation start transfers microphone ownership away
+        // from Ask Tutor without closing its permanently visible window.
+        try{window.stopAskTutorVoice?.(true)}catch(_){}
+        voiceTutorState.coachMicPaused=false;
 
         if(voiceTutorState.micSession){
             resumeVoiceRecognition(true);
@@ -23536,7 +23548,19 @@ Requirements:
     function keepConversationMicPausedWhileCoachOpen(){
         try{
             if(typeof voiceTutorState==="undefined" || !voiceTutorState?.active)return;
-            if(document.getElementById("language-coach-window")?.hidden)return;
+            const coachOwnsMic=Boolean(document.querySelector(
+                "#language-coach-window .dictating,"+
+                "#ask-tutor-speak-english.listening,"+
+                "#ask-tutor-speak-target.listening,"+
+                "#ask-tutor-live-voice-btn.live-active"
+            ));
+            if(!coachOwnsMic){
+                voiceTutorState.coachMicPaused=false;
+                if(voiceTutorState.micSession && !voiceTutorState.speaking && voiceTutorState.phase!=="processing"){
+                    setTimeout(()=>window.resumeVoiceRecognition?.(true,"target"),120);
+                }
+                return;
+            }
             if(voiceTutorState.recognition){
                 if(typeof destroyVoiceRecognition==="function")destroyVoiceRecognition();
                 if(typeof setVoiceMicIndicator==="function")setVoiceMicIndicator(false);
