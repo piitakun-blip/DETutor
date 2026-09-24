@@ -1,5 +1,5 @@
 <!--
-LanguageTutor — v1.01 SOURCE
+LanguageTutor — v1.02 SOURCE
 Based on Version 1 / exact user rollback baseline.
 Changes: replaces dock/close lifecycle with one persistent floating
 workspace state. Tutor Controls, Conversation Transcript, Ask Tutor, and
@@ -27783,5 +27783,38 @@ else boot();
 window.addEventListener("resize",()=>openAll(false));
 })();
 </script>
+<style id="language-tutor-v102-transcript-height-fix">
+/* v1.02 — The floating Conversation history uses the full window height.
+   Each nested flex layer is allowed to grow; only the history log scrolls. */
+#voice-transcript-window:not(.all-floating-minimized) > #voice-transcript-window-body{
+  flex:1 1 0%!important;
+  width:100%!important;
+  height:0!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:hidden!important;
+}
+#voice-transcript-window:not(.all-floating-minimized) #conversation-view{
+  flex:1 1 0%!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+}
+#voice-transcript-window:not(.all-floating-minimized) #conversation-view .conversation-shared-body{
+  flex:1 1 0%!important;
+  height:0!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:hidden!important;
+}
+#voice-transcript-window:not(.all-floating-minimized) #voice-chat-messages-log{
+  flex:1 1 0%!important;
+  height:100%!important;
+  min-height:260px!important;
+  max-height:none!important;
+  overflow-y:auto!important;
+}
+</style>
 </body>
 </html>
