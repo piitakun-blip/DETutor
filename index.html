@@ -1,5 +1,5 @@
 <!--
-LanguageTutor — v2.10 SOURCE
+LanguageTutor — v2.13 SOURCE
 Based on Version 1 / exact user rollback baseline.
 Changes: replaces dock/close lifecycle with one persistent floating
 workspace state. Tutor Controls, Conversation Transcript, Ask Tutor, and
@@ -64,6 +64,25 @@ cards now share exact title, helper, and restore-control typography. German,
 Spanish, and Japanese character keyboards also use the same draggable,
 resizable, minimizable, click-to-front window behavior and participate in
 Reset window positions.
+v2.11: replaces Reset window positions with a context-aware three-state
+workspace layout control. It cycles from minimizing the five persistent main
+windows, to restoring the three conversation windows, to restoring all five,
+while preserving each window's user-selected position and expanded size.
+On-demand Chat Settings and language-keyboard windows remain on-demand. A
+separate Set current layout as default control snapshots the five main window
+positions and expanded sizes and reapplies that arrangement at future startup.
+v2.12: consolidates Analysis Workbench navigation into Ask Tutor's Analyze,
+Translate, and Why this wording controls. Analyze opens directly to the grammar
+parse; Translate and Why switch the open workbench content. The redundant
+internal mode row and sentence-diagram UI are removed, translations use the
+prominent transcript-style result card, Save is renamed + Study List, and the
+embedded workbench title bar retains only its close control. The remaining
+Color legend opens from a compact button inside the first sentence heading,
+so the parser tiles begin immediately without a permanent control row.
+v2.13: renames the German and Spanish input windows to German Special
+Characters and Spanish Special Characters. Keyboard minimize controls now use
+their native non-drag control classes and stop pointer propagation, preventing
+the title-bar drag handler from intercepting collapse and restore presses.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -21526,17 +21545,10 @@ Current work: ${context||"No sentence has been entered yet."}`;
             <div id="analysis-workbench-sentence"></div>
         </div>
 
-        <div class="analysis-workbench-primary-tools">
-            <button type="button" onclick="analysisWorkbenchTranslate(this)">Translation</button>
-            <button type="button" class="ai" onclick="analysisWorkbenchFullParse(this)">Parse</button>
-
-            <button type="button" class="ai" onclick="analysisWorkbenchWhy(this)">Why?</button>
-        </div>
-
         <div class="analysis-workbench-utility-tools">
             <button type="button" onclick="analysisWorkbenchListen()">🔊 Listen</button>
             <button type="button" onclick="analysisWorkbenchCopy(this)">⧉ Copy</button>
-            <button type="button" onclick="analysisWorkbenchSave(this)">☆ Save</button>
+            <button type="button" onclick="analysisWorkbenchSave(this)">＋ Study List</button>
             <button type="button" onclick="analysisWorkbenchCoach()">❓ Ask Tutor</button>
             <button type="button" onclick="workspaceOpenTool('keyboard')">⌨ Keyboard</button>
         </div>
@@ -21973,7 +21985,7 @@ Rules:
         const legendToggle=document.createElement("button");
         legendToggle.type="button";
         legendToggle.className="analysis-parser-legend-toggle";
-        legendToggle.textContent="Show color key";
+        legendToggle.textContent="Color legend";
 
         const legend=document.createElement("div");
         legend.className="analysis-parser-legend hidden";
@@ -21997,7 +22009,7 @@ Rules:
         legendToggle.addEventListener("click",()=>{
             const opening=legend.classList.contains("hidden");
             legend.classList.toggle("hidden",!opening);
-            legendToggle.textContent=opening ? "Hide color key" : "Show color key";
+            legendToggle.textContent=opening ? "Hide color legend" : "Color legend";
         });
         const viewSwitch=document.createElement("div");
         viewSwitch.className="analysis-parser-view-switch";
@@ -22011,8 +22023,8 @@ Rules:
         diagramViewButton.type="button";
         diagramViewButton.textContent="Diagram";
 
-        viewSwitch.append(tilesViewButton,diagramViewButton);
-        card.append(viewSwitch,legendToggle,legend);
+        /* v2.12: tiles are the only parser view. The former Tiles/Diagram and
+           color-key control row consumed space and duplicated the workbench. */
 
         const tiles=document.createElement("div");
         tiles.className="analysis-parser-tiles";
@@ -22039,7 +22051,9 @@ Rules:
             sentenceText.textContent=sentence.text || "";
 
             heading.append(number,sentenceText);
+            if(index===0)heading.appendChild(legendToggle);
             group.appendChild(heading);
+            if(index===0)group.appendChild(legend);
 
             const row=document.createElement("div");
             row.className="analysis-parser-sentence-tiles";
@@ -22146,7 +22160,8 @@ Rules:
 
         const diagramHost=document.createElement("div");
         diagramHost.className="analysis-parser-diagram-host hidden";
-        card.appendChild(diagramHost);
+        /* Diagram rendering code is retained as a compatibility guard for old
+           saved sessions, but no Diagram control or host is exposed. */
 
         const showTiles=()=>{
             tiles.classList.remove("hidden");
@@ -22380,6 +22395,7 @@ Rules:
         clearResults();
 
         const card=section("Grammar Parser");
+        card.classList.add("analysis-parser-card");
         const old=button?.textContent||"Parse";
         const ai=resolveWorkbenchAIConfig();
 
@@ -23021,7 +23037,7 @@ Do not continue the conversation.`;
 
         const save=document.createElement("button");
         save.type="button";
-        save.textContent="☆ Save";
+        save.textContent="＋ Study List";
         save.addEventListener("click",()=>{
             if(typeof window.saveVoiceTutorPhrase==="function"){
                 window.saveVoiceTutorPhrase(phrase,currentStudyLanguage,save);
@@ -25353,7 +25369,7 @@ function renderAskReplyOptionCard(option,index){
 
     const save=document.createElement("button");
     save.type="button";
-    save.textContent="☆ Save";
+    save.textContent="＋ Study List";
     save.addEventListener("click",()=>{
         window.saveVoiceTutorPhrase?.(phrase,currentStudyLanguage,save);
     });
@@ -25567,38 +25583,34 @@ window.closeAskTutorEmbeddedAnalysis=function(){
     }
 };
 
-window.toggleAskTutorAnalysis=async function(){
+function normalizeEmbeddedWorkbenchTitlebar(win){
+    const bar=win?.querySelector("#analysis-workbench-drag-handle");
+    const close=bar?.querySelector(".analysis-workbench-close");
+    if(!bar || !close)return;
+    bar.appendChild(close);
+    bar.querySelectorAll("button").forEach(control=>{if(control!==close)control.remove()});
+    bar.querySelectorAll(".workspace-v95-title-actions,.workspace-standard-window-actions")
+        .forEach(wrapper=>wrapper.remove());
+    close.textContent="×";
+    close.title="Hide analysis";
+    close.setAttribute("aria-label","Hide Analysis Workbench");
+}
+
+function mountAskTutorWorkbench(context,entry={source:"ask-tutor",text:context}){
     const host=document.getElementById("ask-tutor-analysis-host");
     const win=document.getElementById("analysis-workbench-window");
     const button=document.getElementById("ask-tutor-analyze-btn");
-    const context=String(askState.context||"").trim();
-
-    if(!host || !win || !button)return;
-
-    if(button.getAttribute("aria-expanded")==="true"){
-        window.closeAskTutorEmbeddedAnalysis();
-        return;
-    }
-
-    if(!context){
-        setStatus("Select a conversation line first so the Tutor knows what to analyze.","error");
-        return;
-    }
-
+    if(!host || !win || !button || !context)return null;
     ensureAnalysisHomeAnchor();
-
     if(typeof window.openAnalysisWorkbench!=="function"){
         setStatus("The grammar parser is unavailable.","error");
-        return;
+        return null;
     }
-
-    // Use the ORIGINAL Analysis Workbench and its established parser renderer.
     window.openAnalysisWorkbench(
         context,
         currentCfg().code || currentCfg().locale || "de",
-        {source:"ask-tutor",text:context}
+        entry
     );
-
     clearAnalysisFloatingGeometry(win);
     win.classList.add("ask-tutor-embedded-analysis");
     host.replaceChildren(win);
@@ -25607,22 +25619,42 @@ window.toggleAskTutorAnalysis=async function(){
 
     button.setAttribute("aria-expanded","true");
     button.textContent="🔎 Hide analysis";
+    normalizeEmbeddedWorkbenchTitlebar(win);
     setStatus("");
+    return win;
+}
 
-    // openAnalysisWorkbench may have queued its old floating placement on RAF.
-    // Clear that geometry again after the queued placement, then run the same
-    // Full Parse behavior the previous Analysis window used.
+window.showAskTutorAnalysisMode=function(mode="parse"){
+    const context=String(askState.context||"").trim();
+    const host=document.getElementById("ask-tutor-analysis-host");
+    const win=document.getElementById("analysis-workbench-window");
+    const button=document.getElementById("ask-tutor-analyze-btn");
+    if(!context){
+        setStatus("Select a conversation line first so the Tutor knows what to analyze.","error");
+        return;
+    }
+    if(!host || !win || !button)return;
+    const expanded=button.getAttribute("aria-expanded")==="true" && host.contains(win);
+    if(!expanded && !mountAskTutorWorkbench(context))return;
+    normalizeEmbeddedWorkbenchTitlebar(win);
+
     requestAnimationFrame(()=>{
         clearAnalysisFloatingGeometry(win);
         win.classList.add("ask-tutor-embedded-analysis");
-
-        const parseButton=[...win.querySelectorAll(".analysis-workbench-primary-tools button")]
-            .find(b=>/parse/i.test(b.textContent||""));
-        const results=document.getElementById("analysis-workbench-results");
-        if(typeof window.analysisWorkbenchFullParse==="function" && !results?.children?.length){
-            window.analysisWorkbenchFullParse(parseButton||null);
-        }
+        normalizeEmbeddedWorkbenchTitlebar(win);
+        if(mode==="translate")window.analysisWorkbenchTranslate?.(document.getElementById("ask-tutor-translate-btn"));
+        else if(mode==="why")window.analysisWorkbenchWhy?.(document.getElementById("ask-tutor-why-btn"));
+        else window.analysisWorkbenchFullParse?.(null);
     });
+};
+
+window.toggleAskTutorAnalysis=async function(){
+    const button=document.getElementById("ask-tutor-analyze-btn");
+    if(button?.getAttribute("aria-expanded")==="true"){
+        window.closeAskTutorEmbeddedAnalysis?.();
+        return;
+    }
+    window.showAskTutorAnalysisMode?.("parse");
 };
 
 
@@ -25649,15 +25681,15 @@ window.analyzeAskTutorReplyOption=function(text){
     win.hidden=false;
     button.setAttribute("aria-expanded","true");
     button.textContent="🔎 Hide analysis";
+    normalizeEmbeddedWorkbenchTitlebar(win);
 
     requestAnimationFrame(()=>{
         clearAnalysisFloatingGeometry(win);
         win.classList.add("ask-tutor-embedded-analysis");
-        const parseButton=[...win.querySelectorAll(".analysis-workbench-primary-tools button")]
-            .find(b=>/parse/i.test(b.textContent||""));
+        normalizeEmbeddedWorkbenchTitlebar(win);
         const results=document.getElementById("analysis-workbench-results");
         if(typeof window.analysisWorkbenchFullParse==="function" && !results?.children?.length){
-            window.analysisWorkbenchFullParse(parseButton||null);
+            window.analysisWorkbenchFullParse(null);
         }
     });
 };
@@ -26254,10 +26286,10 @@ function bind(){
         ?.addEventListener("click",()=>window.toggleAskTutorAnalysis?.());
 
     document.getElementById("ask-tutor-translate-btn")
-        ?.addEventListener("click",()=>runShortcut("translate"));
+        ?.addEventListener("click",()=>window.showAskTutorAnalysisMode?.("translate"));
 
     document.getElementById("ask-tutor-why-btn")
-        ?.addEventListener("click",()=>runShortcut("why"));
+        ?.addEventListener("click",()=>window.showAskTutorAnalysisMode?.("why"));
 
     document.getElementById("ask-tutor-reply-btn")
         ?.addEventListener("click",()=>runShortcut("reply"));
@@ -29737,7 +29769,9 @@ function bind(name){
   bar.querySelectorAll(".workspace-v95-title-actions,.special-character-window-actions,.floating-kana-window-actions").forEach(node=>node.remove());
   let button=bar.querySelector(".language-keyboard-minimize");
   if(!button){
-    button=document.createElement("button");button.type="button";button.className="language-keyboard-minimize";
+    button=document.createElement("button");button.type="button";
+    button.className="language-keyboard-minimize "+(name==="kana"?"floating-kana-window-btn":"special-character-window-btn");
+    button.addEventListener("pointerdown",event=>event.stopPropagation());
     button.addEventListener("click",event=>{event.preventDefault();event.stopPropagation();toggle(name)});
     bar.appendChild(button);
   }
@@ -29752,7 +29786,7 @@ function afterOpen(name){
   if(name==="special"){
     const title=win.querySelector("#special-character-title");
     const language=document.body.dataset.studyLanguage;
-    if(title)title.textContent=language==="es"?"Spanish Keyboard":"German Keyboard";
+    if(title)title.textContent=language==="es"?"Spanish Special Characters":"German Special Characters";
   }
 }
 function wrapOpen(globalName,name){
@@ -29780,5 +29814,230 @@ function boot(){
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});else boot();
 })();
 </script>
+
+<style id="language-tutor-v211-layout-cycle-css">
+#all-floating-reset-layout{
+  min-width:112px!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+}
+#save-default-window-layout{
+  position:static!important;
+  flex:0 0 auto!important;
+  min-height:36px!important;
+  padding:7px 10px!important;
+  border:1px solid #94a3b8!important;
+  border-radius:9px!important;
+  background:#fff!important;
+  color:#334155!important;
+  font:800 11px/1.1 var(--lt-interface-font,"Segoe UI Variable","Segoe UI",Inter,system-ui,sans-serif)!important;
+  white-space:nowrap!important;
+  cursor:pointer!important;
+}
+#save-default-window-layout:hover{background:#f8fafc!important}
+@media(max-width:900px){#save-default-window-layout{display:none!important}}
+</style>
+
+<script id="language-tutor-v211-layout-cycle-runtime">
+(()=>{
+"use strict";
+const mainWindows={
+  tutor:{id:"tutor-controls-window",button:".all-floating-minimize",isMinimized:win=>win.classList.contains("all-floating-minimized")},
+  transcript:{id:"voice-transcript-window",button:".all-floating-minimize",isMinimized:win=>win.classList.contains("all-floating-minimized")},
+  coach:{id:"language-coach-window",button:".all-floating-minimize",isMinimized:win=>Boolean(win.querySelector(".ask-css-minimize-toggle")?.checked)},
+  tools:{id:"language-tools-window",button:".all-floating-minimize",isMinimized:win=>win.classList.contains("all-floating-minimized")},
+  translate:{id:"quick-translate-window",button:".quick-translate-minimize",isMinimized:win=>win.classList.contains("quick-translate-minimized")}
+};
+const trio=["tutor","transcript","coach"];
+const supporting=["tools","translate"];
+const DEFAULT_KEY="languagetutor_user_default_layout_v211";
+let busy=false;
+function entry(name){
+  const spec=mainWindows[name],win=document.getElementById(spec.id);
+  return win?{spec,win}:null;
+}
+function minimized(name){const item=entry(name);return item?item.spec.isMinimized(item.win):false}
+function setMinimized(name,wantMinimized){
+  const item=entry(name);if(!item||item.spec.isMinimized(item.win)===wantMinimized)return;
+  item.win.querySelector(item.spec.button)?.click();
+}
+function nextAction(){
+  const names=Object.keys(mainWindows);
+  const allMinimized=names.every(minimized);
+  const trioOpen=trio.every(name=>!minimized(name));
+  const supportingMinimized=supporting.every(minimized);
+  if(allMinimized)return "trio";
+  if(trioOpen&&supportingMinimized)return "all";
+  return "minimize";
+}
+function updateButton(button){
+  if(busy)return;
+  const action=nextAction();button.dataset.nextLayout=action;
+  if(action==="trio"){
+    button.textContent="Open chat windows";
+    button.title="Restore Chat with Tutor, Chat Transcript, and Ask Tutor";
+  }else if(action==="all"){
+    button.textContent="Open all windows";
+    button.title="Restore every persistent main window";
+  }else{
+    button.textContent="Minimize all";
+    button.title="Minimize every persistent main window to a title card";
+  }
+  button.setAttribute("aria-label",button.title);
+}
+function applyAction(button){
+  const action=button.dataset.nextLayout||nextAction();busy=true;
+  try{
+    if(action==="minimize")Object.keys(mainWindows).forEach(name=>setMinimized(name,true));
+    else if(action==="trio"){
+      trio.forEach(name=>setMinimized(name,false));
+      supporting.forEach(name=>setMinimized(name,true));
+    }else Object.keys(mainWindows).forEach(name=>setMinimized(name,false));
+  }finally{
+    busy=false;requestAnimationFrame(()=>updateButton(button));
+  }
+}
+function captureDefault(saveButton){
+  const snapshot={};
+  Object.entries(mainWindows).forEach(([name,spec])=>{
+    const win=document.getElementById(spec.id);if(!win)return;
+    const rect=win.getBoundingClientRect(),isSmall=spec.isMinimized(win);
+    snapshot[name]={
+      left:rect.left,top:rect.top,
+      width:isSmall?(Number(win.dataset.expandedWidth)||rect.width):rect.width,
+      height:isSmall?(Number(win.dataset.expandedHeight)||rect.height):rect.height
+    };
+  });
+  try{localStorage.setItem(DEFAULT_KEY,JSON.stringify(snapshot))}catch(_){return}
+  const oldText=saveButton.textContent;
+  saveButton.textContent="Default saved";
+  saveButton.setAttribute("aria-live","polite");
+  setTimeout(()=>{saveButton.textContent=oldText;saveButton.removeAttribute("aria-live")},1400);
+}
+function restoreSavedDefault(){
+  let snapshot={};
+  try{snapshot=JSON.parse(localStorage.getItem(DEFAULT_KEY)||"{}")||{}}catch(_){return}
+  Object.entries(mainWindows).forEach(([name,spec])=>{
+    const win=document.getElementById(spec.id),saved=snapshot[name];if(!win||!saved)return;
+    const width=clamp(Number(saved.width)||win.offsetWidth,300,Math.max(300,innerWidth-16));
+    const height=clamp(Number(saved.height)||win.offsetHeight,180,Math.max(180,innerHeight-16));
+    const left=clamp(Number(saved.left)||8,8,Math.max(8,innerWidth-width-8));
+    const top=clamp(Number(saved.top)||8,8,Math.max(8,innerHeight-height-8));
+    win.dataset.expandedWidth=String(width);win.dataset.expandedHeight=String(height);
+    Object.assign(win.style,{left:left+"px",top:top+"px",right:"auto",bottom:"auto"});
+    if(!spec.isMinimized(win))Object.assign(win.style,{width:width+"px",height:height+"px"});
+  });
+}
+function installSaveButton(cycleButton){
+  let saveButton=document.getElementById("save-default-window-layout");
+  if(saveButton)return saveButton;
+  saveButton=document.createElement("button");saveButton.type="button";
+  saveButton.id="save-default-window-layout";saveButton.textContent="Set current layout as default";
+  saveButton.title="Use the current main-window positions and expanded sizes at startup";
+  saveButton.addEventListener("click",()=>captureDefault(saveButton));
+  cycleButton.insertAdjacentElement("afterend",saveButton);
+  return saveButton;
+}
+function clamp(value,min,max){return Math.max(min,Math.min(max,value))}
+function install(){
+  const old=document.getElementById("all-floating-reset-layout");
+  if(!old||old.dataset.layoutCycleInstalled==="1")return false;
+  /* Cloning deliberately removes the retired position-reset listener while
+     retaining the established banner placement and visual style. */
+  const button=old.cloneNode(false);
+  button.id="all-floating-reset-layout";
+  button.dataset.layoutCycleInstalled="1";
+  old.replaceWith(button);
+  button.addEventListener("click",()=>applyAction(button));
+  installSaveButton(button);
+  const observer=new MutationObserver(()=>requestAnimationFrame(()=>updateButton(button)));
+  Object.values(mainWindows).forEach(spec=>{
+    const win=document.getElementById(spec.id);
+    if(win)observer.observe(win,{attributes:true,subtree:true,attributeFilter:["class","checked"]});
+  });
+  document.addEventListener("change",event=>{
+    if(event.target?.classList?.contains("ask-css-minimize-toggle"))updateButton(button);
+  });
+  updateButton(button);
+  /* Older startup runtimes finish mounting and positioning asynchronously.
+     Apply the explicit user default afterward so it remains authoritative. */
+  setTimeout(restoreSavedDefault,850);
+  return true;
+}
+function boot(){
+  if(install())return;
+  let attempts=0;
+  const timer=setInterval(()=>{attempts++;if(install()||attempts>30)clearInterval(timer)},100);
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});else boot();
+})();
+</script>
+
+<style id="language-tutor-v212-analysis-consolidation-css">
+/* Ask Tutor's top shortcuts are now the only Analysis Workbench mode controls. */
+#analysis-workbench-window .analysis-workbench-primary-tools{display:none!important}
+.ask-tutor-analysis-host #analysis-workbench-drag-handle button:not(.analysis-workbench-close),
+.ask-tutor-analysis-host #analysis-workbench-drag-handle .workspace-v95-title-actions,
+.ask-tutor-analysis-host #analysis-workbench-drag-handle .workspace-standard-window-actions{
+  display:none!important;
+}
+.ask-tutor-analysis-host #analysis-workbench-drag-handle>.analysis-workbench-close{
+  display:grid!important;place-items:center!important;margin-left:auto!important;
+  position:static!important;inset:auto!important;transform:none!important;
+}
+
+/* The sentence tiles are the parser. Remove the redundant parser heading,
+   provider badge, Tiles/Diagram switch, and color-key control block. */
+#analysis-workbench-window .analysis-parser-card>.analysis-workbench-section-title,
+#analysis-workbench-window .analysis-parser-card>.analysis-parser-view-switch,
+#analysis-workbench-window .analysis-parser-card>.analysis-parser-legend-toggle,
+#analysis-workbench-window .analysis-parser-card>.analysis-parser-legend,
+#analysis-workbench-window .analysis-parser-card>.analysis-parser-diagram-host{
+  display:none!important;
+}
+#analysis-workbench-window .analysis-parser-card{
+  padding-top:8px!important;
+}
+#analysis-workbench-window .analysis-parser-card .analysis-parser-tiles{
+  margin-top:0!important;
+}
+#analysis-workbench-window .analysis-parser-sentence-heading{
+  align-items:center!important;
+}
+#analysis-workbench-window .analysis-parser-sentence-heading>.analysis-parser-legend-toggle{
+  flex:0 0 auto!important;margin:0 0 0 auto!important;min-height:26px!important;
+  padding:4px 8px!important;border-color:#bfdbfe!important;
+  background:#eff6ff!important;color:#1d4ed8!important;font-size:8.5px!important;
+}
+#analysis-workbench-window .analysis-parser-sentence-group>.analysis-parser-legend{
+  margin:0!important;padding:8px 9px!important;border:0!important;
+  border-bottom:1px solid #e2e8f0!important;border-radius:0!important;
+  background:#fbfdff!important;
+}
+
+/* Match the prominent blue translation result used by Chat Transcript. */
+.ask-tutor-analysis-host .analysis-workbench-section:has(.analysis-workbench-translation){
+  box-sizing:border-box!important;width:100%!important;margin:0!important;
+  padding:11px 13px 12px!important;
+  border:1px solid #93c5fd!important;border-left:4px solid #3b82f6!important;
+  border-radius:10px!important;
+  background:linear-gradient(135deg,#eff6ff 0%,#eef2ff 100%)!important;
+  box-shadow:0 2px 7px rgba(37,99,235,.09)!important;
+}
+.ask-tutor-analysis-host .analysis-workbench-section:has(.analysis-workbench-translation)
+  >.analysis-workbench-section-title{
+  display:block!important;margin:0 0 4px!important;color:#2563eb!important;
+  font-family:var(--lt-interface-font,"Segoe UI Variable","Segoe UI",Inter,system-ui,sans-serif)!important;
+  font-size:9px!important;line-height:1.2!important;font-weight:800!important;
+  letter-spacing:.055em!important;text-transform:uppercase!important;
+}
+.ask-tutor-analysis-host .analysis-workbench-translation{
+  padding:0!important;border:0!important;background:transparent!important;
+  color:#172554!important;
+  font-family:var(--lt-interface-font,"Segoe UI Variable","Segoe UI",Inter,system-ui,sans-serif)!important;
+  font-size:13px!important;line-height:1.55!important;font-weight:700!important;
+  white-space:normal!important;overflow-wrap:anywhere!important;
+}
+</style>
 </body>
 </html>
