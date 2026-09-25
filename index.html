@@ -1,5 +1,5 @@
 <!--
-LanguageTutor — v2.04 SOURCE
+LanguageTutor — v2.08 SOURCE
 Based on Version 1 / exact user rollback baseline.
 Changes: replaces dock/close lifecycle with one persistent floating
 workspace state. Tutor Controls, Conversation Transcript, Ask Tutor, and
@@ -42,6 +42,19 @@ v2.04: prevents Ask Tutor's CSS restore icon from overlapping legacy literal
 button text in its minimized title card, and removes the redundant upper
 Ask Tutor button from the Chat Transcript toolbar while retaining the
 selected-line Ask Tutor action.
+v2.05: establishes a consistent typography hierarchy across floating windows:
+one interface font family, unified button labels, distinct window and section
+headings, readable body text, and smaller supporting labels.
+v2.06: simplifies transcript speaker labels from language-specific forms such
+as “German Tutor” to the concise “Tutor”; the learner label still identifies
+the spoken language where useful.
+v2.07: moves the existing Quick Translate tool out of Ask Tutor and into its
+own persistent floating workspace with drag, resize, minimize/restore,
+click-to-front, saved geometry, and Reset Window Positions support.
+v2.08: presents each Quick Translate result as a transcript-style card with
+Listen, Copy, Study List, and Ask Tutor actions while retaining Use in reply
+for translations into the study language. Current and saved transcript
+translations also use a larger, labeled, high-contrast result card.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -14656,7 +14669,7 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
             if(user){
                 speaker=entry.inputMode==="english" ? "You (English)" : `You (${languageName})`;
             }else{
-                speaker=entry.replyLanguage==="en" ? `${languageName} Tutor (English)` : `${languageName} Tutor`;
+                speaker=entry.replyLanguage==="en" ? "Tutor (English)" : "Tutor";
             }
 
             let block=`${speaker}: ${String(entry.text||"").trim()}`;
@@ -15284,8 +15297,8 @@ Do not add quotation marks or labels.`;
                 : `You • ${cfg.name} speech`;
         }else{
             label.textContent=entry.replyLanguage==="en"
-                ? `${cfg.name} Tutor • English reply`
-                : `${cfg.name} Tutor`;
+                ? "Tutor • English reply"
+                : "Tutor";
         }
         wrap.appendChild(label);
 
@@ -17195,7 +17208,7 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
 
             const speaker=document.createElement("div");
             speaker.className="voice-transcript-speaker";
-            speaker.textContent=entry.role==="user" ? "You" : `${languageName} Text Tutor`;
+            speaker.textContent=entry.role==="user" ? "You" : "Tutor";
 
             const content=document.createElement("div");
             content.className="voice-transcript-text";
@@ -28341,9 +28354,21 @@ else build();
   font-weight:700;
 }
 #ask-tutor-quick-translate-result{
-  margin-top:8px;
-  padding-top:8px;
-  border-top:1px solid #dbeafe;
+  margin-top:10px;
+  padding:11px 12px;
+  border:1px solid #c7d2fe;
+  border-radius:12px;
+  background:#eef2ff;
+  box-shadow:0 1px 2px rgba(15,23,42,.05);
+}
+.ask-tutor-quick-result-label{
+  margin-bottom:5px;
+  color:#4f46e5;
+  font-size:9px;
+  line-height:1.25;
+  font-weight:800;
+  letter-spacing:.055em;
+  text-transform:uppercase;
 }
 #ask-tutor-quick-translate-output{
   color:#0f172a;
@@ -28376,9 +28401,12 @@ const ids={
   button:"ask-tutor-quick-translate-button",
   status:"ask-tutor-quick-translate-status",
   result:"ask-tutor-quick-translate-result",
+  resultLabel:"ask-tutor-quick-result-label",
   output:"ask-tutor-quick-translate-output",
   listen:"ask-tutor-quick-listen",
   copy:"ask-tutor-quick-copy",
+  study:"ask-tutor-quick-study",
+  coach:"ask-tutor-quick-coach",
   use:"ask-tutor-quick-use-reply"
 };
 
@@ -28407,11 +28435,14 @@ function makePanel(){
       <button type="button" id="${ids.button}">Translate</button>
     </div>
     <div id="${ids.status}" aria-live="polite">Direction is detected automatically.</div>
-    <div id="${ids.result}" hidden>
+    <div id="${ids.result}" class="conversation-turn-card quick-translate-result-card" hidden>
+      <div id="${ids.resultLabel}" class="ask-tutor-quick-result-label">Translation</div>
       <div id="${ids.output}"></div>
       <div class="ask-tutor-quick-result-actions">
         <button type="button" id="${ids.listen}">🔊 Listen</button>
         <button type="button" id="${ids.copy}">⧉ Copy</button>
+        <button type="button" id="${ids.study}">＋ Study List</button>
+        <button type="button" id="${ids.coach}">❓ Ask Tutor</button>
         <button type="button" id="${ids.use}" hidden>↩ Use in reply</button>
       </div>
     </div>`;
@@ -28448,8 +28479,10 @@ async function translate(){
   const input=document.getElementById(ids.input);
   const button=document.getElementById(ids.button);
   const result=document.getElementById(ids.result);
+  const resultLabel=document.getElementById(ids.resultLabel);
   const output=document.getElementById(ids.output);
   const use=document.getElementById(ids.use);
+  const study=document.getElementById(ids.study);
   const text=String(input?.value||"").trim();
   if(!text){setStatus("Enter something to translate.",true);input?.focus();return;}
   if(typeof googleTranslateApiCall!=="function"){
@@ -28480,6 +28513,10 @@ async function translate(){
     if(!translated)throw new Error("Translation returned no text.");
     state.text=text;state.output=translated;
     output.textContent=translated;
+    if(resultLabel)resultLabel.textContent=`Translation • ${state.targetName}`;
+    if(study)study.title=state.outputIsReply
+      ? `Save this ${cfg.name} translation to Study List`
+      : `Save the original ${cfg.name} phrase to Study List`;
     use.hidden=!state.outputIsReply;
     result.hidden=false;
     setStatus(`${state.source==="en" ? "English" : cfg.name} → ${state.targetName}`);
@@ -28516,6 +28553,34 @@ async function copy(){
   }
 }
 
+function studyPhrase(){
+  if(!state.output)return "";
+  return state.outputIsReply ? state.output : state.text;
+}
+
+function saveToStudy(button){
+  const phrase=studyPhrase();
+  if(!phrase)return;
+  const cfg=studyConfig();
+  if(typeof window.saveVoiceTutorPhrase==="function"){
+    window.saveVoiceTutorPhrase(phrase,cfg.code,button);
+  }else{
+    setStatus("Study List is not available.",true);
+  }
+}
+
+function askTutor(){
+  if(!state.output)return;
+  window.setAskTutorContext?.(state.output);
+  if(typeof window.openTutorCoachForPhrase==="function"){
+    window.openTutorCoachForPhrase(state.output,state.output);
+  }else if(typeof window.openLanguageCoach==="function"){
+    window.openLanguageCoach(`Translation: ${state.output}`);
+    window.workspaceOpenTool?.("coach");
+  }
+  requestAnimationFrame(()=>window.bringFloatingWindowToFront?.("language-coach-window"));
+}
+
 function useInReply(){
   if(!state.output || !state.outputIsReply)return;
   const reply=document.getElementById("voice-text-input");
@@ -28530,6 +28595,8 @@ function bind(){
   document.getElementById(ids.button)?.addEventListener("click",translate);
   document.getElementById(ids.listen)?.addEventListener("click",listen);
   document.getElementById(ids.copy)?.addEventListener("click",copy);
+  document.getElementById(ids.study)?.addEventListener("click",event=>saveToStudy(event.currentTarget));
+  document.getElementById(ids.coach)?.addEventListener("click",askTutor);
   document.getElementById(ids.use)?.addEventListener("click",useInReply);
   input?.addEventListener("keydown",event=>{
     if(event.isComposing)return;
@@ -28802,5 +28869,497 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
 else init();
 })();
 </script>
+
+<style id="language-tutor-v205-typography-hierarchy-css">
+/* v2.05 — One type system, with hierarchy supplied by size and weight rather
+   than by unrelated browser/default control fonts. Language examples and the
+   intentionally monospaced technical fields keep their specialized styling. */
+:root{
+  --lt-interface-font:"Segoe UI Variable","Segoe UI",Inter,system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  --lt-window-title-size:14px;
+  --lt-section-title-size:13px;
+  --lt-card-title-size:12px;
+  --lt-control-size:11px;
+  --lt-body-size:11px;
+  --lt-helper-size:9.5px;
+  --lt-label-size:9px;
+}
+
+#tutor-controls-window,
+#voice-transcript-window,
+#language-coach-window,
+#language-tools-window,
+#conversation-settings-window,
+#saved-transcripts-window{
+  font-family:var(--lt-interface-font)!important;
+  font-size:var(--lt-body-size);
+  font-weight:500;
+}
+
+#tutor-controls-window button,
+#tutor-controls-window input,
+#tutor-controls-window textarea,
+#tutor-controls-window select,
+#voice-transcript-window button,
+#voice-transcript-window input,
+#voice-transcript-window textarea,
+#voice-transcript-window select,
+#language-coach-window button,
+#language-coach-window input,
+#language-coach-window textarea,
+#language-coach-window select,
+#language-tools-window button,
+#language-tools-window input,
+#language-tools-window textarea,
+#language-tools-window select,
+#conversation-settings-window button,
+#conversation-settings-window input,
+#conversation-settings-window textarea,
+#conversation-settings-window select,
+#saved-transcripts-window button,
+#saved-transcripts-window input,
+#saved-transcripts-window textarea,
+#saved-transcripts-window select{
+  font-family:inherit!important;
+}
+
+/* Level 1: movable-window titles. */
+#tutor-controls-window .primary-workspace-window-title,
+#language-tools-window .primary-workspace-window-title,
+#voice-transcript-window .voice-transcript-window-title,
+#language-coach-window .language-coach-title,
+#conversation-settings-window .conversation-settings-title,
+#saved-transcripts-window .saved-transcripts-window-title{
+  font-size:var(--lt-window-title-size)!important;
+  line-height:1.25!important;
+  font-weight:800!important;
+  letter-spacing:-.01em!important;
+}
+
+/* Level 2: major section headings. */
+#language-tools-window .text-sm.font-bold,
+#language-tools-window h3,
+#language-tools-window .combined-language-tools-heading,
+#language-coach-window .ask-tutor-section-title,
+#conversation-settings-window h3{
+  font-family:inherit!important;
+  font-size:var(--lt-section-title-size)!important;
+  line-height:1.35!important;
+  font-weight:800!important;
+  letter-spacing:0!important;
+}
+
+/* Level 3: card/subtool headings. */
+#language-tools-window h4,
+#language-tools-window .ml-subtool > summary,
+#language-tools-window .grammar-card-title,
+#language-coach-window .ask-tutor-reply-option-text{
+  font-size:var(--lt-card-title-size)!important;
+  line-height:1.4!important;
+  font-weight:750!important;
+}
+
+/* Controls use one dependable label size and weight. Title-bar controls are
+   excluded because their dash/restore glyphs intentionally use icon sizing. */
+#tutor-controls-window .primary-workspace-window-body button,
+#voice-transcript-window .voice-transcript-toolbar button,
+#voice-transcript-window .conversation-shared-body button,
+#language-coach-window .language-coach-body button,
+#language-tools-window .primary-workspace-window-body button,
+#conversation-settings-window .conversation-settings-body button,
+#saved-transcripts-window .saved-transcript-body button{
+  font-size:var(--lt-control-size)!important;
+  line-height:1.25!important;
+  font-weight:700!important;
+  letter-spacing:0!important;
+}
+
+/* Keep the most important chat actions slightly stronger, but not in a
+   different typeface or size system. */
+#voice-start-btn,
+#voice-send-btn,
+#language-coach-send,
+.tutor-composer-send,
+.grammar-primary-action{
+  font-weight:800!important;
+}
+
+/* Body copy and form controls remain readable and calm. */
+#language-tools-window p,
+#language-tools-window .text-xs,
+#language-coach-window .ask-tutor-turn,
+#voice-transcript-window .conversation-turn-card,
+#conversation-settings-window label{
+  font-size:var(--lt-body-size)!important;
+  line-height:1.5!important;
+  font-weight:500;
+}
+
+/* Subtitles, hints, and status copy form the quietest level. */
+#tutor-controls-window .primary-workspace-window-subtitle,
+#language-tools-window .primary-workspace-window-subtitle,
+#voice-transcript-window .voice-transcript-window-subtitle,
+#language-coach-window .language-coach-subtitle,
+#conversation-settings-window .conversation-settings-subtitle,
+#language-tools-window .text-slate-500:not(.font-bold),
+.tutor-composer-status{
+  font-size:var(--lt-helper-size)!important;
+  line-height:1.4!important;
+  font-weight:500!important;
+}
+
+/* Short uppercase field labels stay compact but consistent. */
+#language-tools-window .uppercase,
+#voice-transcript-window .uppercase,
+#language-coach-window .uppercase{
+  font-family:inherit!important;
+  font-size:var(--lt-label-size)!important;
+  line-height:1.25!important;
+  font-weight:800!important;
+  letter-spacing:.055em!important;
+}
+</style>
+
+<style id="language-tutor-v207-quick-translate-window-css">
+/* v2.07 — Quick Translate is a peer workspace, not an Ask Tutor subsection. */
+#quick-translate-window{
+  position:fixed;
+  z-index:33000;
+  display:flex;
+  flex-direction:column;
+  width:540px;
+  height:280px;
+  min-width:320px;
+  min-height:190px;
+  max-width:calc(100vw - 16px);
+  max-height:calc(100vh - 16px);
+  overflow:hidden;
+  resize:both;
+  border:1px solid #d8ccfa;
+  border-radius:15px;
+  background:#fbfaff;
+  box-shadow:0 20px 55px rgba(15,23,42,.22);
+  font-family:var(--lt-interface-font,"Segoe UI Variable","Segoe UI",Inter,system-ui,sans-serif);
+}
+#quick-translate-window[hidden]{display:none!important}
+.quick-translate-titlebar{
+  flex:0 0 48px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:7px 8px 7px 13px;
+  border-bottom:1px solid #e5def8;
+  background:#f4f0ff;
+  cursor:move;
+  user-select:none;
+  touch-action:none;
+}
+.quick-translate-titlecopy{flex:1 1 auto;min-width:0}
+.quick-translate-title{
+  color:#3f2a78;
+  font-size:var(--lt-window-title-size,14px);
+  line-height:1.25;
+  font-weight:800;
+  letter-spacing:-.01em;
+}
+.quick-translate-subtitle{
+  margin-top:1px;
+  overflow:hidden;
+  color:#8878ae;
+  font-size:var(--lt-helper-size,9.5px);
+  line-height:1.4;
+  font-weight:500;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.quick-translate-minimize{
+  flex:0 0 auto;
+  width:34px;
+  height:34px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  border:1px solid #cbd5e1;
+  border-radius:8px;
+  background:#fff;
+  color:#475569;
+  font-family:inherit;
+  font-size:17px;
+  line-height:1;
+  font-weight:900;
+  cursor:pointer;
+}
+.quick-translate-minimize:hover{background:#faf8ff;border-color:#a99bd0;color:#4c1d95}
+.quick-translate-window-body{
+  flex:1 1 auto;
+  min-height:0;
+  overflow:auto;
+  padding:12px;
+  background:#fbfaff;
+}
+#quick-translate-window #ask-tutor-quick-translate{
+  box-sizing:border-box;
+  width:100%;
+  min-height:100%;
+  margin:0;
+  flex:1 1 auto;
+}
+#quick-translate-window .ask-tutor-quick-translate-label,
+#quick-translate-window button{
+  font-family:inherit!important;
+  font-size:var(--lt-control-size,11px)!important;
+  font-weight:700!important;
+}
+#quick-translate-window #ask-tutor-quick-translate-input{
+  font-family:inherit!important;
+}
+#quick-translate-window.quick-translate-minimized{
+  width:340px!important;
+  height:52px!important;
+  min-height:52px!important;
+  max-height:52px!important;
+  resize:none!important;
+}
+#quick-translate-window.quick-translate-minimized .quick-translate-window-body{display:none!important}
+
+@media(max-width:700px){
+  #quick-translate-window{
+    width:calc(100vw - 24px)!important;
+    min-width:0!important;
+    max-width:none!important;
+    resize:none!important;
+  }
+  #quick-translate-window.quick-translate-minimized{
+    width:min(340px,calc(100vw - 24px))!important;
+  }
+}
+</style>
+
+<script id="language-tutor-v207-quick-translate-window-runtime">
+(()=>{
+"use strict";
+
+const STORAGE_KEY="languagetutor_quick_translate_window_v207";
+let localLayer=120000;
+let mounted=false;
+let resetBound=false;
+let resizeObserver=null;
+
+function clamp(value,min,max){return Math.max(min,Math.min(max,value))}
+function load(){
+  try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}")||{}}
+  catch(_){return {}}
+}
+function shell(){return document.getElementById("quick-translate-window")}
+function defaults(){
+  const mobile=window.innerWidth<=700;
+  const width=mobile?Math.max(280,window.innerWidth-24):Math.min(540,window.innerWidth-24);
+  const height=mobile?Math.min(330,Math.max(220,window.innerHeight-90)):Math.min(280,window.innerHeight-24);
+  return {
+    width,height,
+    left:mobile?12:Math.max(8,window.innerWidth-width-26),
+    top:mobile?118:Math.max(86,window.innerHeight-height-24)
+  };
+}
+function bringFront(){
+  const win=shell();
+  if(!win)return;
+  document.body.classList.remove("ask-tutor-force-front");
+  if(typeof window.bringFloatingWindowToFront==="function"){
+    window.bringFloatingWindowToFront(win);
+  }else{
+    win.style.setProperty("z-index",String(++localLayer),"important");
+  }
+}
+function position(forceDefaults=false){
+  const win=shell();
+  if(!win)return;
+  const base=defaults();
+  const saved=forceDefaults?{}:load();
+  const mobile=window.innerWidth<=700;
+  let width=Number(saved.width)||base.width;
+  let height=Number(saved.height)||base.height;
+  width=clamp(width,mobile?280:320,Math.max(280,window.innerWidth-16));
+  height=clamp(height,190,Math.max(190,window.innerHeight-16));
+  let left=Number.isFinite(Number(saved.left))?Number(saved.left):base.left;
+  let top=Number.isFinite(Number(saved.top))?Number(saved.top):base.top;
+  left=clamp(left,8,Math.max(8,window.innerWidth-width-8));
+  top=clamp(top,8,Math.max(8,window.innerHeight-height-8));
+  win.classList.remove("quick-translate-minimized");
+  win.style.left=left+"px";
+  win.style.top=top+"px";
+  win.style.right="auto";
+  win.style.bottom="auto";
+  win.style.width=width+"px";
+  win.style.height=height+"px";
+  const button=win.querySelector(".quick-translate-minimize");
+  if(button){button.textContent="—";button.title="Minimize to title card"}
+}
+function save(){
+  const win=shell();
+  if(!win)return;
+  const minimized=win.classList.contains("quick-translate-minimized");
+  const rect=win.getBoundingClientRect();
+  const state={
+    left:rect.left,
+    top:rect.top,
+    width:minimized?(Number(win.dataset.expandedWidth)||540):rect.width,
+    height:minimized?(Number(win.dataset.expandedHeight)||280):rect.height
+  };
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}catch(_){ }
+}
+function toggleMinimize(){
+  const win=shell();
+  if(!win)return;
+  bringFront();
+  const minimizing=!win.classList.contains("quick-translate-minimized");
+  if(minimizing){
+    const rect=win.getBoundingClientRect();
+    win.dataset.expandedWidth=String(rect.width);
+    win.dataset.expandedHeight=String(rect.height);
+    win.classList.add("quick-translate-minimized");
+  }else{
+    win.classList.remove("quick-translate-minimized");
+    win.style.width=Math.min(Number(win.dataset.expandedWidth)||540,window.innerWidth-16)+"px";
+    win.style.height=Math.min(Number(win.dataset.expandedHeight)||280,window.innerHeight-16)+"px";
+  }
+  const button=win.querySelector(".quick-translate-minimize");
+  if(button){
+    button.textContent=minimizing?"□":"—";
+    button.title=minimizing?"Restore Quick Translate":"Minimize to title card";
+  }
+  save();
+}
+function bindDrag(win,titlebar){
+  let drag=null;
+  titlebar.addEventListener("pointerdown",event=>{
+    if(event.button!==0 || event.target.closest("button"))return;
+    bringFront();
+    const rect=win.getBoundingClientRect();
+    drag={x:event.clientX,y:event.clientY,left:rect.left,top:rect.top};
+    titlebar.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+  });
+  titlebar.addEventListener("pointermove",event=>{
+    if(!drag)return;
+    const width=win.getBoundingClientRect().width;
+    const height=win.getBoundingClientRect().height;
+    win.style.left=clamp(drag.left+event.clientX-drag.x,8,Math.max(8,window.innerWidth-width-8))+"px";
+    win.style.top=clamp(drag.top+event.clientY-drag.y,8,Math.max(8,window.innerHeight-height-8))+"px";
+  });
+  const finish=()=>{if(!drag)return;drag=null;save()};
+  titlebar.addEventListener("pointerup",finish);
+  titlebar.addEventListener("pointercancel",finish);
+}
+function bindReset(){
+  if(resetBound)return;
+  const reset=document.getElementById("all-floating-reset-layout");
+  if(!reset)return;
+  resetBound=true;
+  reset.addEventListener("click",()=>requestAnimationFrame(()=>{
+    try{localStorage.removeItem(STORAGE_KEY)}catch(_){ }
+    position(true);
+    bringFront();
+    save();
+  }));
+}
+function mount(){
+  if(mounted){bindReset();return true}
+  const panel=document.getElementById("ask-tutor-quick-translate");
+  if(!panel)return false;
+
+  const win=document.createElement("section");
+  win.id="quick-translate-window";
+  win.setAttribute("aria-label","Quick Translate window");
+  win.innerHTML=`
+    <div id="quick-translate-drag-handle" class="quick-translate-titlebar">
+      <div class="quick-translate-titlecopy">
+        <div class="quick-translate-title">⚡ Quick Translate</div>
+        <div class="quick-translate-subtitle">Automatic translation between English and the study language</div>
+      </div>
+      <button type="button" class="quick-translate-minimize" aria-label="Minimize Quick Translate" title="Minimize to title card">—</button>
+    </div>
+    <div class="quick-translate-window-body"></div>`;
+  document.body.appendChild(win);
+  win.querySelector(".quick-translate-window-body").appendChild(panel);
+  const inlineLabel=panel.querySelector(".ask-tutor-quick-translate-label");
+  if(inlineLabel)inlineLabel.textContent="Text to translate";
+  win.querySelector(".quick-translate-minimize").addEventListener("click",event=>{
+    event.preventDefault();event.stopPropagation();toggleMinimize();
+  });
+  win.addEventListener("pointerdown",bringFront,true);
+  bindDrag(win,win.querySelector(".quick-translate-titlebar"));
+  if("ResizeObserver" in window){
+    resizeObserver=new ResizeObserver(()=>{
+      if(!win.classList.contains("quick-translate-minimized"))save();
+    });
+    resizeObserver.observe(win);
+  }
+  position(false);
+  bindReset();
+  bringFront();
+  mounted=true;
+  return true;
+}
+function boot(){
+  if(mount())return;
+  let attempts=0;
+  const timer=setInterval(()=>{
+    attempts++;
+    if(mount() || attempts>40)clearInterval(timer);
+  },100);
+  const observer=new MutationObserver(()=>{
+    if(mount())observer.disconnect();
+  });
+  observer.observe(document.body,{childList:true,subtree:true});
+  setTimeout(()=>observer.disconnect(),5000);
+}
+
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});
+else boot();
+window.addEventListener("resize",()=>{if(mounted)position(false)});
+})();
+</script>
+
+<style id="language-tutor-v208-prominent-transcript-translation-css">
+/* Translation is a result, not helper copy: give it a clear labeled card. */
+#voice-transcript-window .transcript-selected-translation,
+#saved-transcripts-window .saved-transcript-selection-translation{
+  box-sizing:border-box!important;
+  width:100%!important;
+  margin-top:3px!important;
+  padding:11px 13px 12px!important;
+  border:1px solid #93c5fd!important;
+  border-left:4px solid #3b82f6!important;
+  border-radius:10px!important;
+  background:linear-gradient(135deg,#eff6ff 0%,#eef2ff 100%)!important;
+  color:#172554!important;
+  font-family:var(--lt-interface-font,"Segoe UI Variable","Segoe UI",Inter,system-ui,sans-serif)!important;
+  font-size:13px!important;
+  line-height:1.55!important;
+  font-weight:650!important;
+  box-shadow:0 2px 7px rgba(37,99,235,.09)!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+}
+#voice-transcript-window .transcript-selected-translation::before,
+#saved-transcripts-window .saved-transcript-selection-translation::before{
+  content:"English translation";
+  display:block;
+  margin-bottom:4px;
+  color:#2563eb;
+  font-size:9px;
+  line-height:1.2;
+  font-weight:800;
+  letter-spacing:.055em;
+  text-transform:uppercase;
+}
+@media(max-width:700px){
+  #voice-transcript-window .transcript-selected-translation,
+  #saved-transcripts-window .saved-transcript-selection-translation{
+    font-size:14px!important;
+  }
+}
+</style>
 </body>
 </html>
