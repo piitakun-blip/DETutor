@@ -1,5 +1,5 @@
 <!--
-LanguageTutor — v2.08 SOURCE
+LanguageTutor — v2.10 SOURCE
 Based on Version 1 / exact user rollback baseline.
 Changes: replaces dock/close lifecycle with one persistent floating
 workspace state. Tutor Controls, Conversation Transcript, Ask Tutor, and
@@ -55,6 +55,15 @@ v2.08: presents each Quick Translate result as a transcript-style card with
 Listen, Copy, Study List, and Ask Tutor actions while retaining Use in reply
 for translations into the study language. Current and saved transcript
 translations also use a larger, labeled, high-contrast result card.
+v2.09: gives every primary workspace a concise, consistently styled helper
+line beneath its title, including minimized title cards.
+v2.10: strengthens the functional color identity of each primary window with
+distinct high-contrast borders, title bars, title text, helper text, and
+matching minimize controls while preserving light content areas. Minimized
+cards now share exact title, helper, and restore-control typography. German,
+Spanish, and Japanese character keyboards also use the same draggable,
+resizable, minimizable, click-to-front window behavior and participate in
+Reset window positions.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -8116,7 +8125,7 @@ body.conversation-first-layout main.conversation-first-main{gap:var(--ws-gap)!im
                         <div id="voice-transcript-drag-handle" class="voice-transcript-titlebar conversation-shared-titlebar">
                             <div class="voice-transcript-titlecopy">
                                 <div id="voice-transcript-window-title" class="voice-transcript-window-title">📝 Chat Transcript</div>
-                                <div class="voice-transcript-window-subtitle">Select a line to make it Ask Tutor context automatically.</div>
+                                <div class="voice-transcript-window-subtitle">Review, translate, and study conversation turns</div>
                             </div>
                             <div class="voice-transcript-window-actions conversation-floating-only-actions">
                                 <button type="button" id="voice-transcript-collapse-btn" onclick="toggleVoiceTranscriptCollapse()" title="Minimize">—</button>
@@ -22835,7 +22844,7 @@ Do not continue the conversation.`;
     <div id="language-coach-drag-handle" class="language-coach-titlebar">
         <div class="language-coach-titlecopy">
             <div id="language-coach-title" class="language-coach-title">❓ Ask Tutor</div>
-            <div id="language-coach-subtitle" class="language-coach-subtitle"></div>
+            <div id="language-coach-subtitle" class="language-coach-subtitle">Explanations, translations, and reply help</div>
         </div>
         <button type="button" class="language-coach-close" onclick="closeLanguageCoach()" title="Return to conversation">×</button>
     </div>
@@ -26842,7 +26851,7 @@ const STORAGE_KEY="languagetutor_primary_workspace_rects_v1414";
 const registry={
     tutor:{
         label:"💬 Chat with Tutor",
-        subtitle:"Settings, voice controls, live status, and reply composer",
+        subtitle:"Voice, text, and chat controls",
         viewId:"tutor-controls-view",
         shellId:"tutor-controls-window",
         bodyId:"tutor-controls-window-body",
@@ -26851,7 +26860,7 @@ const registry={
     },
     tools:{
         label:"🧰 Language Tools",
-        subtitle:"Grammar Tools and Study & Review",
+        subtitle:"Grammar tools and study review",
         viewId:"language-tools-view",
         shellId:"language-tools-window",
         bodyId:"language-tools-window-body",
@@ -28225,7 +28234,7 @@ function build(){
   win.setAttribute("aria-label","Chat settings window");
   win.innerHTML=`<div id="conversation-settings-drag-handle" class="conversation-settings-titlebar">
     <div class="conversation-settings-titlecopy"><div class="conversation-settings-title">⚙ Chat Settings</div>
-    <div class="conversation-settings-subtitle">Mode, level, corrections, language help, speed, voice, and scenario</div></div>
+    <div class="conversation-settings-subtitle">Role play, corrections, voice, and speed</div></div>
     <div class="conversation-settings-actions"><button type="button" id="conversation-settings-minimize" title="Minimize">—</button>
     <button type="button" id="conversation-settings-close" title="Close" aria-label="Close Chat settings">×</button></div>
   </div><div class="conversation-settings-window-body"></div>`;
@@ -29275,7 +29284,7 @@ function mount(){
     <div id="quick-translate-drag-handle" class="quick-translate-titlebar">
       <div class="quick-translate-titlecopy">
         <div class="quick-translate-title">⚡ Quick Translate</div>
-        <div class="quick-translate-subtitle">Automatic translation between English and the study language</div>
+        <div class="quick-translate-subtitle">Translate between English and the study language</div>
       </div>
       <button type="button" class="quick-translate-minimize" aria-label="Minimize Quick Translate" title="Minimize to title card">—</button>
     </div>
@@ -29361,5 +29370,415 @@ window.addEventListener("resize",()=>{if(mounted)position(false)});
   }
 }
 </style>
+
+<style id="language-tutor-v209-unified-window-helper-css">
+/* v2.09 — every primary window uses one compact title/helper hierarchy. */
+#tutor-controls-window .primary-workspace-titlecopy,
+#language-tools-window .primary-workspace-titlecopy,
+#voice-transcript-window .voice-transcript-titlecopy,
+#language-coach-window .language-coach-titlecopy,
+#conversation-settings-window .conversation-settings-titlecopy,
+#quick-translate-window .quick-translate-titlecopy{
+  min-width:0!important;
+  flex:1 1 auto!important;
+  overflow:hidden!important;
+}
+
+#tutor-controls-window .primary-workspace-window-subtitle,
+#language-tools-window .primary-workspace-window-subtitle,
+#voice-transcript-window .voice-transcript-window-subtitle,
+#language-coach-window .language-coach-subtitle,
+#conversation-settings-window .conversation-settings-subtitle,
+#quick-translate-window .quick-translate-subtitle{
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  margin-top:2px!important;
+  overflow:hidden!important;
+  color:#718096!important;
+  font-family:var(--lt-interface-font,"Segoe UI Variable","Segoe UI",Inter,system-ui,sans-serif)!important;
+  font-size:var(--lt-helper-size,9.5px)!important;
+  line-height:1.25!important;
+  font-weight:500!important;
+  letter-spacing:0!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+</style>
+
+<style id="language-tutor-v210-bold-window-color-cues-css">
+/* v2.10 — stable color identities make overlapping and minimized windows
+   recognizable at a glance. Content areas stay neutral for reading. */
+#tutor-controls-window{
+  --lt-window-accent:#2563eb;
+  --lt-window-border:#60a5fa;
+  --lt-window-title-bg:linear-gradient(135deg,#bfdbfe 0%,#dbeafe 100%);
+  --lt-window-title-ink:#1e3a8a;
+  --lt-window-helper-ink:#3f5f91;
+  --lt-window-halo:rgba(37,99,235,.16);
+}
+#voice-transcript-window{
+  --lt-window-accent:#059669;
+  --lt-window-border:#34d399;
+  --lt-window-title-bg:linear-gradient(135deg,#a7f3d0 0%,#d1fae5 100%);
+  --lt-window-title-ink:#065f46;
+  --lt-window-helper-ink:#337565;
+  --lt-window-halo:rgba(5,150,105,.16);
+}
+#language-coach-window{
+  --lt-window-accent:#e11d48;
+  --lt-window-border:#fb7185;
+  --lt-window-title-bg:linear-gradient(135deg,#fecdd3 0%,#ffe4e6 100%);
+  --lt-window-title-ink:#881337;
+  --lt-window-helper-ink:#9d4059;
+  --lt-window-halo:rgba(225,29,72,.15);
+}
+#language-tools-window{
+  --lt-window-accent:#7c3aed;
+  --lt-window-border:#a78bfa;
+  --lt-window-title-bg:linear-gradient(135deg,#ddd6fe 0%,#ede9fe 100%);
+  --lt-window-title-ink:#4c1d95;
+  --lt-window-helper-ink:#704ca3;
+  --lt-window-halo:rgba(124,58,237,.16);
+}
+#quick-translate-window{
+  --lt-window-accent:#d97706;
+  --lt-window-border:#f59e0b;
+  --lt-window-title-bg:linear-gradient(135deg,#fde68a 0%,#fef3c7 100%);
+  --lt-window-title-ink:#78350f;
+  --lt-window-helper-ink:#925414;
+  --lt-window-halo:rgba(217,119,6,.17);
+}
+#conversation-settings-window{
+  --lt-window-accent:#0891b2;
+  --lt-window-border:#22d3ee;
+  --lt-window-title-bg:linear-gradient(135deg,#a5f3fc 0%,#cffafe 100%);
+  --lt-window-title-ink:#164e63;
+  --lt-window-helper-ink:#397486;
+  --lt-window-halo:rgba(8,145,178,.16);
+}
+
+#tutor-controls-window,
+#voice-transcript-window,
+#language-coach-window,
+#language-tools-window,
+#quick-translate-window,
+#conversation-settings-window{
+  border:2px solid var(--lt-window-border)!important;
+  box-shadow:
+    0 20px 55px rgba(15,23,42,.24),
+    0 0 0 3px var(--lt-window-halo)!important;
+}
+
+#tutor-controls-window .primary-workspace-titlebar,
+#language-tools-window .primary-workspace-titlebar,
+#voice-transcript-window #voice-transcript-drag-handle,
+#language-coach-window #language-coach-drag-handle,
+#quick-translate-window .quick-translate-titlebar,
+#conversation-settings-window .conversation-settings-titlebar{
+  background:var(--lt-window-title-bg)!important;
+  border-bottom:2px solid var(--lt-window-accent)!important;
+}
+
+#tutor-controls-window .primary-workspace-window-title,
+#language-tools-window .primary-workspace-window-title,
+#voice-transcript-window .voice-transcript-window-title,
+#language-coach-window .language-coach-title,
+#quick-translate-window .quick-translate-title,
+#conversation-settings-window .conversation-settings-title{
+  color:var(--lt-window-title-ink)!important;
+  font-weight:850!important;
+}
+
+#tutor-controls-window .primary-workspace-window-subtitle,
+#language-tools-window .primary-workspace-window-subtitle,
+#voice-transcript-window .voice-transcript-window-subtitle,
+#language-coach-window .language-coach-subtitle,
+#quick-translate-window .quick-translate-subtitle,
+#conversation-settings-window .conversation-settings-subtitle{
+  color:var(--lt-window-helper-ink)!important;
+  font-weight:600!important;
+}
+
+#tutor-controls-window .all-floating-minimize,
+#language-tools-window .all-floating-minimize,
+#voice-transcript-window .all-floating-minimize,
+#language-coach-window .all-floating-minimize,
+#quick-translate-window .quick-translate-minimize,
+#conversation-settings-window .conversation-settings-actions button{
+  border-color:var(--lt-window-accent)!important;
+  background:rgba(255,255,255,.88)!important;
+  color:var(--lt-window-title-ink)!important;
+  box-shadow:0 1px 3px var(--lt-window-halo)!important;
+}
+
+#tutor-controls-window .all-floating-minimize:hover,
+#language-tools-window .all-floating-minimize:hover,
+#voice-transcript-window .all-floating-minimize:hover,
+#language-coach-window .all-floating-minimize:hover,
+#quick-translate-window .quick-translate-minimize:hover,
+#conversation-settings-window .conversation-settings-actions button:hover{
+  background:#fff!important;
+  box-shadow:0 0 0 3px var(--lt-window-halo)!important;
+}
+
+/* Exact title-card typography: no window may inherit a heavier or smaller
+   legacy title rule when it is minimized. */
+#tutor-controls-window .primary-workspace-window-title,
+#language-tools-window .primary-workspace-window-title,
+#voice-transcript-window .voice-transcript-window-title,
+#language-coach-window .language-coach-title,
+#quick-translate-window .quick-translate-title,
+#conversation-settings-window .conversation-settings-title{
+  font-family:var(--lt-interface-font,"Segoe UI Variable","Segoe UI",Inter,system-ui,sans-serif)!important;
+  font-size:14px!important;
+  line-height:1.25!important;
+  font-weight:800!important;
+  letter-spacing:-.01em!important;
+}
+#tutor-controls-window .primary-workspace-window-subtitle,
+#language-tools-window .primary-workspace-window-subtitle,
+#voice-transcript-window .voice-transcript-window-subtitle,
+#language-coach-window .language-coach-subtitle,
+#quick-translate-window .quick-translate-subtitle,
+#conversation-settings-window .conversation-settings-subtitle{
+  font-size:9.5px!important;
+  line-height:1.25!important;
+  font-weight:600!important;
+  letter-spacing:0!important;
+}
+#tutor-controls-window .all-floating-minimize,
+#language-tools-window .all-floating-minimize,
+#voice-transcript-window .all-floating-minimize,
+#language-coach-window .all-floating-minimize,
+#quick-translate-window .quick-translate-minimize,
+#conversation-settings-window .conversation-settings-actions button{
+  font-family:var(--lt-interface-font,"Segoe UI Variable","Segoe UI",Inter,system-ui,sans-serif)!important;
+  font-size:17px!important;
+  line-height:1!important;
+  font-weight:800!important;
+}
+#language-coach-window .ask-css-minimize-label::before{
+  font-family:var(--lt-interface-font,"Segoe UI Variable","Segoe UI",Inter,system-ui,sans-serif)!important;
+  font-size:17px!important;
+  line-height:1!important;
+  font-weight:800!important;
+}
+</style>
+
+<style id="language-tutor-v210-keyboard-windows-css">
+/* German/Spanish special characters and Japanese kana are first-class tool
+   windows. They retain their language-specific keys and insertion behavior. */
+#special-character-palette,
+#floating-kana-tool{
+  --lt-keyboard-accent:#0f766e;
+  --lt-keyboard-border:#2dd4bf;
+  --lt-keyboard-title-bg:linear-gradient(135deg,#99f6e4 0%,#ccfbf1 100%);
+  --lt-keyboard-title-ink:#134e4a;
+  --lt-keyboard-helper-ink:#316f69;
+  box-sizing:border-box!important;
+  border:2px solid var(--lt-keyboard-border)!important;
+  border-radius:16px!important;
+  background:#fff!important;
+  box-shadow:0 20px 55px rgba(15,23,42,.24),0 0 0 3px rgba(15,118,110,.16)!important;
+  overflow:hidden!important;
+  resize:both!important;
+}
+body[data-study-language="de"] #special-character-palette{
+  --lt-keyboard-accent:#1d4ed8;--lt-keyboard-border:#60a5fa;
+  --lt-keyboard-title-bg:linear-gradient(135deg,#bfdbfe 0%,#dbeafe 100%);
+  --lt-keyboard-title-ink:#1e3a8a;--lt-keyboard-helper-ink:#3f5f91;
+}
+body[data-study-language="es"] #special-character-palette{
+  --lt-keyboard-accent:#c2410c;--lt-keyboard-border:#fb923c;
+  --lt-keyboard-title-bg:linear-gradient(135deg,#fed7aa 0%,#ffedd5 100%);
+  --lt-keyboard-title-ink:#7c2d12;--lt-keyboard-helper-ink:#9a4d2d;
+}
+#floating-kana-tool{
+  --lt-keyboard-accent:#be123c;--lt-keyboard-border:#fb7185;
+  --lt-keyboard-title-bg:linear-gradient(135deg,#fecdd3 0%,#ffe4e6 100%);
+  --lt-keyboard-title-ink:#881337;--lt-keyboard-helper-ink:#9d4059;
+}
+#special-character-palette .special-character-titlebar,
+#floating-kana-tool .floating-kana-titlebar{
+  box-sizing:border-box!important;
+  height:52px!important;
+  min-height:52px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  padding:0 10px 0 14px!important;
+  background:var(--lt-keyboard-title-bg)!important;
+  border-bottom:2px solid var(--lt-keyboard-accent)!important;
+}
+#special-character-palette .special-character-titlecopy,
+#floating-kana-tool .language-keyboard-titlecopy{
+  display:flex!important;align-items:center!important;gap:9px!important;
+  min-width:0!important;flex:1 1 auto!important;overflow:hidden!important;
+}
+#special-character-palette .special-character-title,
+#floating-kana-tool .language-keyboard-title{
+  color:var(--lt-keyboard-title-ink)!important;
+  font-family:var(--lt-interface-font,"Segoe UI Variable","Segoe UI",Inter,system-ui,sans-serif)!important;
+  font-size:14px!important;line-height:1.25!important;font-weight:800!important;
+  letter-spacing:-.01em!important;white-space:nowrap!important;
+}
+#special-character-palette .special-character-subtitle,
+#floating-kana-tool .language-keyboard-subtitle{
+  display:block!important;width:100%!important;min-width:0!important;margin-top:2px!important;
+  overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+  color:var(--lt-keyboard-helper-ink)!important;
+  font-family:var(--lt-interface-font,"Segoe UI Variable","Segoe UI",Inter,system-ui,sans-serif)!important;
+  font-size:9.5px!important;line-height:1.25!important;font-weight:600!important;
+}
+#special-character-palette .special-character-title-icon,
+#floating-kana-tool .floating-kana-title-icon{
+  border-color:var(--lt-keyboard-accent)!important;color:var(--lt-keyboard-title-ink)!important;
+}
+.language-keyboard-minimize{
+  margin-left:auto!important;flex:0 0 auto!important;width:34px!important;height:34px!important;
+  min-width:34px!important;min-height:34px!important;padding:0!important;
+  border:1px solid var(--lt-keyboard-accent)!important;border-radius:8px!important;
+  background:rgba(255,255,255,.88)!important;color:var(--lt-keyboard-title-ink)!important;
+  font-family:var(--lt-interface-font,"Segoe UI Variable","Segoe UI",Inter,system-ui,sans-serif)!important;
+  font-size:17px!important;line-height:1!important;font-weight:800!important;cursor:pointer!important;
+}
+.language-keyboard-minimize:hover{background:#fff!important;box-shadow:0 0 0 3px rgba(15,23,42,.10)!important}
+#special-character-palette .workspace-v95-title-actions,
+#special-character-palette .special-character-window-actions,
+#floating-kana-tool .workspace-v95-title-actions,
+#floating-kana-tool .floating-kana-window-actions{display:none!important}
+#special-character-palette.special-character-minimized,
+#floating-kana-tool.floating-kana-minimized{
+  width:340px!important;height:52px!important;min-width:300px!important;min-height:52px!important;
+  max-height:52px!important;resize:none!important;
+}
+#special-character-palette.special-character-minimized .special-character-body,
+#floating-kana-tool.floating-kana-minimized .floating-kana-body{display:none!important}
+@media(max-width:700px){
+  #special-character-palette,#floating-kana-tool{resize:none!important}
+  #special-character-palette.special-character-minimized,
+  #floating-kana-tool.floating-kana-minimized{width:calc(100vw - 24px)!important}
+}
+</style>
+
+<script id="language-tutor-v210-keyboard-windows-runtime">
+(()=>{
+"use strict";
+const STORAGE_KEY="languagetutor_keyboard_windows_v210";
+let topLayer=2147483500;
+const specs={
+  special:{id:"special-character-palette",bar:"special-character-drag-handle",minClass:"special-character-minimized",width:460,height:220,left:56,top:92},
+  kana:{id:"floating-kana-tool",bar:"floating-kana-titlebar",minClass:"floating-kana-minimized",width:650,height:720,left:56,top:72}
+};
+function read(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}")||{}}catch(_){return {}}}
+function write(value){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(value))}catch(_){}}
+function panel(spec){return document.getElementById(spec.id)}
+function clamp(value,min,max){return Math.max(min,Math.min(max,value))}
+function bringFront(win){win.style.zIndex=String(++topLayer)}
+function save(name){
+  const spec=specs[name],win=panel(spec);if(!win||win.hidden)return;
+  const state=read(),rect=win.getBoundingClientRect(),minimized=win.classList.contains(spec.minClass);
+  state[name]={left:rect.left,top:rect.top,width:minimized?(Number(win.dataset.keyboardExpandedWidth)||spec.width):rect.width,height:minimized?(Number(win.dataset.keyboardExpandedHeight)||spec.height):rect.height};
+  write(state);
+}
+function position(name,force=false){
+  const spec=specs[name],win=panel(spec);if(!win)return;
+  const saved=force?null:read()[name];
+  const width=clamp(Number(saved?.width)||spec.width,300,Math.max(300,innerWidth-16));
+  const height=clamp(Number(saved?.height)||spec.height,160,Math.max(160,innerHeight-16));
+  const left=clamp(Number.isFinite(Number(saved?.left))?Number(saved.left):spec.left,8,Math.max(8,innerWidth-width-8));
+  const top=clamp(Number.isFinite(Number(saved?.top))?Number(saved.top):spec.top,8,Math.max(8,innerHeight-height-8));
+  Object.assign(win.style,{left:left+"px",top:top+"px",right:"auto",bottom:"auto",width:width+"px",height:height+"px"});
+  bringFront(win);
+}
+function setButton(win,spec){
+  const button=win.querySelector(".language-keyboard-minimize");if(!button)return;
+  const minimized=win.classList.contains(spec.minClass);
+  button.textContent=minimized?"□":"—";
+  button.title=minimized?"Restore keyboard":"Minimize keyboard to title card";
+  button.setAttribute("aria-label",button.title);
+}
+function toggle(name){
+  const spec=specs[name],win=panel(spec);if(!win)return;
+  const minimizing=!win.classList.contains(spec.minClass);
+  if(minimizing){
+    const rect=win.getBoundingClientRect();
+    win.dataset.keyboardExpandedWidth=String(rect.width);win.dataset.keyboardExpandedHeight=String(rect.height);
+    win.classList.add(spec.minClass);
+  }else{
+    win.classList.remove(spec.minClass);
+    win.style.width=Math.min(Number(win.dataset.keyboardExpandedWidth)||spec.width,innerWidth-16)+"px";
+    win.style.height=Math.min(Number(win.dataset.keyboardExpandedHeight)||spec.height,innerHeight-16)+"px";
+  }
+  setButton(win,spec);bringFront(win);save(name);
+}
+function normalizeTitle(name,win,bar){
+  if(name==="special"){
+    const subtitle=win.querySelector(".special-character-subtitle");
+    if(subtitle)subtitle.textContent="Insert special characters into the active text field";
+    return;
+  }
+  let copy=bar.querySelector(".language-keyboard-titlecopy");
+  if(!copy){
+    const old=bar.querySelector(".floating-kana-title");
+    const icon=old?.querySelector(".floating-kana-title-icon");
+    copy=document.createElement("div");copy.className="language-keyboard-titlecopy";
+    if(icon)copy.appendChild(icon);
+    const text=document.createElement("div");
+    text.innerHTML='<div class="language-keyboard-title">Japanese Keyboard</div><div class="language-keyboard-subtitle">Kana chart and Japanese text input</div>';
+    copy.appendChild(text);
+    old?.replaceWith(copy);
+  }
+}
+function bind(name){
+  const spec=specs[name],win=panel(spec),bar=document.getElementById(spec.bar);if(!win||!bar)return;
+  normalizeTitle(name,win,bar);
+  bar.querySelectorAll(".workspace-v95-title-actions,.special-character-window-actions,.floating-kana-window-actions").forEach(node=>node.remove());
+  let button=bar.querySelector(".language-keyboard-minimize");
+  if(!button){
+    button=document.createElement("button");button.type="button";button.className="language-keyboard-minimize";
+    button.addEventListener("click",event=>{event.preventDefault();event.stopPropagation();toggle(name)});
+    bar.appendChild(button);
+  }
+  setButton(win,spec);
+  win.addEventListener("pointerdown",()=>bringFront(win),true);
+  win.addEventListener("pointerup",()=>setTimeout(()=>save(name),0),true);
+  if("ResizeObserver" in window)new ResizeObserver(()=>{if(!win.hidden&&!win.classList.contains(spec.minClass))save(name)}).observe(win);
+}
+function afterOpen(name){
+  const spec=specs[name],win=panel(spec);if(!win)return;
+  bind(name);win.hidden=false;win.removeAttribute("hidden");win.classList.remove(spec.minClass);setButton(win,spec);position(name,false);
+  if(name==="special"){
+    const title=win.querySelector("#special-character-title");
+    const language=document.body.dataset.studyLanguage;
+    if(title)title.textContent=language==="es"?"Spanish Keyboard":"German Keyboard";
+  }
+}
+function wrapOpen(globalName,name){
+  const original=window[globalName];if(typeof original!=="function"||original.__v210KeyboardWindow)return;
+  const wrapped=function(...args){const result=original.apply(this,args);afterOpen(name);return result};
+  wrapped.__v210KeyboardWindow=true;window[globalName]=wrapped;
+}
+function reset(){
+  try{localStorage.removeItem(STORAGE_KEY)}catch(_){ }
+  Object.entries(specs).forEach(([name,spec])=>{
+    const win=panel(spec);if(!win)return;
+    win.classList.remove(spec.minClass);setButton(win,spec);
+    if(!win.hidden)position(name,true);
+  });
+}
+function boot(){
+  bind("special");bind("kana");
+  wrapOpen("openSpecialCharacterPalette","special");
+  wrapOpen("openFloatingKanaChart","kana");
+  const resetButton=document.getElementById("all-floating-reset-layout");
+  if(resetButton&&!resetButton.dataset.keyboardResetBound){
+    resetButton.dataset.keyboardResetBound="1";resetButton.addEventListener("click",reset);
+  }
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});else boot();
+})();
+</script>
 </body>
 </html>
