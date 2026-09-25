@@ -1,5 +1,5 @@
 <!--
-LanguageTutor — v1.10 SOURCE
+LanguageTutor — v2.04 SOURCE
 Based on Version 1 / exact user rollback baseline.
 Changes: replaces dock/close lifecycle with one persistent floating
 workspace state. Tutor Controls, Conversation Transcript, Ask Tutor, and
@@ -30,6 +30,18 @@ resizable window while its composer remains anchored at the bottom.
 v1.10: retains the confirmed all-floating-window startup state, adds a compact
 automatic two-way Quick Translate tool inside Ask Tutor, and renames the
 language-specific conversation window to identify it as a transcript.
+v2.01: begins the major-version series and makes the Conversation Settings
+window remount and expand its live settings controls whenever it opens.
+v2.02: unifies icon-based window headings, simplifies Language Tools into a
+single-layer two-button workspace, retires Translation & Manual Input from
+Language Tools, adopts Chat wording, repairs Chat Settings content mounting,
+and moves Reset window positions into the banner control row.
+v2.03: renames selected-line Save actions to “＋ Study List” so they are
+clearly distinguished from the whole-transcript Save control.
+v2.04: prevents Ask Tutor's CSS restore icon from overlapping legacy literal
+button text in its minimized title card, and removes the redundant upper
+Ask Tutor button from the Chat Transcript toolbar while retaining the
+selected-line Ask Tutor action.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -8090,7 +8102,7 @@ body.conversation-first-layout main.conversation-first-main{gap:var(--ws-gap)!im
                     <section id="conversation-view" class="conversation-shared-view" aria-label="Tutor Conversation">
                         <div id="voice-transcript-drag-handle" class="voice-transcript-titlebar conversation-shared-titlebar">
                             <div class="voice-transcript-titlecopy">
-                                <div id="voice-transcript-window-title" class="voice-transcript-window-title">German Conversation Transcript</div>
+                                <div id="voice-transcript-window-title" class="voice-transcript-window-title">📝 Chat Transcript</div>
                                 <div class="voice-transcript-window-subtitle">Select a line to make it Ask Tutor context automatically.</div>
                             </div>
                             <div class="voice-transcript-window-actions conversation-floating-only-actions">
@@ -8104,14 +8116,13 @@ body.conversation-first-layout main.conversation-first-main{gap:var(--ws-gap)!im
                             <div class="flex flex-wrap gap-2">
                                 <button type="button" onclick="saveCurrentTutorTranscript('voice',this)">💾 Save</button>
                                 <button type="button" onclick="openSavedTutorTranscripts()">🗂 Saved</button>
-                                <button type="button" onclick="openAskTutorFromConversation()">❓ Ask Tutor</button>
                             </div>
                         </div>
 
                         <div class="voice-transcript-body conversation-shared-body">
                             <div id="voice-chat-messages-log" class="transcript-hub-log flex-1 min-h-0 overflow-y-auto space-y-3 pr-1 pb-2 overscroll-contain" aria-live="polite">
                                 <div id="voice-tutor-empty" class="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-3 py-2 text-center text-[10px] text-slate-400">
-                                    Start a conversation or open Saved Transcripts. Select any target-language turn for study or Ask Tutor.
+                                    Start a chat or open Saved Transcripts. Select any target-language turn for study or Ask Tutor.
                                 </div>
                             </div>
                         </div>
@@ -8119,7 +8130,7 @@ body.conversation-first-layout main.conversation-first-main{gap:var(--ws-gap)!im
 
                     <div class="shrink-0 flex flex-wrap items-center gap-2">
                         <button type="button" id="voice-start-btn" onclick="toggleTutorLiveVoice('chat')" title="Listening pauses automatically after 10 seconds of silence" class="min-h-[44px] px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition">
-                            🎙 Start Conversation
+                            🎙 Start Chat
                         </button>
                         <button type="button" id="voice-stop-btn" onclick="stopTutorLiveVoiceOrFallback('chat')" class="hidden min-h-[44px] px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition">
                             ■ Stop
@@ -8133,8 +8144,8 @@ body.conversation-first-layout main.conversation-first-main{gap:var(--ws-gap)!im
                         <button type="button" id="voice-restate-btn" onclick="restateLastVoiceTurn()" class="hidden min-h-[44px] px-4 py-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-xs font-bold transition" title="Discard the last captured turn and say it again">
                             ↺ Restate
                         </button>
-                        <button type="button" onclick="newVoiceConversation()" class="min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition">
-                            New conversation
+                        <button type="button" id="voice-new-chat-btn" onclick="newVoiceConversation()" class="min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition">
+                            New Chat
                         </button>
                     </div>
 
@@ -14796,7 +14807,7 @@ Plain text only. No Markdown, headings, bullets, or asterisks.`;
         const title=document.getElementById("voice-transcript-window-title");
 
         view?.classList.toggle("is-floating",floating);
-        if(title)title.textContent=`${langConfig().name} Conversation Transcript`;
+        if(title)title.textContent="📝 Chat Transcript";
     }
 
     function renderVoiceTranscriptWindow(){
@@ -15374,12 +15385,28 @@ Do not add quotation marks or labels.`;
         const targetTranslation=String(voiceTutorState.liveUserTargetTranslation||"").trim();
         const tutor=stripTutorMarkdown(voiceTutorState.liveTutorText);
         const listening=String(listeningText||"").trim();
-        const lines=[];
-        if(user) lines.push(`You: ${user}`);
-        if(targetTranslation) lines.push(`${langConfig().name}: ${targetTranslation}`);
-        if(tutor) lines.push(`Tutor: ${tutor}`);
-        if(listening) lines.push(listening);
-        live.textContent=lines.length ? lines.join("\n\n") : "What the microphone hears will appear here.";
+        const entries=voiceTutorHistory().slice(-3).map(entry=>({
+            role:entry?.role==="assistant" ? "assistant" : "user",
+            text:String(entry?.text||"").trim()
+        })).filter(entry=>entry.text);
+        const addPending=(role,text)=>{
+            if(!text)return;
+            const last=entries[entries.length-1];
+            if(!last || last.role!==role || last.text!==text)entries.push({role,text});
+        };
+        addPending("user",targetTranslation || user);
+        addPending("assistant",tutor);
+        const recent=entries.slice(-3);
+        live.replaceChildren();
+        recent.forEach(entry=>{
+            const line=document.createElement("div");
+            line.className=`voice-live-turn-line ${entry.role==="assistant" ? "voice-live-tutor-line" : "voice-live-user-line"}`;
+            const speaker=document.createElement("strong");
+            speaker.textContent=entry.role==="assistant" ? "Tutor: " : "You: ";
+            line.append(speaker,document.createTextNode(entry.text));
+            live.appendChild(line);
+        });
+        if(!recent.length)live.textContent="What the microphone hears will appear here.";
         live.scrollTop=live.scrollHeight;
     }
 
@@ -15656,7 +15683,7 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
             // End only the active listening session. Conversation history remains,
             // so pressing Start Conversation again continues with the same transcript/context.
             window.stopVoiceConversation(true);
-            voiceTutorStatus("Paused after 10 seconds of silence. Tap Start Conversation to continue.");
+            voiceTutorStatus("Paused after 10 seconds of silence. Tap Start Chat to continue.");
             renderVoiceLiveTurn("Listening paused after silence.");
         },VOICE_SILENCE_TIMEOUT_MS);
     }
@@ -17383,7 +17410,7 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
                 <button type="button" id="saved-transcript-copy" disabled>⧉ Copy</button>
                 <button type="button" id="saved-transcript-translate" disabled>🌐 Translate</button>
                 <button type="button" id="saved-transcript-analysis" disabled>🔎 Analyze</button>
-                <button type="button" id="saved-transcript-save" disabled>☆ Save</button>
+                <button type="button" id="saved-transcript-save" disabled>＋ Study List</button>
                 <button type="button" id="saved-transcript-coach" disabled>❓ Ask Tutor</button>
             </div>
             <div id="saved-transcript-selected-translation" class="saved-transcript-selection-translation" hidden></div>`;
@@ -17429,20 +17456,23 @@ Set reply_language to "en" only when the spoken reply is primarily English; othe
     function showRecentSavedTurnsInTutorControls(entries){
         const live=document.getElementById("voice-live-transcript");
         if(!live)return;
-        const languageName=langConfig().name;
         const recent=normalizedSavedConversationEntries(entries).slice(-3);
-        const lines=recent.map(entry=>{
+        live.replaceChildren();
+        recent.forEach(entry=>{
             const text=entry.role==="assistant"
                 ? stripTutorMarkdown(entry.text)
                 : String(entry.text||"").trim();
-            const speaker=entry.role==="assistant"
-                ? `${languageName} Tutor`
-                : (entry.inputMode==="english" ? "You (English)" : "You");
-            return `${speaker}: ${text}`;
-        }).filter(Boolean);
-        live.textContent=lines.length
-            ? lines.join("\n\n")
-            : "What the microphone hears will appear here.";
+            if(!text)return;
+            const line=document.createElement("div");
+            line.className=`voice-live-turn-line ${entry.role==="assistant" ? "voice-live-tutor-line" : "voice-live-user-line"}`;
+            const speaker=document.createElement("strong");
+            speaker.textContent=entry.role==="assistant"
+                ? "Tutor: "
+                : (entry.inputMode==="english" ? "You (English): " : "You: ");
+            line.append(speaker,document.createTextNode(text));
+            live.appendChild(line);
+        });
+        if(!live.children.length)live.textContent="What the microphone hears will appear here.";
         live.scrollTop=live.scrollHeight;
     }
 
@@ -23054,7 +23084,7 @@ Do not continue the conversation.`;
 
         const cfg=currentCoachConfig();
         const title=document.getElementById("language-coach-title");
-        if(title)title.textContent=`❓ Ask Tutor — ${cfg.name}`;
+        if(title)title.textContent="❓ Ask Tutor";
 
         win.hidden=false;
         if(input){
@@ -24839,7 +24869,7 @@ function toolbar(){
         <button type="button" id="transcript-selected-copy" disabled>⧉ Copy</button>
         <button type="button" id="transcript-selected-translate" disabled>🌐 Translate</button>
         <button type="button" id="transcript-selected-analysis" disabled>🔎 Analyze</button>
-        <button type="button" id="transcript-selected-save" disabled>☆ Save</button>
+        <button type="button" id="transcript-selected-save" disabled>＋ Study List</button>
         <button type="button" id="transcript-selected-coach" disabled>❓ Ask Tutor</button>
       </div>
       <div id="transcript-selected-translation" class="transcript-selected-translation" hidden></div>`;
@@ -25143,7 +25173,7 @@ function updateLanguageLabels(){
 
     const title=document.getElementById("language-coach-title");
     const win=document.getElementById("language-coach-window");
-    if(title && win && !win.hidden)title.textContent=`❓ Ask Tutor — ${c.name}`;
+    if(title && win && !win.hidden)title.textContent="❓ Ask Tutor";
 
     updateAskVoiceButtons();
 }
@@ -26405,10 +26435,28 @@ function setLiveHeard(){
     if(!el)return;
     const user=String(liveState.input.text||"").trim();
     const tutor=String(liveState.output.text||"").trim();
-    const lines=[];
-    if(user)lines.push(`You: ${user}`);
-    if(tutor)lines.push(`Tutor: ${tutor}`);
-    el.textContent=lines.length ? lines.join("\n\n") : "Live voice is listening…";
+    const history=typeof window.getVoiceTutorHistory==="function"
+        ? window.getVoiceTutorHistory().slice(-3).map(entry=>({
+            role:entry?.role==="assistant" ? "assistant" : "user",
+            text:String(entry?.text||"").trim()
+        })).filter(entry=>entry.text)
+        : [];
+    const addPending=(role,text)=>{
+        if(!text)return;
+        const last=history[history.length-1];
+        if(!last || last.role!==role || last.text!==text)history.push({role,text});
+    };
+    addPending("user",user);addPending("assistant",tutor);
+    el.replaceChildren();
+    history.slice(-3).forEach(entry=>{
+        const line=document.createElement("div");
+        line.className=`voice-live-turn-line ${entry.role==="assistant" ? "voice-live-tutor-line" : "voice-live-user-line"}`;
+        const speaker=document.createElement("strong");
+        speaker.textContent=entry.role==="assistant" ? "Tutor: " : "You: ";
+        line.append(speaker,document.createTextNode(entry.text));
+        el.appendChild(line);
+    });
+    if(!el.children.length)el.textContent="Live voice is listening…";
     el.scrollTop=el.scrollHeight;
 }
 
@@ -26539,7 +26587,7 @@ function updateLiveButtons(){
         chatTop.classList.toggle("live-active",chatActive);
         chatTop.textContent=chatActive
             ? "■ Stop live voice"
-            : (configured ? "🎙 Start live conversation" : "🎙 Start Conversation");
+            : (configured ? "🎙 Start Live Chat" : "🎙 Start Chat");
     }
     if(ask){
         ask.classList.toggle("live-active",askActive);
@@ -26780,7 +26828,7 @@ const STORAGE_KEY="languagetutor_primary_workspace_rects_v1414";
 
 const registry={
     tutor:{
-        label:"Chat with Tutor",
+        label:"💬 Chat with Tutor",
         subtitle:"Settings, voice controls, live status, and reply composer",
         viewId:"tutor-controls-view",
         shellId:"tutor-controls-window",
@@ -26789,8 +26837,8 @@ const registry={
         placeholderId:"tutor-controls-placeholder"
     },
     tools:{
-        label:"Language Tools",
-        subtitle:"Grammar Tools, Study & Review, Translation & Manual Input",
+        label:"🧰 Language Tools",
+        subtitle:"Grammar Tools and Study & Review",
         viewId:"language-tools-view",
         shellId:"language-tools-window",
         bodyId:"language-tools-window-body",
@@ -27585,8 +27633,10 @@ test.addEventListener("click",()=>{
 }
 .all-floating-minimize:hover{background:#f8fafc!important;border-color:#94a3b8!important}
 .ask-css-minimize-toggle{position:absolute!important;opacity:0!important;pointer-events:none!important}
+.ask-css-minimize-label{font-size:0!important;color:transparent!important}
 .ask-css-minimize-label::before{content:"—"}
 .ask-css-minimize-toggle:checked + .ask-css-minimize-label::before{content:"□"}
+.ask-css-minimize-label::before{font-size:17px!important;color:#64748b!important;line-height:1!important}
 
 #tutor-controls-window.all-floating-minimized,
 #voice-transcript-window.all-floating-minimized,
@@ -27721,7 +27771,13 @@ function toggleTitleCard(name){
     panel.style.height=Math.min(height,window.innerHeight-16)+"px";
   }
   const button=panel.querySelector(".all-floating-minimize");
-  if(button && name!=="coach"){button.textContent=minimizing?"□":"—";button.title=minimizing?"Restore":"Minimize to title card"}
+  if(button && name!=="coach"){
+    button.textContent=minimizing?"□":"—";
+    button.title=minimizing?"Restore":"Minimize to title card";
+  }else if(button){
+    button.textContent="";
+    button.title=minimizing?"Restore Ask Tutor":"Minimize Ask Tutor";
+  }
   saveLayout();
 }
 
@@ -27869,7 +27925,11 @@ function ensureResetButton(){
       const coachToggle=panel?.querySelector(".ask-css-minimize-toggle");
       if(coachToggle)coachToggle.checked=false;
       const minimize=panel?.querySelector(".all-floating-minimize");
-      if(minimize){minimize.textContent="—";minimize.title="Minimize to title card"}
+      if(minimize){
+        const isCoach=panel?.id==="language-coach-window";
+        minimize.textContent=isCoach ? "" : "—";
+        minimize.title=isCoach ? "Minimize Ask Tutor" : "Minimize to title card";
+      }
     });
     openAll(true);saveLayout();
   });
@@ -28072,6 +28132,21 @@ focusAfterOpen("openLanguageCoach","language-coach-window");
 <script id="language-tutor-v107-conversation-settings-window-runtime">
 (()=>{
 "use strict";
+function mountConversationSettings(win){
+  if(!win)return false;
+  const body=win.querySelector(".conversation-settings-window-body");
+  const settings=document.getElementById("voice-settings-panel");
+  const controls=document.getElementById("chat-settings-controls")
+    || settings?.querySelector(".voice-settings-panel-body")
+    || document.querySelector(".voice-settings-panel-body");
+  if(!body || !controls)return false;
+  controls.id="chat-settings-controls";
+  if(controls.parentElement!==body)body.appendChild(controls);
+  controls.hidden=false;
+  controls.removeAttribute("hidden");
+  controls.style.setProperty("display","block","important");
+  return true;
+}
 function bringForward(){
   if(typeof window.bringFloatingWindowToFront==="function"){
     window.bringFloatingWindowToFront("conversation-settings-window");
@@ -28082,11 +28157,14 @@ function bringForward(){
 window.openConversationSettingsWindow=function(){
   const win=document.getElementById("conversation-settings-window");
   if(!win)return;
+  mountConversationSettings(win);
   win.hidden=false;
   win.classList.remove("conversation-settings-collapsed");
   const minimize=document.getElementById("conversation-settings-minimize");
   if(minimize)minimize.textContent="—";
   bringForward();
+  requestAnimationFrame(()=>mountConversationSettings(win));
+  setTimeout(()=>mountConversationSettings(win),120);
 };
 window.closeConversationSettingsWindow=function(){
   const win=document.getElementById("conversation-settings-window");
@@ -28131,21 +28209,28 @@ function build(){
   const oldWrapper=settings.parentElement;
   const win=document.createElement("section");
   win.id="conversation-settings-window";win.hidden=true;
-  win.setAttribute("aria-label","Conversation settings window");
+  win.setAttribute("aria-label","Chat settings window");
   win.innerHTML=`<div id="conversation-settings-drag-handle" class="conversation-settings-titlebar">
-    <div class="conversation-settings-titlecopy"><div class="conversation-settings-title">Conversation settings</div>
+    <div class="conversation-settings-titlecopy"><div class="conversation-settings-title">⚙ Chat Settings</div>
     <div class="conversation-settings-subtitle">Mode, level, corrections, language help, speed, voice, and scenario</div></div>
     <div class="conversation-settings-actions"><button type="button" id="conversation-settings-minimize" title="Minimize">—</button>
-    <button type="button" id="conversation-settings-close" title="Close" aria-label="Close Conversation settings">×</button></div>
+    <button type="button" id="conversation-settings-close" title="Close" aria-label="Close Chat settings">×</button></div>
   </div><div class="conversation-settings-window-body"></div>`;
   document.body.appendChild(win);
-  win.querySelector(".conversation-settings-window-body").appendChild(settings);
+  const controls=settings.querySelector(".voice-settings-panel-body");
+  if(controls){
+    controls.id="chat-settings-controls";
+    win.querySelector(".conversation-settings-window-body").appendChild(controls);
+    controls.hidden=false;
+    controls.removeAttribute("hidden");
+  }
+  settings.remove();
   if(oldWrapper && oldWrapper!==settings)oldWrapper.remove();
 
   const button=document.createElement("button");
   button.type="button";button.id="conversation-settings-open-btn";
   button.className="min-h-[44px] px-3 py-2 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-xs font-bold transition";
-  button.textContent="⚙ Conversation settings";
+  button.textContent="⚙ Chat Settings";
   button.addEventListener("click",window.openConversationSettingsWindow);
   start.insertAdjacentElement("afterend",button);
 
@@ -28454,6 +28539,267 @@ function bind(){
 
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",makePanel,{once:true});
 else makePanel();
+})();
+</script>
+<style id="language-tutor-v202-desktop-unification-css">
+/* v2.02 — primary window headings share one clear icon/title rhythm. */
+#tutor-controls-window .primary-workspace-window-title,
+#language-tools-window .primary-workspace-window-title,
+#voice-transcript-window .voice-transcript-window-title,
+#language-coach-window .language-coach-title,
+#conversation-settings-window .conversation-settings-title{
+  font-size:13px!important;
+  line-height:1.25!important;
+  font-weight:900!important;
+  letter-spacing:0!important;
+}
+
+/* Reset is now a real banner control, not a fixed overlay. */
+#all-floating-reset-layout{
+  position:static!important;
+  inset:auto!important;
+  z-index:auto!important;
+  flex:0 0 auto;
+  min-height:36px;
+  white-space:nowrap;
+  box-shadow:none!important;
+}
+
+/* Chat Settings mounts the live controls directly, outside the retired
+   collapsible details wrapper. */
+#conversation-settings-window #chat-settings-controls{
+  display:block!important;
+  width:100%;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+}
+
+/* Language Tools now uses the window itself as its only outer layer. */
+#language-tools-window .primary-workspace-window-body{
+  padding:12px!important;
+  overflow:hidden!important;
+}
+#language-tools-view,
+#language-tools-view.is-floating{
+  height:100%!important;
+  min-height:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.language-tools-simple-shell{
+  height:100%;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.language-tools-button-bar{
+  flex:0 0 auto;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.language-tools-section-button{
+  min-height:38px;
+  padding:8px 13px;
+  border:1px solid #cbd5e1;
+  border-radius:9px;
+  background:#fff;
+  color:#475569;
+  font-size:11px;
+  font-weight:850;
+  cursor:pointer;
+}
+.language-tools-section-button:hover{
+  border-color:#a5b4fc;
+  background:#f8faff;
+  color:#4338ca;
+}
+.language-tools-section-button.is-active{
+  border-color:#8b7cc7;
+  background:#ede9fe;
+  color:#4c1d95;
+  box-shadow:0 0 0 2px rgba(139,124,199,.12);
+}
+.language-tools-simple-content{
+  flex:1 1 auto;
+  min-height:0;
+  overflow:auto;
+  border-top:1px solid #e7e2f4;
+  padding-top:10px;
+}
+.language-tools-simple-panel[hidden]{display:none!important}
+.language-tools-simple-panel,
+.language-tools-simple-panel>.combined-language-tools-subsection-body{
+  min-height:0;
+}
+.language-tools-simple-panel>.combined-language-tools-subsection-body{
+  padding:0!important;
+}
+
+/* Three recent speech turns stay readable; Tutor lines are visually distinct. */
+#voice-live-transcript.voice-live-interim-status,
+#voice-live-transcript{
+  min-height:96px!important;
+  max-height:132px!important;
+  padding:8px 9px!important;
+  margin:6px 0!important;
+  border-width:1px!important;
+  opacity:1!important;
+  overflow-y:auto!important;
+  color:#334155!important;
+  font-size:13px!important;
+  line-height:1.48!important;
+}
+#voice-live-transcript.voice-live-interim-status.voice-live-interim-idle{
+  min-height:0!important;
+  max-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border-width:0!important;
+  opacity:0!important;
+}
+.voice-live-turn-line{
+  padding:5px 7px;
+  border-radius:7px;
+  overflow-wrap:anywhere;
+}
+.voice-live-turn-line+.voice-live-turn-line{margin-top:4px}
+.voice-live-user-line{
+  color:#334155;
+  background:#f8fafc;
+}
+.voice-live-tutor-line{
+  color:#312e81;
+  background:#eef2ff;
+  border-left:3px solid #6366f1;
+}
+.voice-live-tutor-line strong{color:#4338ca}
+
+@media(max-width:900px){
+  #all-floating-reset-layout{display:none!important}
+}
+</style>
+
+<script id="language-tutor-v202-desktop-unification-runtime">
+(()=>{
+"use strict";
+
+function setPrimaryLabels(){
+  const labels={
+    "#tutor-controls-window .primary-workspace-window-title":"💬 Chat with Tutor",
+    "#voice-transcript-window .voice-transcript-window-title":"📝 Chat Transcript",
+    "#language-coach-window .language-coach-title":"❓ Ask Tutor",
+    "#language-tools-window .primary-workspace-window-title":"🧰 Language Tools",
+    "#conversation-settings-window .conversation-settings-title":"⚙ Chat Settings"
+  };
+  Object.entries(labels).forEach(([selector,text])=>{
+    const node=document.querySelector(selector);
+    if(node)node.textContent=text;
+  });
+  const start=document.getElementById("voice-start-btn");
+  if(start && !/stop/i.test(start.textContent||""))start.textContent="🎙 Start Chat";
+  const settings=document.getElementById("conversation-settings-open-btn");
+  if(settings)settings.textContent="⚙ Chat Settings";
+  const fresh=document.getElementById("voice-new-chat-btn");
+  if(fresh)fresh.textContent="New Chat";
+}
+
+function moveResetIntoBanner(){
+  const reset=document.getElementById("all-floating-reset-layout");
+  const language=document.getElementById("language-selector-wrap");
+  const row=language?.parentElement;
+  if(reset && row && reset.parentElement!==row)row.insertBefore(reset,language);
+}
+
+function simplifyLanguageTools(){
+  if(document.querySelector(".language-tools-simple-shell"))return;
+  const view=document.getElementById("language-tools-view");
+  const outer=document.getElementById("conversation-language-tools-section");
+  const grammar=document.getElementById("combined-grammar-tools");
+  const study=document.getElementById("combined-study-review");
+  const manual=document.getElementById("combined-manual-tools");
+  if(!view || !outer || !grammar || !study)return;
+
+  /* Retain retired DOM IDs invisibly for compatibility with older guarded
+     functions, but remove the feature from the visible Language Tools UI. */
+  if(manual){
+    let retired=document.getElementById("retired-manual-input-host");
+    if(!retired){
+      retired=document.createElement("div");
+      retired.id="retired-manual-input-host";
+      retired.hidden=true;
+      retired.setAttribute("aria-hidden","true");
+      document.body.appendChild(retired);
+    }
+    retired.appendChild(manual);
+  }
+
+  const shell=document.createElement("div");
+  shell.className="language-tools-simple-shell";
+  const nav=document.createElement("div");
+  nav.className="language-tools-button-bar";
+  nav.setAttribute("role","tablist");
+  nav.setAttribute("aria-label","Language tool sections");
+  const content=document.createElement("div");
+  content.className="language-tools-simple-content";
+
+  const items=[
+    {key:"grammar",label:"🔤 Grammar Tools",section:grammar},
+    {key:"study",label:"★ Study & Review",section:study}
+  ];
+  const select=key=>{
+    items.forEach(item=>{
+      const button=nav.querySelector(`[data-tools-tab="${item.key}"]`);
+      const panel=content.querySelector(`[data-tools-panel="${item.key}"]`);
+      const active=item.key===key;
+      button?.classList.toggle("is-active",active);
+      button?.setAttribute("aria-selected",active?"true":"false");
+      if(panel)panel.hidden=!active;
+    });
+  };
+
+  items.forEach((item,index)=>{
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="language-tools-section-button";
+    button.dataset.toolsTab=item.key;
+    button.setAttribute("role","tab");
+    button.textContent=item.label;
+    button.addEventListener("click",()=>select(item.key));
+    nav.appendChild(button);
+
+    const panel=document.createElement("section");
+    panel.className="language-tools-simple-panel";
+    panel.dataset.toolsPanel=item.key;
+    panel.setAttribute("role","tabpanel");
+    panel.hidden=index!==0;
+    const body=item.section.querySelector(".combined-language-tools-subsection-body");
+    if(body)panel.appendChild(body);
+    content.appendChild(panel);
+  });
+
+  shell.append(nav,content);
+  outer.replaceWith(shell);
+  select("grammar");
+}
+
+function init(){
+  setPrimaryLabels();
+  moveResetIntoBanner();
+  simplifyLanguageTools();
+  requestAnimationFrame(()=>{
+    setPrimaryLabels();moveResetIntoBanner();simplifyLanguageTools();
+  });
+  setTimeout(()=>{setPrimaryLabels();moveResetIntoBanner();simplifyLanguageTools()},250);
+  setTimeout(()=>{setPrimaryLabels();moveResetIntoBanner();simplifyLanguageTools()},1000);
+}
+
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});
+else init();
 })();
 </script>
 </body>
